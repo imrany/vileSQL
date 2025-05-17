@@ -2,9 +2,16 @@ package user
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/gorilla/sessions"
+	"github.com/imrany/vileSQL/config"
+	"github.com/imrany/vileSQL/internal/handlers/database"
 	"github.com/imrany/vileSQL/internal/helper"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -54,7 +61,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert the user into the database
-	_, err = systemDB.Exec(
+	_, err = database.SystemDB.Exec(
 		"INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)",
 		user.Username,
 		string(hashedPassword),
@@ -73,6 +80,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 		return
+	}
+
+	DB_STORAGE_PATH:=config.GetValue("DB_STORAGE_PATH")
+	if DB_STORAGE_PATH == ""{
+		log.Fatal("DB_STORAGE_PATH is empty")
 	}
 
 	// Create user directory for databases
@@ -104,7 +116,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve user from database
 	var user User
 	var hashedPassword string
-	err := systemDB.QueryRow(
+	err := database.SystemDB.QueryRow(
 		"SELECT id, username, password_hash, email FROM users WHERE username = ?",
 		loginData.Username,
 	).Scan(&user.ID, &user.Username, &hashedPassword, &user.Email)
@@ -127,6 +139,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create session
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	if SESSION_KEY == ""{
+		log.Fatal("SESSION_KEY is empty")
+	}
+	
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if COOKIE_STORE_KEY == ""{
+		log.Fatal("COOKIE_STORE_KEY is empty")
+	}
+
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	session.Values["authenticated"] = true
 	session.Values["user_id"] = user.ID
@@ -147,11 +170,22 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	if SESSION_KEY == ""{
+		log.Fatal("SESSION_KEY is empty")
+	}
+	
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if COOKIE_STORE_KEY == ""{
+		log.Fatal("COOKIE_STORE_KEY is empty")
+	}
+
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	session.Values["authenticated"] = false
 	session.Save(r, w)
 
-	respondWithJSON(w, http.StatusOK, ApiResponse{
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
 		Success: true,
 		Message: "Logout successful",
 	})

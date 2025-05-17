@@ -33,6 +33,7 @@ type Database struct {
 type TableInfo struct {
 	Name    string   `json:"name"`
 	Columns []Column `json:"columns"`
+	RowCount int `json:"row_count"`
 }
 
 type Column struct {
@@ -52,20 +53,12 @@ type ApiResponse struct {
 
 // Configuration
 const (
-	PORT              = 8080
-	// DB_STORAGE_PATH   = "./data/user_dbs"
-	// SESSION_KEY       = config.GetValue("SESSION_KEY") // Replace with a strong random key in production
-	// COOKIE_STORE_KEY  = "replace-with-secure-key"    // Replace with a strong random key in production
 	MAX_DB_SIZE       = 50 * 1024 * 1024             // 50MB max database size
 	TOKEN_EXPIRY_DAYS = 30
 )
 
-// Global variables
-var (
-	// store = sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
-	// Main SQLite database to store user information and database metadata
-	systemDB *sql.DB
-)
+// Main SQLite database to store user information and database metadata
+var SystemDB *sql.DB
 
 // Initialize the application
 func init() {
@@ -81,7 +74,7 @@ func init() {
 
 	// Initialize the system database
 	var err error
-	systemDB, err = sql.Open("sqlite3", "./data/system.db")
+	SystemDB, err = sql.Open("sqlite3", "./data/system.db")
 	if err != nil {
 		log.Fatalf("Failed to open system database: %v", err)
 	}
@@ -92,7 +85,7 @@ func init() {
 
 func setupSystemDB() {
 	// Create users table
-	_, err := systemDB.Exec(`
+	_, err := SystemDB.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			username TEXT UNIQUE NOT NULL,
@@ -106,7 +99,7 @@ func setupSystemDB() {
 	}
 
 	// Create databases table
-	_, err = systemDB.Exec(`
+	_, err = SystemDB.Exec(`
 		CREATE TABLE IF NOT EXISTS databases (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
@@ -215,7 +208,7 @@ func CreateDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Record the database in the system database
-	result, err := systemDB.Exec(
+	result, err := SystemDB.Exec(
 		"INSERT INTO databases (user_id, name, description, file_path) VALUES (?, ?, ?, ?)",
 		userID,
 		sanitizedName,
@@ -261,7 +254,7 @@ func GetUserDatabasesHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
 
-	rows, err := systemDB.Query(
+	rows, err := SystemDB.Query(
 		"SELECT id, name, description, share_token, token_expiry, created_at, updated_at FROM databases WHERE user_id = ?",
 		userID,
 	)
@@ -339,7 +332,7 @@ func getDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 
 	var db Database
 	var shareToken, tokenExpiry sql.NullString
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		`SELECT id, user_id, name, description, file_path, share_token, token_expiry, created_at, updated_at 
          FROM databases WHERE id = ?`,
 		dbID,
@@ -487,7 +480,7 @@ func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 
 	// First, check if the database belongs to the user
 	var count int
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		"SELECT COUNT(*) FROM databases WHERE id = ? AND user_id = ?",
 		dbID, userID,
 	).Scan(&count)
@@ -501,7 +494,7 @@ func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the database with the share token
-	_, err = systemDB.Exec(
+	_, err = SystemDB.Exec(
 		"UPDATE databases SET share_token = ?, token_expiry = ? WHERE id = ?",
 		token, tokenExpiry.Format(time.RFC3339), dbID,
 	)
@@ -554,7 +547,7 @@ func DisableSharingHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the database belongs to the user
 	var count int
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		"SELECT COUNT(*) FROM databases WHERE id = ? AND user_id = ?",
 		dbID, userID,
 	).Scan(&count)
@@ -568,7 +561,7 @@ func DisableSharingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Remove the share token
-	_, err = systemDB.Exec(
+	_, err = SystemDB.Exec(
 		"UPDATE databases SET share_token = NULL, token_expiry = NULL WHERE id = ?",
 		dbID,
 	)
@@ -593,7 +586,7 @@ func GetSharedDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 
 	var db Database
 	var tokenExpiry time.Time
-	err := systemDB.QueryRow(
+	err := SystemDB.QueryRow(
 		`SELECT id, user_id, name, description, file_path, token_expiry, created_at, updated_at 
          FROM databases WHERE share_token = ?`,
 		token,
@@ -750,7 +743,7 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the database file path
 	var filePath string
 	var dbUserID int
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		"SELECT file_path, user_id FROM databases WHERE id = ?",
 		dbID,
 	).Scan(&filePath, &dbUserID)
@@ -928,7 +921,7 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the database file path
 	var filePath string
 	var dbUserID int
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		"SELECT file_path, user_id FROM databases WHERE id = ?",
 		dbID,
 	).Scan(&filePath, &dbUserID)
@@ -1063,7 +1056,7 @@ func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the database file path
 	var filePath string
 	var dbUserID int
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		"SELECT file_path, user_id FROM databases WHERE id = ?",
 		dbID,
 	).Scan(&filePath, &dbUserID)
@@ -1202,7 +1195,7 @@ func DeleteTableHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the database file path
 	var filePath string
 	var dbUserID int
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		"SELECT file_path, user_id FROM databases WHERE id = ?",
 		dbID,
 	).Scan(&filePath, &dbUserID)
@@ -1279,7 +1272,7 @@ func DeleteDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the database file path
 	var filePath string
 	var dbUserID int
-	err = systemDB.QueryRow(
+	err = SystemDB.QueryRow(
 		"SELECT file_path, user_id FROM databases WHERE id = ?",
 		dbID,
 	).Scan(&filePath, &dbUserID)
@@ -1302,7 +1295,7 @@ func DeleteDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete the database record from the system database
-	_, err = systemDB.Exec("DELETE FROM databases WHERE id = ?", dbID)
+	_, err = SystemDB.Exec("DELETE FROM databases WHERE id = ?", dbID)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -1322,7 +1315,7 @@ func DeleteDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func executeSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
+func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"]
 
@@ -1337,4 +1330,371 @@ func executeSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	if queryRequest.SQL == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "SQL query is required",
+		})
+		return
+	}
+
+	// Verify that the share token is valid and not expired
+	var filePath string
+	var tokenExpiry time.Time
+	err := SystemDB.QueryRow(
+		"SELECT file_path, token_expiry FROM databases WHERE share_token = ?",
+		token,
+	).Scan(&filePath, &tokenExpiry)
+
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "Shared database not found",
+		})
+		return
+	}
+
+	// Check if the token has expired
+	if time.Now().After(tokenExpiry) {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "Share link has expired",
+		})
+		return
+	}
+
+	// Open the user's database in read-only mode
+	userDB, err := sql.Open("sqlite3", filePath+"?mode=ro")
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to open database",
+		})
+		return
+	}
+	defer userDB.Close()
+
+	// Block any write operations for shared databases
+	lowercaseSQL := strings.ToLower(strings.TrimSpace(queryRequest.SQL))
+	if strings.HasPrefix(lowercaseSQL, "insert") ||
+		strings.HasPrefix(lowercaseSQL, "update") ||
+		strings.HasPrefix(lowercaseSQL, "delete") ||
+		strings.HasPrefix(lowercaseSQL, "drop") ||
+		strings.HasPrefix(lowercaseSQL, "alter") ||
+		strings.HasPrefix(lowercaseSQL, "create") {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "Write operations are not allowed for shared databases",
+		})
+		return
+	}
+
+	// Execute the query
+	rows, err := userDB.Query(queryRequest.SQL)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: fmt.Sprintf("Query execution failed: %v", err),
+		})
+		return
+	}
+	defer rows.Close()
+
+	// Get column names
+	columns, err := rows.Columns()
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to get column information",
+		})
+		return
+	}
+
+	// Prepare the result set
+	result := make([]map[string]interface{}, 0)
+	columnTypes, _ := rows.ColumnTypes()
+	
+	// Prepare values holder
+	values := make([]interface{}, len(columns))
+	valuePtrs := make([]interface{}, len(columns))
+	for i := range values {
+		valuePtrs[i] = &values[i]
+	}
+
+	// Fetch rows with a reasonable limit
+	rowCount := 0
+	maxRows := 10000 // Limit to prevent excessive memory usage
+	
+	for rows.Next() {
+		if rowCount >= maxRows {
+			break
+		}
+		
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+
+		entry := make(map[string]interface{})
+		for i, col := range columns {
+			val := values[i]
+			
+			// Handle SQLite specific types
+			switch v := val.(type) {
+			case []byte:
+				// Try to convert []byte to string if it looks like text
+				entry[col] = string(v)
+			case nil:
+				entry[col] = nil
+			default:
+				entry[col] = v
+			}
+		}
+		result = append(result, entry)
+		rowCount++
+	}
+
+	// Check for errors from iterating over rows
+	if err := rows.Err(); err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: fmt.Sprintf("Error processing results: %v", err),
+		})
+		return
+	}
+
+	queryResult := struct {
+		Columns  []string                 `json:"columns"`
+		Types    []string                 `json:"types"`
+		Rows     []map[string]interface{} `json:"rows"`
+		ReadOnly bool                     `json:"read_only"`
+		RowCount int                      `json:"row_count"`
+		Limited  bool                     `json:"limited"`
+	}{
+		Columns:  columns,
+		Types:    make([]string, len(columnTypes)),
+		Rows:     result,
+		ReadOnly: true,
+		RowCount: rowCount,
+		Limited:  rowCount >= maxRows,
+	}
+
+	// Extract column types
+	for i, ct := range columnTypes {
+		queryResult.Types[i] = ct.DatabaseTypeName()
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data:    queryResult,
+	})
+}
+
+func GetDatabaseHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	if SESSION_KEY ==""{
+		log.Fatal("SESSION_KEY is empty")
+	}
+
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if COOKIE_STORE_KEY == ""{
+		log.Fatal("COOKIE_STORE_KEY is empty")
+	}
+	
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, err := store.Get(r, SESSION_KEY)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusUnauthorized, ApiResponse{
+			Success: false,
+			Message: "Invalid session",
+		})
+		return
+	}
+	
+	userID, ok := session.Values["user_id"].(int)
+	if !ok {
+		helper.RespondWithJSON(w, http.StatusUnauthorized, ApiResponse{
+			Success: false,
+			Message: "Invalid user session",
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	dbID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid database ID",
+		})
+		return
+	}
+
+	var db Database
+	var shareToken, tokenExpiry sql.NullString
+	err = SystemDB.QueryRow(
+		`SELECT id, user_id, name, description, file_path, share_token, token_expiry, created_at, updated_at 
+         FROM databases WHERE id = ?`,
+		dbID,
+	).Scan(
+		&db.ID,
+		&db.UserID,
+		&db.Name,
+		&db.Description,
+		&db.FilePath,
+		&shareToken,
+		&tokenExpiry,
+		&db.CreatedAt,
+		&db.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+				Success: false,
+				Message: "Database not found",
+			})
+		} else {
+			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+				Success: false,
+				Message: "Database query error",
+			})
+			log.Fatal("Database query error", err)
+		}
+		return
+	}
+
+	// Check if the database belongs to the user
+	if db.UserID != userID {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "You don't have permission to access this database",
+		})
+		return
+	}
+
+	if shareToken.Valid {
+		db.ShareToken = shareToken.String
+	}
+	if tokenExpiry.Valid {
+		expiry, err := time.Parse(time.RFC3339, tokenExpiry.String)
+		if err == nil {
+			db.TokenExpiry = expiry
+		}
+	}
+
+	// Check if database file exists
+	if _, err := os.Stat(db.FilePath); os.IsNotExist(err) {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Database file not found",
+		})
+		log.Fatal("Database file not found", db.FilePath)
+		return
+	}
+
+	// Get the database schema (tables and columns)
+	userDB, err := sql.Open("sqlite3", db.FilePath)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to open database",
+		})
+		log.Fatal("Failed to open database", err)
+		return
+	}
+	defer userDB.Close()
+
+	// Validate DB connection
+	if err := userDB.Ping(); err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Database connection error",
+		})
+		log.Fatal("Database connection error", err)
+		return
+	}
+
+	// Query for table names - exclude SQLite internal tables
+	rows, err := userDB.Query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to retrieve database schema",
+		})
+		log.Fatal("Failed to retrieve schema", err)
+		return
+	}
+	defer rows.Close()
+
+	tables := []TableInfo{}
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			log.Fatal("Error scanning table name", err)
+			continue
+		}
+
+		// Get columns for each table
+		tableInfo := TableInfo{Name: tableName}
+		pragmaRows, err := userDB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
+		if err == nil {
+			defer pragmaRows.Close()
+			for pragmaRows.Next() {
+				var cid int
+				var name string
+				var dataType string
+				var notNull int
+				var defaultValue interface{}
+				var pk int
+
+				if err := pragmaRows.Scan(&cid, &name, &dataType, &notNull, &defaultValue, &pk); err != nil {
+					log.Fatal("Error scanning column info", err)
+					continue
+				}
+
+				column := Column{
+					Name:         name,
+					Type:         dataType,
+					NotNull:      notNull == 1,
+					PK:           pk > 0,
+					DefaultValue: defaultValue,
+				}
+				tableInfo.Columns = append(tableInfo.Columns, column)
+			}
+		}
+
+		// Get the row count for each table
+		var rowCount int
+		countRow := userDB.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName))
+		if err := countRow.Scan(&rowCount); err == nil {
+			tableInfo.RowCount = rowCount
+		}
+
+		tables = append(tables, tableInfo)
+	}
+
+	// Get database size
+	fileInfo, err := os.Stat(db.FilePath)
+	var dbSize int64
+	if err == nil {
+		dbSize = fileInfo.Size()
+	}
+
+	response := struct {
+		Database    Database    `json:"database"`
+		Tables      []TableInfo `json:"tables"`
+		Size        int64       `json:"size_bytes"`
+		SizeDisplay string      `json:"size_display"`
+	}{
+		Database:    db,
+		Tables:      tables,
+		Size:        dbSize,
+		SizeDisplay: strconv.FormatInt(dbSize, 10),
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data:    response,
+	})
 }

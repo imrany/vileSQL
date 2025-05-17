@@ -2,7 +2,8 @@ package router
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/imrany/vileSQL/database"
+	
+	"github.com/imrany/vileSQL/internal/handlers/database"
 	"github.com/imrany/vileSQL/internal/handlers/user"
 	"github.com/imrany/vileSQL/internal/middleware"
 )

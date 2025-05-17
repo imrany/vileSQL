@@ -1,6 +1,6 @@
 ## VileSQL
 
-This code provides a complete backend for hosting and managing SQLite databases on your VPS with web-based access.
+We provide sqLite database hosting and management (Server mode for sqLite database) with controlled access.
 
 ### System Overview
 This web application allows users to:
@@ -23,75 +23,75 @@ This web application allows users to:
 
 2. #### Database Management
 
-Creating new SQLite databases
-Listing user's databases
-Getting database schema (tables and columns)
-Sharing and unsharing databases
-Deleting databases
+- Creating new SQLite databases
+- Listing user's databases
+- Getting database schema (tables and columns)
+- Sharing and unsharing databases
+- Deleting databases
 
 
-Query Execution
+3. #### Query Execution
 
-Executing SQL queries on user databases
-Read-only access for shared databases
-Security measures to prevent unauthorized access
-
-
-Table Management
-
-Creating new tables with custom schemas
-Inserting data into tables
-Deleting tables
+- Executing SQL queries on user databases
+- Read-only access for shared databases
+- Security measures to prevent unauthorized access
 
 
+4. #### Table Management
 
-Security Features
+- Creating new tables with custom schemas
+- Inserting data into tables
+- Deleting tables
 
-Password hashing using bcrypt
-Session-based authentication
-Database ownership validation
-Read-only mode for shared databases
-Prevention of write operations on shared databases
-Size limits on databases
 
-Setup and Configuration
+
+5. #### Security Features
+
+- Password hashing using bcrypt
+- Session-based authentication
+- Database ownership validation
+- Read-only mode for shared databases
+- Prevention of write operations on shared databases
+- Size limits on databases
+
+### Setup and Configuration
 The application uses several configurable constants:
 
-HTTP port (default: 8080)
-Storage path for user databases
-Session and cookie keys (should be replaced with secure values)
-Database size limits
-Token expiration for shared links
+- HTTP port (default: 8080)
+- Storage path for user databases
+- Session and cookie keys (should be replaced with secure values)
+- Database size limits
+- Token expiration for shared links
 
-API Endpoints
-Authentication
+### API Endpoints
+#### Authentication
 
-POST /api/register - Create a new user account
-POST /api/login - Authenticate a user
-POST /api/logout - End a user session
+- POST `/api/register` - Create a new user account
+- POST `/api/login` - Authenticate a user
+- POST `/api/logout` - End a user session
 
-Database Management (authenticated)
+#### Database Management (authenticated)
 
-GET /api/databases - List user's databases
-POST /api/databases - Create a new database
-GET /api/databases/{id} - Get database details
-DELETE /api/databases/{id} - Delete a database
-POST /api/databases/{id}/share - Generate share link
-DELETE /api/databases/{id}/share - Disable sharing
+- GET `/api/databases` - List user's databases
+- POST `/api/databases` - Create a new database
+- GET `/api/databases/{id}` - Get database details
+- DELETE `/api/databases/{id}` - Delete a database
+- POST `/api/databases/{id}/share` - Generate share link
+- DELETE `/api/databases/{id}/share` - Disable sharing
 
-Data Operations (authenticated)
+#### Data Operations (authenticated)
 
-POST /api/databases/{id}/query - Execute SQL query
-POST /api/databases/{id}/tables - Create a new table
-DELETE /api/databases/{id}/tables/{table} - Delete a table
-POST /api/databases/{id}/data - Insert data into a table
+- POST `/api/databases/{id}/query` - Execute SQL query
+- POST `/api/databases/{id}/tables` - Create a new table
+- DELETE `/api/databases/{id}/tables/{table}` - Delete a table
+- POST `/api/databases/{id}/data` - Insert data into a table
 
-Shared Access (public)
+#### Shared Access (public)
 
-GET /api/shared/{token} - Access a shared database
-POST /api/shared/{token}/query - Query a shared database (read-only)
+- GET `/api/shared/{token}` - Access a shared database
+- POST `/api/shared/{token}/query` - Query a shared database (read-only)
 
-How to Deploy
+### How to Deploy
 
 Set up a Go environment on your VPS
 Install dependencies using go get:
