@@ -1,5 +1,3 @@
-/* Import another CSS file */
-@import url('./tailwindcss.css');
 
 @font-face {
   font-family: MozillaText;
