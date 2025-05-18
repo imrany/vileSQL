@@ -16,8 +16,9 @@ func main() {
 	r := mux.NewRouter()
 	router.SetupRoutes(r)
 
+	// r.Use(loggingMiddleware)
 	// Serve static files for frontend
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
+	r.PathPrefix("/static").Handler(http.FileServer(http.Dir("./static")))
 
 	// Set up CORS
 	corsHandler := cors.New(cors.Options{
@@ -29,9 +30,8 @@ func main() {
 
 	PORT := config.GetValue("PORT")
 	if PORT == ""{
-		log.Fatal("PORT is empty")
+		PORT = "8000"
 	}
-
-	log.Printf("Server running on port %d...", PORT)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", PORT), corsHandler))
+	log.Printf("Server running on port %v...", PORT)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", PORT), corsHandler))
 }

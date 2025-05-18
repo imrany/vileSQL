@@ -2,15 +2,20 @@ package router
 
 import (
 	"github.com/gorilla/mux"
-	
+
 	"github.com/imrany/vileSQL/internal/handlers/database"
 	"github.com/imrany/vileSQL/internal/handlers/user"
 	"github.com/imrany/vileSQL/internal/middleware"
+	"github.com/imrany/vileSQL/internal/views"
 )
 
 func SetupRoutes(r *mux.Router){
 	// API subrouter
 	api := r.PathPrefix("/api").Subrouter()
+	viewsRouter := r.PathPrefix("/").Subrouter()
+
+
+	viewsRouter.HandleFunc("/", views.IndexPage).Methods("GET")
 
 	// Authentication routes
 	api.HandleFunc("/register", user.RegisterHandler).Methods("POST")

@@ -1,0 +1,62 @@
+/* Import another CSS file */
+@import url('./tailwindcss.css');
+
+@font-face {
+  font-family: MozillaText;
+  src: url(/static/fonts/MozillaText-Regular.woff);
+  font-weight:100 900;
+}
+
+@font-face {
+  font-family: MozillaHeadline;
+  src: url(/static/fonts/MozillaHeadline-Regular.woff);
+  font-weight:100 900;
+}
+
+html{
+  scroll-behavior: smooth;
+}
+
+
+/* Root variables */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --font-main: 'Roboto', Arial, sans-serif;
+    --font-size-base: 16px;
+    --MozillaText: MozillaText;
+    --MozillaHeadline: MozillaHeadline;
+}
+
+/* Example usage */
+body {
+    font-family: var(--MozillaText);
+    font-size: var(--font-size-base);
+    color: var(--primary-color);
+}
+
+h1,h2,h3,h4,h5,h6{
+    font-family: var(--MozillaHeadline);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
