@@ -16,6 +16,7 @@ func SetupRoutes(r *mux.Router){
 
 
 	viewsRouter.HandleFunc("/", views.IndexPage).Methods("GET")
+	viewsRouter.HandleFunc("/welcome", views.WelcomePage).Methods("GET")
 
 	// Authentication routes
 	api.HandleFunc("/register", user.RegisterHandler).Methods("POST")

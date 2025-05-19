@@ -1,7 +1,7 @@
 
 @font-face {
   font-family: MozillaText;
-  src: url(/static/fonts/MozillaText-Regular.woff);
+  src: url(/static/fonts/MozillaText-Medium.woff);
   font-weight:100 900;
 }
 
@@ -15,6 +15,13 @@ html{
   scroll-behavior: smooth;
 }
 
+.code-block {
+  background-color: black;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: var(--MozillaHeadline);
+  overflow-x: auto;
+}
 
 /* Root variables */
 :root {
@@ -30,7 +37,6 @@ html{
 body {
     font-family: var(--MozillaText);
     font-size: var(--font-size-base);
-    color: var(--primary-color);
 }
 
 h1,h2,h3,h4,h5,h6{
