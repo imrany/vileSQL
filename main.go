@@ -18,7 +18,8 @@ func main() {
 
 	r.Use(loggingMiddleware)
 	// Serve static files for frontend
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	fs:=http.FileServer(http.Dir("./static"))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 	// Set up CORS
 	corsHandler := cors.New(cors.Options{

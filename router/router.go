@@ -17,6 +17,7 @@ func SetupRoutes(r *mux.Router){
 
 	viewsRouter.HandleFunc("/", views.IndexPage).Methods("GET")
 	viewsRouter.HandleFunc("/welcome", views.WelcomePage).Methods("GET")
+	viewsRouter.HandleFunc("/cpanel", views.ControlPanel).Methods("GET")
 
 	// Authentication routes
 	api.HandleFunc("/register", user.RegisterHandler).Methods("POST")
@@ -40,6 +41,23 @@ func SetupRoutes(r *mux.Router){
 	protected.HandleFunc("/databases/{id:[0-9]+}/tables", database.CreateTableHandler).Methods("POST")
 	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}", database.DeleteTableHandler).Methods("DELETE")
 	protected.HandleFunc("/databases/{id:[0-9]+}/data", database.InsertDataHandler).Methods("POST")
+	
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}", database.GetTableHandler).Methods("GET")
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data", database.GetTableDataHandler).Methods("GET")
+	// Update table data
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data", database.UpdateTableDataHandler).Methods("PUT")
+	// Delete table data
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data", database.DeleteTableDataHandler).Methods("DELETE")
+	// Get all tables in a database
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables", database.GetTablesHandler).Methods("GET")
+	// Get table data with pagination
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data", database.GetTableDataWithPaginationHandler).Methods("GET")
+	// Get table data with filtering
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data/filter", database.GetFilteredTableDataHandler).Methods("POST")
+	// Get table data with sorting
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data/sort", database.GetSortedTableDataHandler).Methods("POST")
+	// Get table data with search
+	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data/search", database.GetSearchedTableDataHandler).Methods("POST")
 
 	// Shared database access - no authentication required
 	api.HandleFunc("/shared/{token}", database.GetSharedDatabaseHandler).Methods("GET")

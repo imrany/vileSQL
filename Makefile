@@ -1,18 +1,18 @@
 all: build run
-dev: build ensure-compile-daemon watch
 
 delete: 
-	rm ./vilesql
+	rm -rf bin
+	rm -rf ./vilesql
 
 build:
+	delete
 	go build -o vilesql main.go
 
 run:
 	./vilesql
 
-watch: 
-	ensure-compile-daemon
-	CompileDaemon --command="./vilesql"
+dev: 
+	CompileDaemon -build="go build -o vilesql main.go" -command="./vilesql"
 
 ensure-compile-daemon:
 	@which go > /dev/null || (echo "Error: Go is not installed or not in PATH" && exit 1)

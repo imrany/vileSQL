@@ -44,6 +44,24 @@ type Column struct {
 	DefaultValue interface{} `json:"default_value"`
 }
 
+// Helper to convert columns array to SQL string
+func ColumnsToSQL(columns []Column) string {
+	defs := make([]string, len(columns))
+	for i, col := range columns {
+		def := fmt.Sprintf("%s %s", col.Name, col.Type)
+		if col.NotNull {
+			def += " NOT NULL"
+		}
+		if col.PK {
+			def += " PRIMARY KEY"
+		}
+		if col.DefaultValue != nil {
+			def += fmt.Sprintf(" DEFAULT %v", col.DefaultValue)
+		}
+		defs[i] = def
+	}
+	return strings.Join(defs, ", ")
+}
 type ApiResponse struct {
 	Success bool        `json:"success"`
 	Message string      `json:"message,omitempty"`
@@ -890,9 +908,10 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the table creation request
 	var tableRequest struct {
 		Name    string   `json:"name"`
-		Columns []Column `json:"columns"`
+		Columns string `json:"columns"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&tableRequest); err != nil {
+		log.Printf("Error decoding request body: %v", err)
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
 			Message: "Invalid request format",
@@ -955,29 +974,7 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 	defer userDB.Close()
 
 	// Build the CREATE TABLE SQL statement
-	createSQL := fmt.Sprintf("CREATE TABLE %s (", tableRequest.Name)
-	
-	columnDefs := make([]string, len(tableRequest.Columns))
-	for i, col := range tableRequest.Columns {
-		def := fmt.Sprintf("%s %s", col.Name, col.Type)
-		
-		if col.NotNull {
-			def += " NOT NULL"
-		}
-		
-		if col.PK {
-			def += " PRIMARY KEY"
-		}
-		
-		if col.DefaultValue != nil {
-			def += fmt.Sprintf(" DEFAULT %v", col.DefaultValue)
-		}
-		
-		columnDefs[i] = def
-	}
-	
-	createSQL += strings.Join(columnDefs, ", ") + ")"
-
+	createSQL := fmt.Sprintf("CREATE TABLE %s (%s)", tableRequest.Name, tableRequest.Columns)
 	// Execute the CREATE TABLE statement
 	_, err = userDB.Exec(createSQL)
 	if err != nil {
@@ -1696,5 +1693,243 @@ func GetDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
 		Success: true,
 		Data:    response,
+	})
+}
+func GetTableHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Server configuration error",
+		})
+		return
+	}
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, _ := store.Get(r, SESSION_KEY)
+	userID := session.Values["user_id"].(int)
+
+	vars := mux.Vars(r)
+	dbID, err := strconv.Atoi(vars["id"])
+	tableName := vars["table"]
+	if err != nil || tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid database ID or table name",
+		})
+		return
+	}
+
+	var filePath string
+	var dbUserID int
+	err = SystemDB.QueryRow("SELECT file_path, user_id FROM databases WHERE id = ?", dbID).Scan(&filePath, &dbUserID)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "Database not found",
+		})
+		return
+	}
+	if dbUserID != userID {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "You don't have permission to access this database",
+		})
+		return
+	}
+
+	userDB, err := sql.Open("sqlite3", filePath)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to open database",
+		})
+		return
+	}
+	defer userDB.Close()
+
+	pragmaRows, err := userDB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Failed to get table info",
+		})
+		return
+	}
+	defer pragmaRows.Close()
+
+	var columns []Column
+	for pragmaRows.Next() {
+		var cid int
+		var name, dataType string
+		var notNull, pk int
+		var defaultValue interface{}
+		if err := pragmaRows.Scan(&cid, &name, &dataType, &notNull, &defaultValue, &pk); err != nil {
+			continue
+		}
+		columns = append(columns, Column{
+			Name:         name,
+			Type:         dataType,
+			NotNull:      notNull == 1,
+			PK:           pk > 0,
+			DefaultValue: defaultValue,
+		})
+	}
+
+	var rowCount int
+	countRow := userDB.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName))
+	_ = countRow.Scan(&rowCount)
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data: TableInfo{
+			Name:     tableName,
+			Columns:  columns,
+			RowCount: rowCount,
+		},
+	})
+}
+
+func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Server configuration error",
+		})
+		return
+	}
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, _ := store.Get(r, SESSION_KEY)
+	userID := session.Values["user_id"].(int)
+
+	vars := mux.Vars(r)
+	dbID, err := strconv.Atoi(vars["id"])
+	tableName := vars["table"]
+	if err != nil || tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid database ID or table name",
+		})
+		return
+	}
+
+	var filePath string
+	var dbUserID int
+	err = SystemDB.QueryRow("SELECT file_path, user_id FROM databases WHERE id = ?", dbID).Scan(&filePath, &dbUserID)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "Database not found",
+		})
+		return
+	}
+	if dbUserID != userID {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "You don't have permission to access this database",
+		})
+		return
+	}
+
+	userDB, err := sql.Open("sqlite3", filePath)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to open database",
+		})
+		return
+	}
+	defer userDB.Close()
+
+	rows, err := userDB.Query(fmt.Sprintf("SELECT * FROM %s", tableName))
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Failed to get table data",
+		})
+		return
+	}
+	defer rows.Close()
+
+	columns, _ := rows.Columns()
+	result := make([]map[string]interface{}, 0)
+	values := make([]interface{}, len(columns))
+	valuePtrs := make([]interface{}, len(columns))
+	for i := range values {
+		valuePtrs[i] = &values[i]
+	}
+	for rows.Next() {
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+		entry := make(map[string]interface{})
+		for i, col := range columns {
+			val := values[i]
+			switch v := val.(type) {
+			case []byte:
+				entry[col] = string(v)
+			default:
+				entry[col] = v
+			}
+		}
+		result = append(result, entry)
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data:    result,
+	})
+}
+
+// The following handlers are stubs for your routes. Implement as needed.
+
+func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
+		Success: false,
+		Message: "UpdateTableDataHandler not implemented",
+	})
+}
+
+func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
+		Success: false,
+		Message: "DeleteTableDataHandler not implemented",
+	})
+}
+
+func GetTablesHandler(w http.ResponseWriter, r *http.Request) {
+	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
+		Success: false,
+		Message: "GetTablesHandler not implemented",
+	})
+}
+
+func GetTableDataWithPaginationHandler(w http.ResponseWriter, r *http.Request) {
+	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
+		Success: false,
+		Message: "GetTableDataWithPaginationHandler not implemented",
+	})
+}
+
+func GetFilteredTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
+		Success: false,
+		Message: "GetFilteredTableDataHandler not implemented",
+	})
+}
+
+func GetSortedTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
+		Success: false,
+		Message: "GetSortedTableDataHandler not implemented",
+	})
+}
+
+func GetSearchedTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
+		Success: false,
+		Message: "GetSearchedTableDataHandler not implemented",
 	})
 }

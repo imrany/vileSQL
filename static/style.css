@@ -11,6 +11,12 @@
   font-weight:100 900;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 html{
   scroll-behavior: smooth;
 }
@@ -23,7 +29,6 @@ html{
   overflow-x: auto;
 }
 
-/* Root variables */
 :root {
     --primary-color: #3498db;
     --secondary-color: #2ecc71;
@@ -32,11 +37,10 @@ html{
     --MozillaText: MozillaText;
     --MozillaHeadline: MozillaHeadline;
 }
-
-/* Example usage */
+        
 body {
-    font-family: var(--MozillaText);
-    font-size: var(--font-size-base);
+  font-family: var(--MozillaText);
+  font-size: var(--font-size-base);
 }
 
 h1,h2,h3,h4,h5,h6{

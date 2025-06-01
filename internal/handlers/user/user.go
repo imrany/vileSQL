@@ -19,6 +19,7 @@ import (
 type User struct {
 	ID  		 int  	    `json:"id"`
 	Username     string    `json:"username"`
+	Password string    `json:"password"`
 	PasswordHash string    `json:"-"`
 	Email        string    `json:"email"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -42,7 +43,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Basic validation
-	if user.Username == "" || user.Email == "" || user.PasswordHash == "" {
+	if user.Username == "" || user.Email == "" || user.Password== "" {
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
 			Message: "Username, email, and password are required",
@@ -51,7 +52,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
