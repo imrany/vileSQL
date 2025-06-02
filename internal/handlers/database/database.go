@@ -1022,8 +1022,9 @@ func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the data insertion request
 	var insertRequest struct {
-		Table  string                   `json:"table"`
-		Values []map[string]interface{} `json:"values"`
+		Table  string       				`json:"table"`
+		Columns string      				`json:"columns,omitempty"` // Optional, can be used to specify columns
+		Values string `json:"values"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&insertRequest); err != nil {
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
@@ -1050,6 +1051,14 @@ func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(insertRequest.Columns) == 0 {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Columns are required for data insertion",
+		})
+		return
+	}
+	
 	// Get the database file path
 	var filePath string
 	var dbUserID int
@@ -1098,43 +1107,49 @@ func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	// Insert each row of data
-	var rowsAffected int64
-	for _, rowData := range insertRequest.Values {
-		if len(rowData) == 0 {
-			continue
-		}
+	// columns and values are comma-separated strings
+	columns := strings.Split(insertRequest.Columns, ",")
+	valuesList := strings.Split(insertRequest.Values, ",") // assume rows are separated by semicolons
 
-		// Extract column names and values
-		columns := make([]string, 0, len(rowData))
-		placeholders := make([]string, 0, len(rowData))
-		values := make([]interface{}, 0, len(rowData))
+	if len(columns) == 0 || len(valuesList) == 0 {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Columns and values cannot be empty",
+		})
+		return
+	}
 
-		for col, val := range rowData {
-			columns = append(columns, col)
-			placeholders = append(placeholders, "?")
-			values = append(values, val)
-		}
+	if len(columns) != len(valuesList) {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Number of columns and values must match",
+		})
+		return
+	}
 
-		// Prepare the INSERT statement
-		insertSQL := fmt.Sprintf(
-			"INSERT INTO %s (%s) VALUES (%s)",
-			insertRequest.Table,
-			strings.Join(columns, ", "),
-			strings.Join(placeholders, ", "),
-		)
+	insertSQL := fmt.Sprintf(
+		"INSERT INTO %s (%s) VALUES (%s)",
+		insertRequest.Table,
+		insertRequest.Columns,
+		insertRequest.Values,
+	)
 
-		// Execute the statement
-		result, err := tx.Exec(insertSQL, values...)
-		if err != nil {
-			helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-				Success: false,
-				Message: fmt.Sprintf("Failed to insert data: %v", err),
-			})
-			return
-		}
-
-		affected, _ := result.RowsAffected()
-		rowsAffected += affected
+	result, err := tx.Exec(insertSQL)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: fmt.Sprintf("Failed to insert data: %v", err),
+		})
+		return
+	}
+	// Get the number of rows affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to get number of affected rows",
+		})
+		return
 	}
 
 	// Commit the transaction
@@ -1695,6 +1710,7 @@ func GetDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 		Data:    response,
 	})
 }
+
 func GetTableHandler(w http.ResponseWriter, r *http.Request) {
 	SESSION_KEY := config.GetValue("SESSION_KEY")
 	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
@@ -1790,6 +1806,102 @@ func GetTableHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func InsertTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+	tableName := vars["table"]
+
+	if tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid table name",
+		})
+		return
+	}
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	var insertRequest struct {
+		Values []map[string]interface{} `json:"values"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&insertRequest); err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid request format",
+		})
+		return
+	}
+
+	if len(insertRequest.Values) == 0 {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "At least one row of values is required",
+		})
+		return
+	}
+
+	tx, err := userDB.Begin()
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to start transaction",
+		})
+		return
+	}
+	defer tx.Rollback()
+
+	var rowsAffected int64
+	for _, rowData := range insertRequest.Values {
+		if len(rowData) == 0 {
+			continue
+		}
+		columns := make([]string, 0, len(rowData))
+		placeholders := make([]string, 0, len(rowData))
+		values := make([]interface{}, 0, len(rowData))
+		for col, val := range rowData {
+			columns = append(columns, col)
+			placeholders = append(placeholders, "?")
+			values = append(values, val)
+		}
+		insertSQL := fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES (%s)",
+			tableName,
+			strings.Join(columns, ", "),
+			strings.Join(placeholders, ", "),
+		)
+		result, err := tx.Exec(insertSQL, values...)
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+				Success: false,
+				Message: fmt.Sprintf("Failed to insert data: %v", err),
+			})
+			return
+		}
+		affected, _ := result.RowsAffected()
+		rowsAffected += affected
+	}
+
+	if err := tx.Commit(); err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to commit transaction",
+		})
+		return
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Message: fmt.Sprintf("Successfully inserted %d rows", rowsAffected),
+		Data: map[string]interface{}{
+			"rows_affected": rowsAffected,
+		},
+	})
+}
+
 func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	SESSION_KEY := config.GetValue("SESSION_KEY")
 	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
@@ -1877,59 +1989,628 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 		result = append(result, entry)
 	}
 
+	valuesArr := make([][]interface{}, 0, len(result))
+	for _, row := range result {
+		rowArr := make([]interface{}, len(columns))
+		for i, col := range columns {
+			rowArr[i] = row[col]
+		}
+		valuesArr = append(valuesArr, rowArr)
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"columns": columns,
+			"values":  valuesArr,
+		},
+	})
+}
+
+func authenticateAndGetDB(w http.ResponseWriter, r *http.Request, dbID string) (*sql.DB, int, string, bool) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Server configuration error",
+		})
+		return nil, 0, "", false
+	}
+
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, _ := store.Get(r, SESSION_KEY)
+	userID := session.Values["user_id"].(int)
+
+	dbIDInt, err := strconv.Atoi(dbID)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid database ID",
+		})
+		return nil, 0, "", false
+	}
+
+	var filePath string
+	var dbUserID int
+	err = SystemDB.QueryRow("SELECT file_path, user_id FROM databases WHERE id = ?", dbIDInt).Scan(&filePath, &dbUserID)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "Database not found",
+		})
+		return nil, 0, "", false
+	}
+
+	if dbUserID != userID {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "You don't have permission to access this database",
+		})
+		return nil, 0, "", false
+	}
+
+	userDB, err := sql.Open("sqlite3", filePath)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to open database",
+		})
+		return nil, 0, "", false
+	}
+
+	return userDB, userID, filePath, true
+}
+
+func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+	tableName := vars["table"]
+
+	if tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid table name",
+		})
+		return
+	}
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	var updateData map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid JSON data",
+		})
+		return
+	}
+
+	condition, ok := updateData["condition"].(map[string]any)
+	if !ok {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Missing condition for update",
+		})
+		return
+	}
+
+	data, ok := updateData["data"].(map[string]any)
+	if !ok {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Missing data for update",
+		})
+		return
+	}
+
+	var setClauses []string
+	var setValues []any
+	for key, value := range data {
+		setClauses = append(setClauses, fmt.Sprintf("%s = ?", key))
+		setValues = append(setValues, value)
+	}
+
+	var whereClauses []string
+	var whereValues []any
+	for key, value := range condition {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
+		whereValues = append(whereValues, value)
+	}
+
+	allValues := append(setValues, whereValues...)
+
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s",
+		tableName,
+		strings.Join(setClauses, ", "),
+		strings.Join(whereClauses, " AND "))
+
+	result, err := userDB.Exec(query, allValues...)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to update data: " + err.Error(),
+		})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Message: fmt.Sprintf("Updated %d row(s)", rowsAffected),
+		Data:    map[string]int64{"rows_affected": rowsAffected},
+	})
+}
+
+func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+	tableName := vars["table"]
+
+	if tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid table name",
+		})
+		return
+	}
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	var condition map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&condition); err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid JSON data",
+		})
+		return
+	}
+
+	var whereClauses []string
+	var whereValues []any
+	for key, value := range condition {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
+		whereValues = append(whereValues, value)
+	}
+
+	if len(whereClauses) == 0 {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "No condition provided for deletion",
+		})
+		return
+	}
+
+	query := fmt.Sprintf("DELETE FROM %s WHERE %s",
+		tableName,
+		strings.Join(whereClauses, " AND "))
+
+	result, err := userDB.Exec(query, whereValues...)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to delete data: " + err.Error(),
+		})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Message: fmt.Sprintf("Deleted %d row(s)", rowsAffected),
+		Data:    map[string]int64{"rows_affected": rowsAffected},
+	})
+}
+
+func GetTablesHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	rows, err := userDB.Query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to get tables",
+		})
+		return
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			continue
+		}
+		tables = append(tables, tableName)
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data:    tables,
+	})
+}
+
+func GetTableDataWithPaginationHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+	tableName := vars["table"]
+
+	if tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid table name",
+		})
+		return
+	}
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 50
+	}
+
+	offset := (page - 1) * limit
+
+	var totalCount int
+	countRow := userDB.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName))
+	_ = countRow.Scan(&totalCount)
+
+	query := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", tableName)
+	rows, err := userDB.Query(query, limit, offset)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Failed to get table data",
+		})
+		return
+	}
+	defer rows.Close()
+
+	columns, _ := rows.Columns()
+	result := make([]map[string]any, 0)
+	values := make([]any, len(columns))
+	valuePtrs := make([]any, len(columns))
+	for i := range values {
+		valuePtrs[i] = &values[i]
+	}
+	for rows.Next() {
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+		entry := make(map[string]any)
+		for i, col := range columns {
+			val := values[i]
+			switch v := val.(type) {
+			case []byte:
+				entry[col] = string(v)
+			default:
+				entry[col] = v
+			}
+		}
+		result = append(result, entry)
+	}
+
+	totalPages := (totalCount + limit - 1) / limit
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data: map[string]any{
+			"data":        result,
+			"page":        page,
+			"limit":       limit,
+			"total_count": totalCount,
+			"total_pages": totalPages,
+			"has_next":    page < totalPages,
+			"has_prev":    page > 1,
+		},
+	})
+}
+
+func GetFilteredTableDataHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+	tableName := vars["table"]
+
+	if tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid table name",
+		})
+		return
+	}
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	filters := make(map[string]string)
+	for key, values := range r.URL.Query() {
+		if key != "page" && key != "limit" && len(values) > 0 {
+			filters[key] = values[0]
+		}
+	}
+
+	if len(filters) == 0 {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "No filters provided",
+		})
+		return
+	}
+
+	var whereClauses []string
+	var whereValues []any
+	for key, value := range filters {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s LIKE ?", key))
+		whereValues = append(whereValues, "%"+value+"%")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE %s",
+		tableName,
+		strings.Join(whereClauses, " AND "))
+
+	rows, err := userDB.Query(query, whereValues...)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Failed to get filtered data: " + err.Error(),
+		})
+		return
+	}
+	defer rows.Close()
+
+	columns, _ := rows.Columns()
+	result := make([]map[string]any, 0)
+	values := make([]any, len(columns))
+	valuePtrs := make([]any, len(columns))
+	for i := range values {
+		valuePtrs[i] = &values[i]
+	}
+	for rows.Next() {
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+		entry := make(map[string]any)
+		for i, col := range columns {
+			val := values[i]
+			switch v := val.(type) {
+			case []byte:
+				entry[col] = string(v)
+			default:
+				entry[col] = v
+			}
+		}
+		result = append(result, entry)
+	}
+
 	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
 		Success: true,
 		Data:    result,
 	})
 }
 
-// The following handlers are stubs for your routes. Implement as needed.
-
-func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
-	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
-		Success: false,
-		Message: "UpdateTableDataHandler not implemented",
-	})
-}
-
-func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
-	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
-		Success: false,
-		Message: "DeleteTableDataHandler not implemented",
-	})
-}
-
-func GetTablesHandler(w http.ResponseWriter, r *http.Request) {
-	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
-		Success: false,
-		Message: "GetTablesHandler not implemented",
-	})
-}
-
-func GetTableDataWithPaginationHandler(w http.ResponseWriter, r *http.Request) {
-	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
-		Success: false,
-		Message: "GetTableDataWithPaginationHandler not implemented",
-	})
-}
-
-func GetFilteredTableDataHandler(w http.ResponseWriter, r *http.Request) {
-	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
-		Success: false,
-		Message: "GetFilteredTableDataHandler not implemented",
-	})
-}
-
 func GetSortedTableDataHandler(w http.ResponseWriter, r *http.Request) {
-	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
-		Success: false,
-		Message: "GetSortedTableDataHandler not implemented",
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+	tableName := vars["table"]
+
+	if tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid table name",
+		})
+		return
+	}
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	sortBy := r.URL.Query().Get("sort_by")
+	sortOrder := r.URL.Query().Get("sort_order")
+
+	if sortBy == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Missing sort_by parameter",
+		})
+		return
+	}
+
+	if sortOrder != "ASC" && sortOrder != "DESC" {
+		sortOrder = "ASC"
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY %s %s", tableName, sortBy, sortOrder)
+	rows, err := userDB.Query(query)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Failed to get sorted data: " + err.Error(),
+		})
+		return
+	}
+	defer rows.Close()
+
+	columns, _ := rows.Columns()
+	result := make([]map[string]any, 0)
+	values := make([]any, len(columns))
+	valuePtrs := make([]any, len(columns))
+	for i := range values {
+		valuePtrs[i] = &values[i]
+	}
+	for rows.Next() {
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+		entry := make(map[string]any)
+		for i, col := range columns {
+			val := values[i]
+			switch v := val.(type) {
+			case []byte:
+				entry[col] = string(v)
+			default:
+				entry[col] = v
+			}
+		}
+		result = append(result, entry)
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data:    result,
 	})
 }
 
 func GetSearchedTableDataHandler(w http.ResponseWriter, r *http.Request) {
-	helper.RespondWithJSON(w, http.StatusNotImplemented, ApiResponse{
-		Success: false,
-		Message: "GetSearchedTableDataHandler not implemented",
+	vars := mux.Vars(r)
+	dbID := vars["id"]
+	tableName := vars["table"]
+
+	if tableName == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid table name",
+		})
+		return
+	}
+
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	if !ok {
+		return
+	}
+	defer userDB.Close()
+
+	searchTerm := r.URL.Query().Get("q")
+	searchColumns := r.URL.Query()["columns"]
+
+	if searchTerm == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Missing search term (q parameter)",
+		})
+		return
+	}
+
+	if len(searchColumns) == 0 {
+		pragmaRows, err := userDB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+				Success: false,
+				Message: "Failed to get table info",
+			})
+			return
+		}
+		defer pragmaRows.Close()
+
+		for pragmaRows.Next() {
+			var cid int
+			var name, dataType string
+			var notNull, pk int
+			var defaultValue any
+			if err := pragmaRows.Scan(&cid, &name, &dataType, &notNull, &defaultValue, &pk); err != nil {
+				continue
+			}
+			if strings.Contains(strings.ToUpper(dataType), "TEXT") ||
+				strings.Contains(strings.ToUpper(dataType), "VARCHAR") ||
+				strings.Contains(strings.ToUpper(dataType), "CHAR") {
+				searchColumns = append(searchColumns, name)
+			}
+		}
+	}
+
+	if len(searchColumns) == 0 {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "No searchable columns found",
+		})
+		return
+	}
+
+	var searchClauses []string
+	var searchValues []any
+	for _, column := range searchColumns {
+		searchClauses = append(searchClauses, fmt.Sprintf("%s LIKE ?", column))
+		searchValues = append(searchValues, "%"+searchTerm+"%")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE %s",
+		tableName,
+		strings.Join(searchClauses, " OR "))
+
+	rows, err := userDB.Query(query, searchValues...)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Failed to search data: " + err.Error(),
+		})
+		return
+	}
+	defer rows.Close()
+
+	columns, _ := rows.Columns()
+	result := make([]map[string]any, 0)
+	values := make([]any, len(columns))
+	valuePtrs := make([]any, len(columns))
+	for i := range values {
+		valuePtrs[i] = &values[i]
+	}
+	for rows.Next() {
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+		entry := make(map[string]any)
+		for i, col := range columns {
+			val := values[i]
+			switch v := val.(type) {
+			case []byte:
+				entry[col] = string(v)
+			default:
+				entry[col] = v
+			}
+		}
+		result = append(result, entry)
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Data: map[string]any{
+			"results":        result,
+			"search_term":    searchTerm,
+			"search_columns": searchColumns,
+			"count":          len(result),
+		},
 	})
 }

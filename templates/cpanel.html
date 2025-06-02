@@ -317,6 +317,7 @@
             padding: 12px;
             background: #2d2d2d;
             border-top: 1px solid #444;
+            width: 100%;
         }
         
         .filter-bar {
@@ -685,8 +686,11 @@
                                     <template x-for="(row, index) in filteredTableData" :key="index">
                                         <tr>
                                             <td class="row-number" x-text="index + 1"></td>
-                                            <template x-for="column in tableColumns" :key="column">
-                                                <td x-text="row[column] !== null ? row[column] : 'NULL'" :title="row[column]"></td>
+                                            <template x-for="(column, colIndex) in tableColumns" :key="column">
+                                                <td
+                                                    x-text="Array.isArray(row) ? (row[colIndex] !== null ? row[colIndex] : 'NULL') : (row[column] !== null ? row[column] : 'NULL')"
+                                                    :title="Array.isArray(row) ? row[colIndex] : row[column]"
+                                                ></td>
                                             </template>
                                         </tr>
                                     </template>
@@ -1151,8 +1155,9 @@
                     this.loading = true;
                     try {
                         const result = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data`);
-                        this.tableData = result.data || [];
-                        this.tableColumns = result.columns || [];
+                        console.log(result.data)
+                        this.tableData = result.data.values || [];
+                        this.tableColumns = result.data.columns || [];
                     } catch (error) {
                         this.setMessage('Failed to load table data', 'error');
                     }
