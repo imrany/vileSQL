@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ .Title }}</title>
     <meta http-equiv="X-UA-Compatible" content="IE=7">
-    <meta name="description" content="Host and manage your SQLite databases in the cloud with unparalleled speed and simplicity">
+    <meta name="description"
+        content="Host and manage your SQLite databases in the cloud with unparalleled speed and simplicity">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="keywords" content="SQLite, SQL, databases, cloud, hosting, edge computing">
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
@@ -17,27 +19,27 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1a1a1a;
             min-height: 100vh;
             color: #e5e5e5;
         }
-        
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .card {
             background: #2d2d2d;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
-        
+
         .header {
             background: #333;
             color: white;
@@ -47,7 +49,7 @@
             align-items: center;
             border-bottom: 1px solid #444;
         }
-        
+
         .header h1 {
             display: flex;
             align-items: center;
@@ -55,7 +57,7 @@
             font-size: 18px;
             font-weight: 500;
         }
-        
+
         .btn {
             padding: 6px 12px;
             border: none;
@@ -68,54 +70,54 @@
             transition: all 0.2s;
             text-decoration: none;
         }
-        
+
         .btn-primary {
             background: #0078d4;
             color: white;
         }
-        
+
         .btn-primary:hover {
             background: #106ebe;
         }
-        
+
         .btn-danger {
             background: #d83b01;
             color: white;
         }
-        
+
         .btn-danger:hover {
             background: #a13100;
         }
-        
+
         .btn-secondary {
             background: #5a5a5a;
             color: white;
         }
-        
+
         .btn-secondary:hover {
             background: #4a4a4a;
         }
-        
+
         .btn-success {
             background: #107c10;
             color: white;
         }
-        
+
         .btn-success:hover {
             background: #0e6b0e;
         }
-        
+
         .form-group {
             margin-bottom: 16px;
         }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 4px;
             font-weight: 500;
             color: #e5e5e5;
         }
-        
+
         .form-control {
             width: 100%;
             padding: 8px;
@@ -125,13 +127,13 @@
             background: #404040;
             color: #fff;
         }
-        
+
         .form-control:focus {
             outline: none;
             border-color: #0078d4;
             box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.3);
         }
-        
+
         .alert {
             padding: 8px 12px;
             border-radius: 4px;
@@ -141,38 +143,38 @@
             gap: 6px;
             font-size: 12px;
         }
-        
+
         .alert-success {
             background: #dff6dd;
             color: #0f5132;
             border: 1px solid #badbcc;
         }
-        
+
         .alert-error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c2c7;
         }
-        
+
         .main-layout {
             display: flex;
             height: calc(100vh - 100px);
         }
-        
+
         .sidebar {
             width: 250px;
             background: #2d2d2d;
             border-right: 1px solid #444;
             overflow-y: auto;
         }
-        
+
         .content-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #1a1a1a;
         }
-        
+
         .toolbar {
             padding: 12px;
             background: #2d2d2d;
@@ -181,11 +183,11 @@
             align-items: center;
             gap: 8px;
         }
-        
+
         .database-list {
             padding: 12px;
         }
-        
+
         .database-item {
             background: #333;
             border: 1px solid #444;
@@ -196,22 +198,22 @@
             transition: all 0.2s;
             font-size: 12px;
         }
-        
+
         .database-item:hover {
             background: #3a3a3a;
             border-color: #0078d4;
         }
-        
+
         .database-item.active {
             /* background: #0078d4; */
             /* color: white; */
             border-color: #0078d4;
         }
-        
+
         .tables-section {
             margin-top: 16px;
         }
-        
+
         .table-item {
             background: #404040;
             border-radius: 4px;
@@ -224,21 +226,21 @@
             gap: 6px;
             transition: all 0.2s;
         }
-        
+
         .table-item:hover {
             background: #4a4a4a;
         }
-        
+
         .table-item.active {
             background: #0078d4;
             color: white;
         }
-        
+
         .table-icon {
             width: 12px;
             height: 12px;
         }
-        
+
         .query-editor {
             background: #1e1e1e;
             color: #d4d4d4;
@@ -250,22 +252,22 @@
             min-height: 120px;
             resize: vertical;
             width: 100%;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);  
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
         }
-        
+
         .data-table-container {
             flex: 1;
             overflow: auto;
             background: #1a1a1a;
         }
-        
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 11px;
             background: #2d2d2d;
         }
-        
+
         .data-table th {
             background: #404040;
             color: #e5e5e5;
@@ -278,11 +280,11 @@
             top: 0;
             z-index: 10;
         }
-        
+
         .data-table th:last-child {
             border-right: none;
         }
-        
+
         .data-table td {
             padding: 6px 12px;
             border-bottom: 1px solid #444;
@@ -293,19 +295,19 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        
+
         .data-table td:last-child {
             border-right: none;
         }
-        
+
         .data-table tr:nth-child(even) {
             background: #252525;
         }
-        
+
         .data-table tr:hover {
             background: #333;
         }
-        
+
         .row-number {
             background: #333 !important;
             color: #888;
@@ -314,14 +316,14 @@
             width: 50px;
             min-width: 50px;
         }
-        
+
         .query-panel {
             padding: 12px;
             background: #2d2d2d;
             border-top: 1px solid #444;
             width: 100%;
         }
-        
+
         .filter-bar {
             padding: 8px 12px;
             background: #333;
@@ -331,7 +333,7 @@
             gap: 8px;
             font-size: 11px;
         }
-        
+
         .filter-input {
             background: #404040;
             border: 1px solid #555;
@@ -340,7 +342,7 @@
             color: #fff;
             font-size: 11px;
         }
-        
+
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -351,20 +353,20 @@
             text-align: center;
             padding: 40px;
         }
-        
+
         .loading-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 100;
         }
-        
+
         .spinner {
             width: 24px;
             height: 24px;
@@ -373,24 +375,26 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
-        
+
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
-        
+
         .modal-content {
             background: #2d2d2d;
             border-radius: 8px;
@@ -401,7 +405,7 @@
             overflow-y: auto;
             border: 1px solid #444;
         }
-        
+
         .auth-container {
             max-width: 400px;
             margin: 100px auto;
@@ -409,12 +413,12 @@
             border-radius: 8px;
             border: 1px solid #444;
         }
-        
+
         .tab-nav {
             display: flex;
             border-bottom: 1px solid #444;
         }
-        
+
         .tab-btn {
             padding: 12px 20px;
             border: none;
@@ -424,28 +428,28 @@
             color: #888;
             font-size: 12px;
         }
-        
+
         .tab-btn.active {
             color: #0078d4;
             border-bottom-color: #0078d4;
         }
-        
+
         .flex {
             display: flex;
         }
-        
+
         .gap-2 {
             gap: 8px;
         }
-        
+
         .hidden {
             display: none;
         }
-        
+
         .text-center {
             text-align: center;
         }
-        
+
         .section-header {
             font-size: 11px;
             font-weight: 600;
@@ -456,6 +460,7 @@
         }
     </style>
 </head>
+
 <body x-data="sqlitePanel()" x-init="init()">
     <!-- Authentication Screen -->
     <div x-show="!isAuthenticated && !sharedDb" class="auth-container">
@@ -465,12 +470,13 @@
                 VileSQL
             </h1>
         </div>
-        
+
         <div style="padding: 20px;">
-            <div x-show="message.text" class="alert" :class="message.type === 'error' ? 'alert-error' : 'alert-success'">
+            <div x-show="message.text" class="alert"
+                :class="message.type === 'error' ? 'alert-error' : 'alert-success'">
                 <span x-text="message.text"></span>
             </div>
-            
+
             <div class="tab-nav">
                 <button class="tab-btn" :class="authMode === 'login' ? 'active' : ''" @click="authMode = 'login'">
                     Login
@@ -479,7 +485,7 @@
                     Register
                 </button>
             </div>
-            
+
             <form @submit.prevent="authMode === 'login' ? login() : register()" style="padding: 20px 0;">
                 <template x-if="authMode === 'login'">
                     <div>
@@ -516,7 +522,7 @@
                     <span x-text="loading ? 'Processing...' : (authMode === 'login' ? 'Login' : 'Register')"></span>
                 </button>
             </form>
-            
+
             <div style="border-top: 1px solid #444; padding-top: 16px;">
                 <div class="section-header">Access Shared Database</div>
                 <div class="flex gap-2">
@@ -536,10 +542,11 @@
             <div class="header">
                 <h1>
                     <!-- database icon -->
-                    <svg width="26" height="26" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
-                        <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899"/>
-                        <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8"/>
-                        <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6"/>
+                    <svg width="26" height="26" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899" />
+                        <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8" />
+                        <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6" />
                     </svg>
                     <span x-text="sharedDb ? `Shared: ${sharedDb.name}` : 'VileSQL Database Manager'"></span>
                 </h1>
@@ -551,44 +558,53 @@
                         <i data-lucide="log-out"></i>
                         Logout
                     </button>
-                    <button x-show="sharedDb && !isAuthenticated" class="btn btn-secondary" @click="sharedDb = null; sharedToken = ''">
+                    <button x-show="sharedDb && !isAuthenticated" class="btn btn-secondary"
+                        @click="sharedDb = null; sharedToken = ''">
                         <i data-lucide="x"></i>
                         Close
                     </button>
                 </div>
             </div>
-            
-            <div x-show="message.text" class="alert" :class="message.type === 'error' ? 'alert-error' : 'alert-success'" style="margin: 12px;">
+
+            <div x-show="message.text" class="alert" :class="message.type === 'error' ? 'alert-error' : 'alert-success'"
+                style="margin: 12px;">
                 <span x-text="message.text"></span>
             </div>
-            
+
             <div class="main-layout">
                 <!-- Sidebar -->
                 <div class="sidebar">
                     <div class="database-list">
                         <div class="section-header">Databases</div>
-                        
+
                         <template x-if="sharedDb">
                             <div class="database-item active" @click="selectDatabase(sharedDb)">
                                 <div style="font-weight: 500;" x-text="sharedDb.name"></div>
                                 <div style="font-size: 10px; color: #888;">Shared Database</div>
                             </div>
                         </template>
-                        
+
                         <template x-if="isAuthenticated">
                             <div>
-                                <div x-show="databases.length === 0" style="color: #888; font-size: 11px; padding: 20px; text-align: center;">
+                                <div x-show="databases.length === 0"
+                                    class="text-[#888] text-[11px] flex items-center justify-center h-[80px]"
+                                >
                                     No databases found
                                 </div>
-                                
+
                                 <template x-for="db in databases" :key="db.id">
-                                    <div class="database-item" :class="selectedDb && selectedDb.id === db.id ? 'active' : ''" @click="selectDatabase(db)">
+                                    <div class="database-item"
+                                        :class="selectedDb && selectedDb.id === db.id ? 'active' : ''"
+                                        @click="selectDatabase(db)">
                                         <div style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
                                             <!-- Pink SQL Database SVG Icon -->
-                                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
-                                                <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899"/>
-                                                <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8"/>
-                                                <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6"/>
+                                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
+                                                style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
+                                                <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899" />
+                                                <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899"
+                                                    fill-opacity="0.8" />
+                                                <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899"
+                                                    fill-opacity="0.6" />
                                             </svg>
                                             <span x-text="db.name"></span>
                                         </div>
@@ -597,37 +613,41 @@
                                         </div>
                                     </div>
                                 </template>
-                                
-                                <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" @click="showCreateModal = true">
+
+                                <button class="btn btn-primary" style="width: 100%; margin-top: 8px;"
+                                    @click="showCreateModal = true">
                                     <!-- plus icon -->
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff"/>
-                                        <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff"/>
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                        style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff" />
+                                        <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff" />
                                     </svg>
                                     New Database
                                 </button>
                             </div>
                         </template>
                     </div>
-                    
+
                     <!-- Tables Section -->
                     <div x-show="selectedDb && tables.length > 0" class="tables-section" style="padding: 0 12px;">
                         <div class="section-header">Tables</div>
                         <template x-for="table in tables" :key="table">
-                            <div class="table-item" :class="selectedTable === table ? 'active' : ''" @click="selectTable(table)">
+                            <div class="table-item" :class="selectedTable === table ? 'active' : ''"
+                                @click="selectTable(table)">
                                 <!-- Table SVG Icon -->
-                                <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa"/>
-                                    <rect x="1" y="5" width="14" height="1" fill="#2563eb"/>
-                                    <rect x="1" y="8" width="14" height="1" fill="#2563eb"/>
-                                    <rect x="1" y="11" width="14" height="1" fill="#2563eb"/>
+                                <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
+                                    <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
+                                    <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
+                                    <rect x="1" y="11" width="14" height="1" fill="#2563eb" />
                                 </svg>
                                 <span x-text="table"></span>
                             </div>
                         </template>
                     </div>
                 </div>
-                
+
                 <!-- Content Area -->
                 <div class="content-area" style="position: relative;">
                     <template x-if="loading">
@@ -635,27 +655,29 @@
                             <div class="spinner"></div>
                         </div>
                     </template>
-                    
+
                     <!-- Toolbar -->
                     <div class="toolbar">
                         <template x-if="selectedDb">
                             <div class="flex gap-2">
                                 <button class="btn btn-primary" @click="showTableModal = true">
                                     <!-- Table SVG Icon -->
-                                    <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa"/>
-                                        <rect x="1" y="5" width="14" height="1" fill="#2563eb"/>
-                                        <rect x="1" y="8" width="14" height="1" fill="#2563eb"/>
-                                        <rect x="1" y="11" width="14" height="1" fill="#2563eb"/>
+                                    <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
+                                        <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
+                                        <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
+                                        <rect x="1" y="11" width="14" height="1" fill="#2563eb" />
                                     </svg>
                                     New Table
                                 </button>
                                 <template x-if="selectedTable">
-                                    <button  class="btn btn-success" @click="showInsertModal = true">
+                                    <button class="btn btn-success" @click="showInsertModal = true">
                                         <!-- plus icon -->
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff"/>
-                                            <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff"/>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff" />
+                                            <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff" />
                                         </svg>
                                         Insert Data
                                     </button>
@@ -664,19 +686,28 @@
                                 <template x-if="isAuthenticated && selectedDb">
                                     <button class="btn btn-secondary" @click="shareDatabase(selectedDb)">
                                         <!-- lock icon -->
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg" x-show="!selectedDb.is_shared">
-                                            <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff" fill-opacity="0.15"/>
-                                            <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff" stroke-width="1"/>
-                                            <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff"/>
-                                            <path d="M5 7V5a3 3 0 1 1 6 0v2" stroke="#fff" stroke-width="1" fill="none"/>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg"
+                                            x-show="!selectedDb.is_shared">
+                                            <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff"
+                                                fill-opacity="0.15" />
+                                            <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff"
+                                                stroke-width="1" />
+                                            <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff" />
+                                            <path d="M5 7V5a3 3 0 1 1 6 0v2" stroke="#fff" stroke-width="1"
+                                                fill="none" />
                                         </svg>
                                         <!-- unlock icon -->
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg" x-show="selectedDb.is_shared">
-                                            <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff" fill-opacity="0.15"/>
-                                            <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff" stroke-width="1"/>
-                                            <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff"/>
-                                            <path d="M8 7V5a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1" fill="none"/>
-                                            <circle cx="12" cy="5" r="1" fill="#fff"/>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg"
+                                            x-show="selectedDb.is_shared">
+                                            <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff"
+                                                fill-opacity="0.15" />
+                                            <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff"
+                                                stroke-width="1" />
+                                            <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff" />
+                                            <path d="M8 7V5a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1" fill="none" />
+                                            <circle cx="12" cy="5" r="1" fill="#fff" />
                                         </svg>
                                         <span x-text="selectedDb.is_shared ? 'Unshare' : 'Share'"></span>
                                     </button>
@@ -685,84 +716,118 @@
                                 <template x-if="isAuthenticated && selectedTable">
                                     <button class="btn btn-success" @click="showInsertModal = true">
                                         <!-- plus icon -->
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff"/>
-                                            <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff"/>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff" />
+                                            <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff" />
                                         </svg>
                                         Delete Table
                                     </button>
                                 </template>
 
                                 <template x-if="isAuthenticated && selectedDb && !selectedTable">
-                                    <button class="btn btn-danger" @click="deleteDatabase(selectedDb.id)">
+                                    <button class="btn btn-danger" @click="showDeleteModal = true">
                                         <!-- trash icon -->
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="3" y="6" width="10" height="7" rx="2" fill="#fff" fill-opacity="0.15"/>
-                                            <rect x="3" y="6" width="10" height="7" rx="2" stroke="#fff" stroke-width="1"/>
-                                            <rect x="7" y="9" width="2" height="3" rx="1" fill="#fff"/>
-                                            <rect x="5" y="3" width="6" height="2" rx="1" fill="#fff"/>
-                                            <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff" fill-opacity="0.5"/>
-                                            <rect x="2" y="5" width="12" height="1" fill="#fff"/>
-                                            <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01" stroke-width="1.5"/>
-                                            <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01" stroke-width="1.5"/>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="3" y="6" width="10" height="7" rx="2" fill="#fff"
+                                                fill-opacity="0.15" />
+                                            <rect x="3" y="6" width="10" height="7" rx="2" stroke="#fff"
+                                                stroke-width="1" />
+                                            <rect x="7" y="9" width="2" height="3" rx="1" fill="#fff" />
+                                            <rect x="5" y="3" width="6" height="2" rx="1" fill="#fff" />
+                                            <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff"
+                                                fill-opacity="0.5" />
+                                            <rect x="2" y="5" width="12" height="1" fill="#fff" />
+                                            <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01" stroke-width="1.5" />
+                                            <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01" stroke-width="1.5" />
                                         </svg>
                                         Delete DB
                                     </button>
                                 </template>
+
+                                <!-- Delete Database Modal -->
+                                <div x-show="showDeleteModal" class="modal" @click.self="showDeleteModal = false">
+                                    <div class="modal-content">
+                                        <h3 style="margin-bottom: 16px;">Are you sure you want to delete the database 
+                                            <strong class="text-[#2563eb]" x-text="selectedDb ? selectedDb.name : ''"></strong>? This action
+                                                cannot be undone.
+                                        </h3>
+                                        <form @submit.prevent="deleteDatabase(selectedDb.id)">
+                                            <div class="form-group">
+                                                <label class="text-sm mt-4">Type the database name to confirm</label>
+                                                <input type="text" class="form-control" x-model="deleteDbName" required
+                                                    placeholder="Enter database name to confirm">
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button type="submit" class="btn btn-danger"
+                                                    :disabled="deleteDbName !== (selectedDb ? selectedDb.name : '') || loading">
+                                                    <span x-text="loading ? 'Deleting...' : 'Delete'"></span>
+                                                </button>
+                                                <button type="button" class="btn btn-secondary"
+                                                    @click="showDeleteModal = false">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </template>
                     </div>
-                    
+
                     <!-- Filter Bar -->
                     <div x-show="selectedTable && tableData.length > 0" class="filter-bar">
                         <label>Filter:</label>
                         <input type="text" class="filter-input" x-model="filterText" placeholder="Search in table...">
-                        <span style="margin-left: auto; color: #888;" x-text="`${filteredTableData.length} rows`"></span>
+                        <span style="margin-left: auto; color: #888;"
+                            x-text="`${filteredTableData.length} rows`"></span>
                     </div>
-                    
+
                     <!-- Data Table -->
                     <div class="data-table-container">
                         <template x-if="!selectedDb">
                             <div class="empty-state">
                                 <!-- database icon -->
-                                <svg width="48" height="48" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
-                                    <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899"/>
-                                    <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8"/>
-                                    <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6"/>
+                                <svg width="48" height="48" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899" />
+                                    <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8" />
+                                    <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6" />
                                 </svg>
                                 <h3>Select a database to get started</h3>
                                 <p>Choose a database from the sidebar to explore its contents</p>
                             </div>
                         </template>
-                        
+
                         <template x-if="selectedDb && !selectedTable">
                             <div class="empty-state">
                                 <!-- table icon -->
-                                <svg width="48" height="48" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa"/>
-                                    <rect x="1" y="5" width="14" height="1" fill="#2563eb"/>
-                                    <rect x="1" y="8" width="14" height="1" fill="#2563eb"/>
-                                    <rect x="1" y="11" width="14" height="1" fill="#2563eb"/>
+                                <svg width="48" height="48" viewBox="0 0 16 16" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
+                                    <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
+                                    <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
+                                    <rect x="1" y="11" width="14" height="1" fill="#2563eb" />
                                 </svg>
                                 <h3>Select a table to view data</h3>
                                 <p>Choose a table from the sidebar or create a new one</p>
                             </div>
                         </template>
-                        
+
                         <template x-if="selectedTable && tableData.length === 0">
                             <div class="empty-state">
                                 <!-- table icon -->
-                                <svg width="48" height="48" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa"/>
-                                    <rect x="1" y="5" width="14" height="1" fill="#2563eb"/>
-                                    <rect x="1" y="8" width="14" height="1" fill="#2563eb"/>
-                                    <rect x="1" y="11" width="14" height="1" fill="#2563eb"/>
+                                <svg width="48" height="48" viewBox="0 0 16 16" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
+                                    <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
+                                    <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
+                                    <rect x="1" y="11" width="14" height="1" fill="#2563eb" />
                                 </svg>
                                 <h3>No data in this table</h3>
                                 <p>This table is empty. Add some data to see it here.</p>
                             </div>
                         </template>
-                        
+
                         <template x-if="selectedTable && tableData.length > 0">
                             <table class="data-table">
                                 <thead>
@@ -778,10 +843,8 @@
                                         <tr>
                                             <td class="row-number" x-text="index + 1"></td>
                                             <template x-for="(column, colIndex) in tableColumns" :key="column">
-                                                <td
-                                                    x-text="Array.isArray(row) ? (row[colIndex] !== null ? row[colIndex] : 'NULL') : (row[column] !== null ? row[column] : 'NULL')"
-                                                    :title="Array.isArray(row) ? row[colIndex] : row[column]"
-                                                ></td>
+                                                <td x-text="Array.isArray(row) ? (row[colIndex] !== null ? row[colIndex] : 'NULL') : (row[column] !== null ? row[column] : 'NULL')"
+                                                    :title="Array.isArray(row) ? row[colIndex] : row[column]"></td>
                                             </template>
                                         </tr>
                                     </template>
@@ -789,28 +852,32 @@
                             </table>
                         </template>
                     </div>
-                    
+
                     <!-- Query Panel -->
-                    <div class="query-panel">
-                        <div class="form-group">
-                            <label>SQL Query</label>
-                            <textarea class="query-editor" x-model="queryText" placeholder="Enter your SQL query here..."></textarea>
+                    <template x-if="selectedDb">
+                        <div class="query-panel">
+                            <div class="form-group">
+                                <label>SQL Query</label>
+                                <textarea class="query-editor" x-model="queryText"
+                                    placeholder="Enter your SQL query here..."></textarea>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-primary" @click="executeQuery()"
+                                    :disabled="!queryText.trim() || loading">
+                                    <i data-lucide="play"></i>
+                                    Execute
+                                </button>
+                                <button class="btn btn-secondary" @click="queryText = ''">
+                                    Clear
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button class="btn btn-primary" @click="executeQuery()" :disabled="!queryText.trim() || loading">
-                                <i data-lucide="play"></i>
-                                Execute
-                            </button>
-                            <button class="btn btn-secondary" @click="queryText = ''">
-                                Clear
-                            </button>
-                        </div>
-                    </div>
+                    </template>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Create Database Modal -->
     <div x-show="showCreateModal" class="modal" @click.self="showCreateModal = false">
         <div class="modal-content">
@@ -818,7 +885,8 @@
             <form @submit.prevent="createDatabase()">
                 <div class="form-group">
                     <label>Database Name</label>
-                    <input type="text" class="form-control" x-model="newDbName" required placeholder="Enter database name">
+                    <input type="text" class="form-control" x-model="newDbName" required
+                        placeholder="Enter database name">
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary" :disabled="!newDbName.trim() || loading">
@@ -829,7 +897,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Create Table Modal -->
     <div x-show="showTableModal" class="modal" @click.self="showTableModal = false">
         <div class="modal-content">
@@ -837,23 +905,28 @@
             <form @submit.prevent="createTable()">
                 <div class="form-group">
                     <label>Table Name</label>
-                    <input type="text" class="form-control" x-model="newTableForm.name" required placeholder="Enter table name">
+                    <input type="text" class="form-control" x-model="newTableForm.name" required
+                        placeholder="Enter table name">
                 </div>
                 <div class="form-group">
                     <label>Columns (SQL format)</label>
-                    <textarea class="form-control" x-model="newTableForm.columns" required placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE" rows="4"></textarea>
-                    <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT</small>
+                    <textarea class="form-control" x-model="newTableForm.columns" required
+                        placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE" rows="4"></textarea>
+                    <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT NOT NULL,
+                        email TEXT</small>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="btn btn-primary" :disabled="!newTableForm.name.trim() || !newTableForm.columns.trim() || loading">
+                    <button type="submit" class="btn btn-primary"
+                        :disabled="!newTableForm.name.trim() || !newTableForm.columns.trim() || loading">
                         <span x-text="loading ? 'Creating...' : 'Create Table'"></span>
                     </button>
-                    <button type="button" class="btn btn-secondary" @click="showTableModal = false; resetTableForm()">Cancel</button>
+                    <button type="button" class="btn btn-secondary"
+                        @click="showTableModal = false; resetTableForm()">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <!-- Insert Data Modal -->
     <div x-show="showInsertModal" class="modal" @click.self="showInsertModal = false">
         <div class="modal-content">
@@ -861,21 +934,26 @@
             <form @submit.prevent="insertData()">
                 <div class="form-group">
                     <label>Table Name</label>
-                    <input type="text" class="form-control" x-model="insertForm.table" required placeholder="Enter table name">
+                    <input type="text" class="form-control" x-model="insertForm.table" required
+                        placeholder="Enter table name">
                 </div>
                 <div class="form-group">
                     <label>Columns (comma-separated)</label>
-                    <input type="text" class="form-control" x-model="insertForm.columns" required placeholder="name, email, age">
+                    <input type="text" class="form-control" x-model="insertForm.columns" required
+                        placeholder="name, email, age">
                 </div>
                 <div class="form-group">
                     <label>Values (comma-separated)</label>
-                    <input type="text" class="form-control" x-model="insertForm.values" required placeholder="'John Doe', 'john@example.com', 30">
+                    <input type="text" class="form-control" x-model="insertForm.values" required
+                        placeholder="'John Doe', 'john@example.com', 30">
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="btn btn-success" :disabled="!insertForm.table.trim() || !insertForm.columns.trim() || !insertForm.values.trim() || loading">
+                    <button type="submit" class="btn btn-success"
+                        :disabled="!insertForm.table.trim() || !insertForm.columns.trim() || !insertForm.values.trim() || loading">
                         <span x-text="loading ? 'Inserting...' : 'Insert Data'"></span>
                     </button>
-                    <button type="button" class="btn btn-secondary" @click="showInsertModal = false; resetInsertForm()">Cancel</button>
+                    <button type="button" class="btn btn-secondary"
+                        @click="showInsertModal = false; resetInsertForm()">Cancel</button>
                 </div>
             </form>
         </div>
@@ -890,11 +968,11 @@
                 user: null,
                 authFormRegister: { username: '', password: '', email: '' },
                 authFormLogin: { username: '', password: '' },
-                
+
                 // UI state
                 loading: false,
                 message: { text: '', type: '' },
-                
+
                 // Database state
                 databases: [],
                 selectedDb: null,
@@ -903,35 +981,38 @@
                 tableData: [],
                 tableColumns: [],
                 filterText: '',
-                
+
                 // Modals
                 showCreateModal: false,
                 showTableModal: false,
                 showInsertModal: false,
-                
+                showDeleteModal: false,
+                deleteDbName: '',
+                sharedDbName: '',
+
                 // Forms
                 newDbName: '',
                 newTableForm: { name: '', columns: '' },
                 insertForm: { table: '', columns: '', values: '' },
-                
+
                 // Query state
                 queryText: '',
                 queryResults: null,
-                
+
                 // Shared database state
                 sharedToken: '',
                 sharedDb: null,
-                
+
                 init() {
                     // Initialize Lucide icons
                     if (typeof lucide !== 'undefined') {
                         lucide.createIcons();
                     }
-                    
+
                     // Check if user is already authenticated
                     this.checkAuth();
                 },
-                
+
                 // Utility methods
                 setMessage(text, type = 'success') {
                     this.message = { text, type };
@@ -939,7 +1020,7 @@
                         this.message = { text: '', type: '' };
                     }, 5000);
                 },
-                
+
                 async apiCall(url, options = {}) {
                     try {
                         const response = await fetch(url, {
@@ -950,12 +1031,12 @@
                             },
                             ...options
                         });
-                        
+
                         if (!response.ok) {
                             const errorText = await response.text();
                             throw new Error(errorText || `HTTP ${response.status}`);
                         }
-                        
+
                         const contentType = response.headers.get('content-type');
                         if (contentType && contentType.includes('application/json')) {
                             return await response.json();
@@ -965,15 +1046,14 @@
                         throw error;
                     }
                 },
-                
+
                 // Authentication methods
                 async checkAuth() {
                     try {
-                        const result = await this.apiCall('/api/databases');
-                        this.isAuthenticated = true;
-                        this.databases = result.data || [];
-                        this.user = result?.user || null;
-                        console.log(result.data)
+                        const result = await this.apiCall('/api/authenticate');
+                        this.user = result?.data.user.username || null;
+                        this.isAuthenticated = result?.data.authenticated ||  false;
+                        // console.log(result.data)
                         if (this.isAuthenticated) {
                             this.loadDatabases();
                         }
@@ -982,10 +1062,10 @@
                         this.user = null;
                     }
                 },
-                
+
                 async register() {
                     if (!this.authFormRegister.username.trim() || !this.authFormRegister.password.trim() || !this.authFormRegister.email.trim()) return;
-                    
+
                     this.loading = true;
                     try {
                         await this.apiCall('/api/register', {
@@ -1000,17 +1080,17 @@
                     }
                     this.loading = false;
                 },
-                
+
                 async login() {
                     if (!this.authFormLogin.username.trim() || !this.authFormLogin.password.trim()) return;
-                    
+
                     this.loading = true;
                     try {
                         const result = await this.apiCall('/api/login', {
                             method: 'POST',
                             body: JSON.stringify(this.authFormLogin)
                         });
-                        
+
                         this.isAuthenticated = true;
                         this.user = result?.user || this.authFormLogin.username;
                         this.setMessage('Login successful!', 'success');
@@ -1021,7 +1101,7 @@
                     }
                     this.loading = false;
                 },
-                
+
                 async logout() {
                     try {
                         await this.apiCall('/api/logout', { method: 'POST' });
@@ -1035,7 +1115,7 @@
                         this.setMessage(error.message, 'error');
                     }
                 },
-                
+
                 // Database management methods
                 async loadDatabases() {
                     try {
@@ -1045,17 +1125,17 @@
                         this.setMessage('Failed to load databases', 'error');
                     }
                 },
-                
+
                 async createDatabase() {
                     if (!this.newDbName.trim()) return;
-                    
+
                     this.loading = true;
                     try {
                         await this.apiCall('/api/databases', {
                             method: 'POST',
                             body: JSON.stringify({ name: this.newDbName })
                         });
-                        
+
                         this.newDbName = '';
                         this.showCreateModal = false;
                         this.loadDatabases();
@@ -1065,23 +1145,30 @@
                     }
                     this.loading = false;
                 },
-                
+
                 async deleteDatabase(id) {
-                    if (!confirm('Are you sure you want to delete this database? This action cannot be undone.')) return;
-                    
                     try {
+                        if (!id || !this.selectedDb) return;
+                        if (this.deleteDbName !== this.selectedDb.name) {
+                            this.setMessage('Please enter the correct database name to confirm deletion.', 'error');
+                            return;
+                        }
+                        this.loading = true;
+        
                         await this.apiCall(`/api/databases/${id}`, { method: 'DELETE' });
                         this.loadDatabases();
                         if (this.selectedDb && this.selectedDb.id === id) {
                             this.selectedDb = null;
                             this.queryResults = null;
+                            this.showDeleteModal = false;
+                            this.deleteDbName = ''; 
                         }
                         this.setMessage('Database deleted successfully', 'success');
                     } catch (error) {
                         this.setMessage(error.message, 'error');
                     }
                 },
-                
+
                 async shareDatabase(database) {
                     try {
                         if (database.is_shared) {
@@ -1098,7 +1185,7 @@
                         this.setMessage(error.message, 'error');
                     }
                 },
-                
+
                 async selectDatabase(database) {
                     this.selectedDb = database;
                     this.selectedTable = null;
@@ -1117,7 +1204,7 @@
                     }
                     this.loading = false;
                 },
-                
+
                 // Query execution methods
                 async executeQuery() {
                     if (!this.queryText.trim() || !this.selectedDb) return;
@@ -1280,4 +1367,5 @@
     <script src="/static/tailwindcss.js"></script>
     <script src="/static/alpine.js"></script>
 </body>
+
 </html>

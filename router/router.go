@@ -23,6 +23,7 @@ func SetupRoutes(r *mux.Router){
 	api.HandleFunc("/register", user.RegisterHandler).Methods("POST")
 	api.HandleFunc("/login", user.LoginHandler).Methods("POST")
 	api.HandleFunc("/logout", user.LogoutHandler).Methods("POST")
+	api.HandleFunc("/authenticate", user.AuthenticateHandler).Methods("GET")
 
 	// Protected routes - require authentication
 	protected := api.PathPrefix("/").Subrouter()

@@ -109,11 +109,37 @@ func setupSystemDB() {
 			username TEXT UNIQUE NOT NULL,
 			password_hash TEXT NOT NULL,
 			email TEXT UNIQUE NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	`)
 	if err != nil {
 		log.Fatalf("Failed to create users table: %v", err)
+	}
+
+	// Create billing table
+	_, err = SystemDB.Exec(`
+		CREATE TABLE IF NOT EXISTS billing (
+			external_reference TEXT NOT NULL PRIMARY KEY,
+			mpesa_receipt_number TEXT,
+			checkout_request_id TEXT,
+			merchant_request_id TEXT,
+			amount INTEGER NOT NULL,
+			result_code TEXT,
+			result_description TEXT,
+			status TEXT,
+			user_id INTEGER NOT NULL,
+			plan TEXT NOT NULL,
+			start_date TIMESTAMP NOT NULL,
+			end_date TIMESTAMP NOT NULL,
+			payment_method TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		)
+	`)
+	if err != nil {
+		log.Fatalf("Failed to create billing table: %v", err)
 	}
 
 	// Create databases table

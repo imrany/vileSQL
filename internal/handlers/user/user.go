@@ -191,3 +191,52 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Message: "Logout successful",
 	})
 }
+
+func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	if SESSION_KEY == ""{
+		log.Fatal("SESSION_KEY is empty")
+	}
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if COOKIE_STORE_KEY == ""{
+		log.Fatal("COOKIE_STORE_KEY is empty")
+	}
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, _ := store.Get(r, SESSION_KEY)
+	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
+		userID, _ := session.Values["user_id"].(int)
+		username, _ := session.Values["username"].(string)
+
+		// Retrieve user details from the database
+		var user User
+		err := database.SystemDB.QueryRow(
+			"SELECT id, username, email FROM users WHERE id = ?",
+			userID,
+		).Scan(&user.ID, &user.Username, &user.Email)
+
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+				Success: false,
+				Message: "Error retrieving user information",
+			})
+			return
+		}
+
+		user.Username = username // Set the username from session
+		user.CreatedAt = time.Now() // Set current time as created_at
+
+		data:=make(map[string]interface{})
+		data["user"] = user
+		data["authenticated"] = true
+
+		helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+			Success: true,
+			Data:    data,
+		})
+	} else {
+		helper.RespondWithJSON(w, http.StatusUnauthorized, ApiResponse{
+			Success: false,
+			Message: "User not authenticated",
+		})
+	}
+}
