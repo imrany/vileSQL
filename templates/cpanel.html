@@ -535,7 +535,12 @@
         <div class="card">
             <div class="header">
                 <h1>
-                    <i data-lucide="database"></i>
+                    <!-- database icon -->
+                    <svg width="26" height="26" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899"/>
+                        <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8"/>
+                        <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6"/>
+                    </svg>
                     <span x-text="sharedDb ? `Shared: ${sharedDb.name}` : 'VileSQL Database Manager'"></span>
                 </h1>
                 <div class="flex gap-2">
@@ -594,7 +599,11 @@
                                 </template>
                                 
                                 <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" @click="showCreateModal = true">
-                                    <i data-lucide="plus"></i>
+                                    <!-- plus icon -->
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff"/>
+                                        <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff"/>
+                                    </svg>
                                     New Database
                                 </button>
                             </div>
@@ -632,22 +641,71 @@
                         <template x-if="selectedDb">
                             <div class="flex gap-2">
                                 <button class="btn btn-primary" @click="showTableModal = true">
-                                    <i data-lucide="table"></i>
+                                    <!-- Table SVG Icon -->
+                                    <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa"/>
+                                        <rect x="1" y="5" width="14" height="1" fill="#2563eb"/>
+                                        <rect x="1" y="8" width="14" height="1" fill="#2563eb"/>
+                                        <rect x="1" y="11" width="14" height="1" fill="#2563eb"/>
+                                    </svg>
                                     New Table
                                 </button>
-                                <button class="btn btn-success" @click="showInsertModal = true">
-                                    <i data-lucide="plus"></i>
-                                    Insert Data
-                                </button>
+                                <template x-if="selectedTable">
+                                    <button  class="btn btn-success" @click="showInsertModal = true">
+                                        <!-- plus icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff"/>
+                                            <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff"/>
+                                        </svg>
+                                        Insert Data
+                                    </button>
+                                </template>
+
                                 <template x-if="isAuthenticated && selectedDb">
                                     <button class="btn btn-secondary" @click="shareDatabase(selectedDb)">
-                                        <i :data-lucide="selectedDb.is_shared ? 'unlock' : 'lock'"></i>
+                                        <!-- lock icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg" x-show="!selectedDb.is_shared">
+                                            <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff" fill-opacity="0.15"/>
+                                            <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff" stroke-width="1"/>
+                                            <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff"/>
+                                            <path d="M5 7V5a3 3 0 1 1 6 0v2" stroke="#fff" stroke-width="1" fill="none"/>
+                                        </svg>
+                                        <!-- unlock icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg" x-show="selectedDb.is_shared">
+                                            <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff" fill-opacity="0.15"/>
+                                            <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff" stroke-width="1"/>
+                                            <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff"/>
+                                            <path d="M8 7V5a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1" fill="none"/>
+                                            <circle cx="12" cy="5" r="1" fill="#fff"/>
+                                        </svg>
                                         <span x-text="selectedDb.is_shared ? 'Unshare' : 'Share'"></span>
                                     </button>
                                 </template>
-                                <template x-if="isAuthenticated && selectedDb">
+
+                                <template x-if="isAuthenticated && selectedTable">
+                                    <button class="btn btn-success" @click="showInsertModal = true">
+                                        <!-- plus icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff"/>
+                                            <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff"/>
+                                        </svg>
+                                        Delete Table
+                                    </button>
+                                </template>
+
+                                <template x-if="isAuthenticated && selectedDb && !selectedTable">
                                     <button class="btn btn-danger" @click="deleteDatabase(selectedDb.id)">
-                                        <i data-lucide="trash-2"></i>
+                                        <!-- trash icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="3" y="6" width="10" height="7" rx="2" fill="#fff" fill-opacity="0.15"/>
+                                            <rect x="3" y="6" width="10" height="7" rx="2" stroke="#fff" stroke-width="1"/>
+                                            <rect x="7" y="9" width="2" height="3" rx="1" fill="#fff"/>
+                                            <rect x="5" y="3" width="6" height="2" rx="1" fill="#fff"/>
+                                            <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff" fill-opacity="0.5"/>
+                                            <rect x="2" y="5" width="12" height="1" fill="#fff"/>
+                                            <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01" stroke-width="1.5"/>
+                                            <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01" stroke-width="1.5"/>
+                                        </svg>
                                         Delete DB
                                     </button>
                                 </template>
@@ -666,6 +724,7 @@
                     <div class="data-table-container">
                         <template x-if="!selectedDb">
                             <div class="empty-state">
+                                <!-- database icon -->
                                 <svg width="48" height="48" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
                                     <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899"/>
                                     <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8"/>
@@ -678,6 +737,7 @@
                         
                         <template x-if="selectedDb && !selectedTable">
                             <div class="empty-state">
+                                <!-- table icon -->
                                 <svg width="48" height="48" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa"/>
                                     <rect x="1" y="5" width="14" height="1" fill="#2563eb"/>
@@ -691,6 +751,7 @@
                         
                         <template x-if="selectedTable && tableData.length === 0">
                             <div class="empty-state">
+                                <!-- table icon -->
                                 <svg width="48" height="48" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa"/>
                                     <rect x="1" y="5" width="14" height="1" fill="#2563eb"/>
