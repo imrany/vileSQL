@@ -349,150 +349,6 @@ func GetUserDatabasesHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func getDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-	
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
-	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
-	session, _ := store.Get(r, SESSION_KEY)
-	userID := session.Values["user_id"].(int)
-
-	vars := mux.Vars(r)
-	dbID, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-			Success: false,
-			Message: "Invalid database ID",
-		})
-		return
-	}
-
-	var db Database
-	var shareToken, tokenExpiry sql.NullString
-	err = SystemDB.QueryRow(
-		`SELECT id, user_id, name, description, file_path, share_token, token_expiry, created_at, updated_at 
-         FROM databases WHERE id = ?`,
-		dbID,
-	).Scan(
-		&db.ID,
-		&db.UserID,
-		&db.Name,
-		&db.Description,
-		&db.FilePath,
-		&shareToken,
-		&tokenExpiry,
-		&db.CreatedAt,
-		&db.UpdatedAt,
-	)
-
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-			Success: false,
-			Message: "Database not found",
-		})
-		return
-	}
-
-	// Check if the database belongs to the user
-	if db.UserID != userID {
-		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-			Success: false,
-			Message: "You don't have permission to access this database",
-		})
-		return
-	}
-
-	if shareToken.Valid {
-		db.ShareToken = shareToken.String
-	}
-	if tokenExpiry.Valid {
-		expiry, err := time.Parse(time.RFC3339, tokenExpiry.String)
-		if err == nil {
-			db.TokenExpiry = expiry
-		}
-	}
-
-	// Get the database schema (tables and columns)
-	userDB, err := sql.Open("sqlite3", db.FilePath)
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Failed to open database",
-		})
-		return
-	}
-	defer userDB.Close()
-
-	// Query for table names
-	rows, err := userDB.Query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Failed to retrieve database schema",
-		})
-		return
-	}
-	defer rows.Close()
-
-	tables := []TableInfo{}
-	for rows.Next() {
-		var tableName string
-		if err := rows.Scan(&tableName); err != nil {
-			continue
-		}
-
-		// Get columns for each table
-		tableInfo := TableInfo{Name: tableName}
-		pragmaRows, err := userDB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
-		if err == nil {
-			defer pragmaRows.Close()
-			for pragmaRows.Next() {
-				var cid int
-				var name string
-				var dataType string
-				var notNull int
-				var defaultValue interface{}
-				var pk int
-
-				if err := pragmaRows.Scan(&cid, &name, &dataType, &notNull, &defaultValue, &pk); err != nil {
-					continue
-				}
-
-				column := Column{
-					Name:         name,
-					Type:         dataType,
-					NotNull:      notNull == 1,
-					PK:           pk > 0,
-					DefaultValue: defaultValue,
-				}
-				tableInfo.Columns = append(tableInfo.Columns, column)
-			}
-		}
-
-		tables = append(tables, tableInfo)
-	}
-
-	response := struct {
-		Database Database    `json:"database"`
-		Tables   []TableInfo `json:"tables"`
-	}{
-		Database: db,
-		Tables:   tables,
-	}
-
-	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
-		Success: true,
-		Data:    response,
-	})
-}
-
 func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	SESSION_KEY := config.GetValue("SESSION_KEY")
 	if SESSION_KEY ==""{
@@ -1993,6 +1849,8 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	columns, _ := rows.Columns()
+	columnType, _:=rows.ColumnTypes()
+
 	result := make([]map[string]interface{}, 0)
 	values := make([]interface{}, len(columns))
 	valuePtrs := make([]interface{}, len(columns))
@@ -2025,10 +1883,19 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 		valuesArr = append(valuesArr, rowArr)
 	}
 
+	// Build columns info array with name and constraint/type
+	columnsInfo := make([]map[string]interface{}, len(columns))
+	for i, col := range columns {
+		columnsInfo[i] = map[string]interface{}{
+			"name":      col,
+			"constraint": columnType[i].DatabaseTypeName(),
+		}
+	}
+
 	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
 		Success: true,
 		Data: map[string]interface{}{
-			"columns": columns,
+			"columns": columnsInfo,
 			"values":  valuesArr,
 		},
 	})

@@ -850,8 +850,15 @@
                                 <thead>
                                     <tr>
                                         <th class="row-number">#</th>
-                                        <template x-for="column in tableColumns" :key="column">
-                                            <th x-text="column"></th>
+                                        <template x-for="column in tableColumns" :key="column.name">
+                                            <th>
+                                                <span x-text="column.name"></span>
+                                                <template x-if="column.constraint">
+                                                    <span style="color:#60a5fa; font-size:10px; display:block;">
+                                                        <span x-text="column.constraint" style="margin-right:4px;"></span>
+                                                    </span>
+                                                </template>
+                                            </th>
                                         </template>
                                     </tr>
                                 </thead>
@@ -894,7 +901,7 @@
                                 <label>SQL Query</label>
                                 <textarea class="query-editor" x-model="queryText"
                                     :placeholder="selectedTable && tableColumns.length > 0
-                                        ? `INSERT INTO ${selectedTable} (${tableColumns.join(', ')}) VALUES (${tableColumns.map(col => `'${col}'`).join(', ')})`
+                                        ? `INSERT INTO ${selectedTable} (${tableColumns.map(col => col.name).join(', ')}) VALUES (${tableColumns.map(col => `'${col.name}'`).join(', ')})`
                                         : 'Enter your SQL query here...'
                                     "></textarea>
                             </div>
