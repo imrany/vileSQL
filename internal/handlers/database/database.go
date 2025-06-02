@@ -768,6 +768,7 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	var queryRequest struct {
 		SQL string `json:"sql"`
 	}
+	log.Printf("Executing query for database ID %d by user ID %d, %v", dbID, userID, r.Body)
 	if err := json.NewDecoder(r.Body).Decode(&queryRequest); err != nil {
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,

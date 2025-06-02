@@ -550,17 +550,25 @@
                     </svg>
                     <span x-text="sharedDb ? `Shared: ${sharedDb.name}` : 'VileSQL Database Manager'"></span>
                 </h1>
-                <div class="flex gap-2">
+                <div class="flex items-center justify-center gap-2">
                     <span x-show="isAuthenticated" style="margin-right: 16px; font-size: 12px;">
                         Welcome, <span x-text="user"></span>
                     </span>
                     <button x-show="isAuthenticated" class="btn btn-secondary" @click="logout()">
-                        <i data-lucide="log-out"></i>
+                        <!-- logout icon -->
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M10.5 11L14 8m0 0l-3.5-3M14 8H6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         Logout
                     </button>
                     <button x-show="sharedDb && !isAuthenticated" class="btn btn-secondary"
                         @click="sharedDb = null; sharedToken = ''">
-                        <i data-lucide="x"></i>
+                        <!-- close icon -->
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="4" y1="4" x2="12" y2="12" stroke="#fff" stroke-width="2"/>
+                            <line x1="12" y1="4" x2="4" y2="12" stroke="#fff" stroke-width="2"/>
+                        </svg>
                         Close
                     </button>
                 </div>
@@ -683,7 +691,7 @@
                                     </button>
                                 </template>
 
-                                <template x-if="isAuthenticated && selectedDb">
+                                <template x-if="isAuthenticated && selectedDb&& !selectedTable">
                                     <button class="btn btn-secondary" @click="shareDatabase(selectedDb)">
                                         <!-- lock icon -->
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
@@ -714,12 +722,21 @@
                                 </template>
 
                                 <template x-if="isAuthenticated && selectedTable">
-                                    <button class="btn btn-success" @click="showInsertModal = true">
-                                        <!-- plus icon -->
+                                    <button class="btn btn-danger" @click="showInsertModal = true">
+                                        <!-- trash icon -->
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                             style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff" />
-                                            <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff" />
+                                            <rect x="3" y="6" width="10" height="7" rx="2" fill="#fff"
+                                                fill-opacity="0.15" />
+                                            <rect x="3" y="6" width="10" height="7" rx="2" stroke="#fff"
+                                                stroke-width="1" />
+                                            <rect x="7" y="9" width="2" height="3" rx="1" fill="#fff" />
+                                            <rect x="5" y="3" width="6" height="2" rx="1" fill="#fff" />
+                                            <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff"
+                                                fill-opacity="0.5" />
+                                            <rect x="2" y="5" width="12" height="1" fill="#fff" />
+                                            <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01" stroke-width="1.5" />
+                                            <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01" stroke-width="1.5" />
                                         </svg>
                                         Delete Table
                                     </button>
@@ -813,9 +830,9 @@
                             </div>
                         </template>
 
-                        <template x-if="selectedTable && tableData.length === 0">
+                        <!-- <template x-if="selectedTable && tableData.length === 0">
                             <div class="empty-state">
-                                <!-- table icon -->
+                                
                                 <svg width="48" height="48" viewBox="0 0 16 16" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
@@ -826,9 +843,9 @@
                                 <h3>No data in this table</h3>
                                 <p>This table is empty. Add some data to see it here.</p>
                             </div>
-                        </template>
+                        </template> -->
 
-                        <template x-if="selectedTable && tableData.length > 0">
+                        <template x-if="selectedTable && tableColumns.length > 0">
                             <table class="data-table">
                                 <thead>
                                     <tr>
@@ -839,6 +856,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <!-- Data rows -->
                                     <template x-for="(row, index) in filteredTableData" :key="index">
                                         <tr>
                                             <td class="row-number" x-text="index + 1"></td>
@@ -848,6 +866,22 @@
                                             </template>
                                         </tr>
                                     </template>
+                                    <!-- Extra row for adding data -->
+                                    <tr>
+                                        <td class="row-number" style="font-weight:bold;">+</td>
+                                        <template x-for="(column, colIndex) in tableColumns" :key="column">
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    :placeholder="column"
+                                                    x-model="insertRow[column]"
+                                                    @keydown.enter.stop.prevent="addRow()"
+                                                    style="font-size:11px; padding:2px 6px;"
+                                                >
+                                            </td>
+                                        </template>
+                                    </tr>
                                 </tbody>
                             </table>
                         </template>
@@ -859,7 +893,10 @@
                             <div class="form-group">
                                 <label>SQL Query</label>
                                 <textarea class="query-editor" x-model="queryText"
-                                    placeholder="Enter your SQL query here..."></textarea>
+                                    :placeholder="selectedTable && tableColumns.length > 0
+                                        ? `INSERT INTO ${selectedTable} (${tableColumns.join(', ')}) VALUES (${tableColumns.map(col => `'${col}'`).join(', ')})`
+                                        : 'Enter your SQL query here...'
+                                    "></textarea>
                             </div>
                             <div class="flex gap-2">
                                 <button class="btn btn-primary" @click="executeQuery()"
@@ -1213,7 +1250,7 @@
                     try {
                         const result = await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
                             method: 'POST',
-                            body: JSON.stringify({ query: this.queryText })
+                            body: JSON.stringify({ sql: this.queryText })
                         });
                         // Optionally handle query results here
                         this.setMessage('Query executed successfully!', 'success');
