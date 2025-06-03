@@ -168,26 +168,27 @@
                     <div>
                         <div class="database-list">
                             <div class="section-header">Databases</div>
-    
+
                             <template x-if="sharedDb">
                                 <div class="database-item active" @click="selectDatabase(sharedDb)">
                                     <div style="font-weight: 500;" x-text="sharedDb.name"></div>
                                     <div style="font-size: 10px; color: #888;">Shared Database</div>
                                 </div>
                             </template>
-    
+
                             <template x-if="isAuthenticated">
                                 <div>
                                     <div x-show="databases.length === 0"
                                         class="text-[#888] text-[11px] flex items-center justify-center h-[80px]">
                                         No databases found
                                     </div>
-    
+
                                     <template x-for="db in databases" :key="db.id">
                                         <div class="database-item"
                                             :class="selectedDb && selectedDb.id === db.id ? 'active' : ''"
                                             @click="selectDatabase(db)">
-                                            <div style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+                                            <div
+                                                style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
                                                 <!-- Pink SQL Database SVG Icon -->
                                                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
                                                     style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
@@ -204,7 +205,7 @@
                                             </div>
                                         </div>
                                     </template>
-    
+
                                     <button class="btn btn-primary" style="width: 100%; margin-top: 8px;"
                                         @click="showCreateModal = true">
                                         <!-- plus icon -->
@@ -218,9 +219,10 @@
                                 </div>
                             </template>
                         </div>
-    
+
                         <!-- Tables Section -->
-                        <div x-show="selectedDb && tables.length > 0" class="tables-section flex-grow" style="padding: 0 12px;">
+                        <div x-show="selectedDb && tables.length > 0" class="tables-section flex-grow"
+                            style="padding: 0 12px;">
                             <div class="section-header">Tables</div>
                             <template x-for="table in tables" :key="table">
                                 <div class="table-item" :class="selectedTable === table ? 'active' : ''"
@@ -337,7 +339,7 @@
                                 </template>
 
                                 <template x-if="isAuthenticated && selectedTable">
-                                    <button class="btn btn-danger" @click="showInsertModal = true">
+                                    <button class="btn btn-danger" @click="deleteTable(selectedTable)">
                                         <!-- trash icon -->
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                             style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
@@ -493,27 +495,25 @@
                     </div>
 
                     <!-- Query Panel -->
-                    <template x-if="selectedDb">
-                        <div class="query-panel">
-                            <div class="form-group">
-                                <label>SQL Query</label>
-                                <textarea class="query-editor" x-model="queryText" :placeholder="selectedTable && tableColumns.length > 0
-                                        ? `INSERT INTO ${selectedTable} (${tableColumns.map(col => col.name).join(', ')}) VALUES (${tableColumns.map(col => `'${col.name}'`).join(', ')})`
-                                        : 'Enter your SQL query here...'
-                                    "></textarea>
-                            </div>
-                            <div class="flex gap-2">
-                                <button class="btn btn-primary" @click="executeQuery()"
-                                    :disabled="!queryText.trim() || loading">
-                                    <i data-lucide="play"></i>
-                                    Execute
-                                </button>
-                                <button class="btn btn-secondary" @click="queryText = ''">
-                                    Clear
-                                </button>
-                            </div>
+                    <div x-show="selectedDb" class="query-panel">
+                        <div class="form-group">
+                            <label>SQL Query</label>
+                            <textarea class="query-editor" x-model="queryText" :placeholder="selectedTable && tableColumns.length > 0
+                                    ? `INSERT INTO ${selectedTable} (${tableColumns.map(col => col.name).join(', ')}) VALUES (${tableColumns.map(col => `'${col.name}'`).join(', ')})`
+                                    : 'Enter your SQL query here...'
+                                "></textarea>
                         </div>
-                    </template>
+                        <div class="flex gap-2">
+                            <button class="btn btn-primary" @click="executeQuery()"
+                                :disabled="!queryText.trim() || loading">
+                                <i data-lucide="play"></i>
+                                Execute
+                            </button>
+                            <button class="btn btn-secondary" @click="queryText = ''">
+                                Clear
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -575,24 +575,45 @@
             <form @submit.prevent="insertData()">
                 <div class="form-group">
                     <label>Table Name</label>
-                    <input type="text" readonly :value="selectedTable ? `${selectedTable}` : `${null}`"
-                        class="form-control" x-model="insertForm.table" required
-                        :placeholder="selectedTable ? `${selectedTable}` : 'Enter table name'">
+                    <template x-if="!selectedTable">
+                        <input type="text" class="form-control"
+                            x-model="insertForm.table"
+                            placeholder="Enter table name"
+                            required 
+                        />
+                    </template>
+                    <template x-if="selectedTable">
+                        <input type="text" class="form-control"
+                            :value="selectedTable"
+                            :placeholder="selectedTable"
+                            readonly
+                        />
+                    </template>
                 </div>
                 <div class="form-group">
                     <label>Columns (comma-separated)</label>
-                    <!-- (column, colIndex) in tableColumns -->
-                    <input type="text" class="form-control" x-model="insertForm.columns" required
-                        :placeholder="selectedTable? `` :'name, email, age'">
+                    <template x-if="!selectedTable">
+                        <input type="text" required class="form-control"
+                            x-model="insertForm.columns"
+                            placeholder="'name', 'email', age"
+                        />
+                    </template>
+                    <template x-if="selectedTable">
+                        <input type="text" class="form-control"
+                            :value="tableColumns.length > 0 ? tableColumns.map(col => col.name).join(', ') : ''"
+                            :placeholder="tableColumns.length > 0 ? tableColumns.map(col => col.name).join(', ') : 'name, email, age'"
+                            readonly
+                        />
+                    </template>
                 </div>
                 <div class="form-group">
                     <label>Values (comma-separated)</label>
                     <input type="text" class="form-control" x-model="insertForm.values" required
-                        placeholder="selectedTable? `` :`'John Doe', 'john@example.com', 30`">
+                        :placeholder="`'John Doe', 'john@example.com', 30`">
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-success"
-                        :disabled="!insertForm.table.trim() || !insertForm.columns.trim() || !insertForm.values.trim() || loading">
+                        :disabled="!insertForm.values.trim() || loading">
                         <span x-text="loading ? 'Inserting...' : 'Insert Data'"></span>
                     </button>
                     <button type="button" class="btn btn-secondary"
@@ -643,7 +664,7 @@
                 queryText: '',
                 queryResults: null,
 
-                insertRow: null,
+                insertRow: {},
 
                 // Shared database state
                 sharedToken: '',
@@ -848,11 +869,26 @@
                 },
 
                 async addRow() {
-                    if (!this.insertRow.trim() || !this.insertRow) return;
+                    // Check if all required fields in insertRow are filled
+                    if (!this.selectedTable || !this.selectedDb || !this.tableColumns.length) return;
+                    const values = this.tableColumns.map(col => this.insertRow[col.name]);
+                    if (values.some(v => v === undefined || v === null || v === "")) return;
                     this.loading = true;
 
                     try {
-
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/data`, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                table: this.selectedTable,
+                                columns: this.tableColumns.map(col => col.name).join(', '),
+                                values: values.map(v => typeof v === 'string' ? `'${v}'` : v).join(', ')
+                            })
+                        });
+                        // Clear insertRow fields
+                        this.insertRow = {};
+                        // Reload table data
+                        await this.selectTable(this.selectedTable);
+                        this.setMessage('Row added successfully!', 'success');
                     } catch (error) {
                         this.setMessage(error.message, 'error');
                     }
@@ -931,23 +967,30 @@
 
                 // Data insertion methods
                 async insertData() {
-                    if (!this.insertForm.table.trim() || !this.insertForm.columns.trim() || !this.insertForm.values.trim() || !this.selectedDb) return;
+                    if (
+                        !this.selectedTable.trim() ||
+                        !this.insertForm.values.trim() ||
+                        !this.selectedDb
+                    ) {
+                        console.log(this.insertForm)
+                        this.setMessage('Please fill all fields before inserting data.', 'error');
+                        return;
+                    }
 
                     this.loading = true;
                     try {
                         await this.apiCall(`/api/databases/${this.selectedDb.id}/data`, {
                             method: 'POST',
                             body: JSON.stringify({
-                                table: this.insertForm.table,
-                                columns: this.insertForm.columns,
+                                table: this.selectedTable ? this.selectedTable : this.insertForm.table,
+                                columns: this.selectedTable ? this.tableColumns.map(col => col.name).join(", ") : this.insertForm.columns,
                                 values: this.insertForm.values
                             })
                         });
 
                         this.showInsertModal = false;
                         this.resetInsertForm();
-                        // If the inserted table is currently selected, reload its data
-                        if (this.selectedTable === this.insertForm.table) {
+                        if (this.selectedTable) {
                             await this.selectTable(this.selectedTable);
                         }
                         this.setMessage('Data inserted successfully!', 'success');
