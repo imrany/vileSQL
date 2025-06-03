@@ -1888,14 +1888,66 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	for i, col := range columns {
 		leng, _:=columnType[i].Length()
 		isNull, _:=columnType[i].Nullable()
-		columnsInfo[i] = map[string]interface{}{
-			"name":      col,
-			"constraint": map[string]interface{}{
-				"type":columnType[i].DatabaseTypeName(),
-				"length":leng,
-				"is_null":isNull,
+		columnsInfo[i] = map[string]any{
+			"name": col,
+			"constraint": map[string]any{
+				"type":     columnType[i].DatabaseTypeName(),
+				"length":   leng,
+				"is_null":  isNull,
+				"not_null": !isNull, // NOT NULL constraint
+				// Add more constraints below
+				"primary_key": false,
+				"default":     nil,
+				"unique":      false,
 			},
 		}
+
+		// Get PRIMARY KEY and DEFAULT constraints from PRAGMA table_info
+		pragmaRows2, err := userDB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
+		if err == nil {
+			for pragmaRows2.Next() {
+				var cid int
+				var name, dataType string
+				var notNull, pk int
+				var defaultValue interface{}
+				if err := pragmaRows2.Scan(&cid, &name, &dataType, &notNull, &defaultValue, &pk); err == nil {
+					if name == col {
+						columnsInfo[i]["constraint"].(map[string]any)["primary_key"] = pk > 0
+						columnsInfo[i]["constraint"].(map[string]any)["default"] = defaultValue
+						break
+					}
+				}
+			}
+			pragmaRows2.Close()
+		}
+
+		// Try to get UNIQUE constraint from PRAGMA index_list and index_info
+		var isUnique bool
+		indexRows, err := userDB.Query(fmt.Sprintf("PRAGMA index_list(%s)", tableName))
+		if err == nil {
+			for indexRows.Next() {
+				var idxSeq int
+				var idxName string
+				var unique int
+				var origin, partial interface{}
+				if err := indexRows.Scan(&idxSeq, &idxName, &unique, &origin, &partial); err == nil && unique == 1 {
+					// Check if this index covers the current column
+					infoRows, err := userDB.Query(fmt.Sprintf("PRAGMA index_info(%s)", idxName))
+					if err == nil {
+						for infoRows.Next() {
+							var seqno, cid int
+							var idxColName string
+							if err := infoRows.Scan(&seqno, &cid, &idxColName); err == nil && idxColName == col {
+								isUnique = true
+							}
+						}
+						infoRows.Close()
+					}
+				}
+			}
+			indexRows.Close()
+		}
+		columnsInfo[i]["constraint"].(map[string]any)["unique"] = isUnique
 	}
 
 	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
