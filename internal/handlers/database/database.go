@@ -1893,7 +1893,6 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 			"constraint": map[string]any{
 				"type":     columnType[i].DatabaseTypeName(),
 				"length":   leng,
-				"is_null":  isNull,
 				"not_null": !isNull, // NOT NULL constraint
 				// Add more constraints below
 				"primary_key": false,
@@ -2080,6 +2079,8 @@ func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
 		tableName,
 		strings.Join(setClauses, ", "),
 		strings.Join(whereClauses, " AND "))
+
+	log.Printf("Executing query: %s with values: %v", query, allValues)
 
 	result, err := userDB.Exec(query, allValues...)
 	if err != nil {

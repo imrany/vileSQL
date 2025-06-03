@@ -42,8 +42,7 @@ func SetupRoutes(r *mux.Router){
 	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}", database.DeleteTableHandler).Methods("DELETE")
 	// insert table data
 	protected.HandleFunc("/databases/{id:[0-9]+}/data", database.InsertDataHandler).Methods("POST")
-	// protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data", database.InsertTableDataHandler).Methods("POST")
-	
+
 	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}", database.GetTableHandler).Methods("GET")
 	// Get table data
 	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}/data", database.GetTableDataHandler).Methods("GET")
