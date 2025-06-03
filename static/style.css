@@ -306,14 +306,26 @@ h6 {
 .main-layout {
   display: flex;
   height: calc(100vh - 100px);
+  background: var(--color-card);
 }
 
 .sidebar {
   width: 250px;
-  background: var(--color-sidebar);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* background: var(--color-sidebar); */
+  background: var(--color-card);
   border-right: 1px solid var(--color-table-border);
   overflow-y: auto;
   transition: background-color 0.3s ease;
+}
+.user-info {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--color-table-border);
 }
 
 .content-area {
@@ -326,7 +338,8 @@ h6 {
 
 .toolbar {
   padding: 12px;
-  background: var(--color-sidebar);
+  /* background: var(--color-sidebar); */
+  background: var(--color-card);
   border-bottom: 1px solid var(--color-table-border);
   display: flex;
   align-items: center;
@@ -473,7 +486,8 @@ h6 {
 
 .query-panel {
   padding: 12px;
-  background: var(--color-sidebar);
+  /* background: var(--color-sidebar); */
+  background: var(--color-card);
   border-top: 1px solid var(--color-table-border);
   width: 100%;
   transition: background-color 0.3s ease;

@@ -21,10 +21,17 @@ class ThemeManager {
         });
 
         // Set up theme selector
-        const selector = document.getElementById('themeSelector');
-        selector.value = savedTheme;
-        selector.addEventListener('change', (e) => {
-            this.setTheme(e.target.value);
+        // const selector = document.getElementById('themeSelector');
+        // selector.value = savedTheme;
+        // selector.addEventListener('change', (e) => {
+        //     this.setTheme(e.target.value);
+        // });
+        const selectors = document.querySelectorAll('#themeSelector');
+        selectors.forEach(selector => {
+            selector.value = savedTheme;
+            selector.addEventListener('change', (e) => {
+                this.setTheme(e.target.value);
+            });
         });
 
         // Apply initial theme
@@ -64,10 +71,10 @@ class ThemeManager {
     }
 
     updateUI() {
-        const themeStatus = document.getElementById('themeStatus');
-        const currentThemeSpan = document.getElementById('currentTheme');
-        const activeTheme = document.getElementById('activeTheme');
-        const systemInfo = document.getElementById('systemPreference');
+        const themeStatus = document.querySelectorAll('#themeStatus');
+        const currentThemeSpans = document.querySelectorAll('#currentTheme');
+        const activeThemes = document.querySelectorAll('#activeTheme');
+        const systemInfos = document.querySelectorAll('#systemPreference');
 
         // Update theme status
         const themeIcons = {
@@ -76,11 +83,14 @@ class ThemeManager {
             light: '☀️'
         };
 
-        const statusIcon = document.querySelector('.theme-icon');
-        statusIcon.textContent = themeIcons[this.currentTheme];
-        currentThemeSpan.textContent =
-            this.currentTheme.charAt(0).toUpperCase() + this.currentTheme.slice(1);
-
+        const statusIcons = document.querySelectorAll('.theme-icon');
+        statusIcons.forEach(statusIcon => {
+            statusIcon.textContent = themeIcons[this.currentTheme];
+        });
+        currentThemeSpans.forEach(span => {
+            span.textContent = this.currentTheme.charAt(0).toUpperCase() + this.currentTheme.slice(1);
+        });
+        
         // Update active theme info
         let activeText = '';
         if (this.currentTheme === 'auto') {
@@ -88,10 +98,19 @@ class ThemeManager {
         } else {
             activeText = this.currentTheme.charAt(0).toUpperCase() + this.currentTheme.slice(1);
         }
-        activeTheme.textContent = activeText;
+        activeThemes.forEach(activeTheme => {
+            activeTheme.textContent = activeText
+        })
+
+        // Update theme status
+        themeStatus.forEach(status => {
+            status.textContent = this.currentTheme.charAt(0).toUpperCase() + this.currentTheme.slice(1);
+        });
 
         // Update system info
-        systemInfo.textContent = this.systemTheme.charAt(0).toUpperCase() + this.systemTheme.slice(1);
+        systemInfos.forEach(systemInfo => {
+            systemInfo.textContent = this.systemTheme.charAt(0).toUpperCase() + this.systemTheme.slice(1);
+        });
     }
 
     getEffectiveTheme() {
