@@ -7,7 +7,7 @@ import (
 )
 
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
-	tmplPath := filepath.Join("templates", "welcome.html")
+	tmplPath := filepath.Join("templates", "cpanel2.html")
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)

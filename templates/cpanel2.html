@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Theme System</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>🎨 Advanced Theme System</h1>
+                <div class="theme-controls">
+                    <select class="theme-selector" id="themeSelector">
+                        <option value="auto">🌓 Auto (System)</option>
+                        <option value="dark">🌙 Dark</option>
+                        <option value="light">☀️ Light</option>
+                    </select>
+                    <div class="theme-status" id="themeStatus">
+                        <span class="theme-icon">🌓</span>
+                        <span id="currentTheme">Auto</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2>Theme System Demo</h2>
+                <div class="theme-info">
+                    <strong>Current Theme:</strong> <span id="activeTheme">Auto (following system preference)</span>
+                    <div class="system-info" id="systemInfo">
+                        System preference: <span id="systemPreference">Unknown</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    ✅ Theme system is working! Try switching between different themes above.
+                </div>
+
+                <h3>Interactive Components</h3>
+                <div class="form-group">
+                    <label for="sampleInput">Sample Input</label>
+                    <input type="text" class="form-control" id="sampleInput" placeholder="Type something here..." value="Theme adaptation test">
+                </div>
+
+                <div style="display: flex; gap: 8px; margin: 12px 0;">
+                    <button class="btn btn-primary">Primary Button</button>
+                    <button class="btn btn-secondary">Secondary</button>
+                    <button class="btn btn-success">Success</button>
+                    <button class="btn btn-danger">Danger</button>
+                </div>
+
+                <h3>Data Table Preview</h3>
+                <div class="filter-bar">
+                    <span>Filter:</span>
+                    <input type="text" class="filter-input" placeholder="Search data..." value="sample filter">
+                </div>
+                
+                <div class="data-table-container" style="max-height: 200px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th class="row-number">#</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="row-number">1</td><td>John Doe</td><td>john@example.com</td><td>Active</td><td>2024-01-15</td></tr>
+                            <tr><td class="row-number">2</td><td>Jane Smith</td><td>jane@example.com</td><td>Pending</td><td>2024-01-16</td></tr>
+                            <tr><td class="row-number">3</td><td>Bob Johnson</td><td>bob@example.com</td><td>Active</td><td>2024-01-17</td></tr>
+                            <tr><td class="row-number">4</td><td>Alice Brown</td><td>alice@example.com</td><td>Inactive</td><td>2024-01-18</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Color Palette</h3>
+                <div class="color-palette">
+                    <div class="color-item" style="background: var(--color-primary); color: white;">Primary</div>
+                    <div class="color-item" style="background: var(--color-secondary); color: white;">Secondary</div>
+                    <div class="color-item" style="background: var(--color-success); color: white;">Success</div>
+                    <div class="color-item" style="background: var(--color-danger); color: white;">Danger</div>
+                    <div class="color-item" style="background: var(--color-bg); color: var(--color-text); border: 2px solid var(--color-table-border);">Background</div>
+                    <div class="color-item" style="background: var(--color-card); color: var(--color-text);">Card</div>
+                </div>
+
+                <h3>Query Editor</h3>
+                <textarea class="query-editor" placeholder="SELECT * FROM users WHERE theme = 'adaptive';">SELECT * FROM themes 
+WHERE mode IN ('dark', 'light', 'auto')
+ORDER BY user_preference;</textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ThemeManager {
+            constructor() {
+                this.currentTheme = 'auto';
+                this.systemTheme = 'dark';
+                this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                
+                this.init();
+            }
+
+            init() {
+                // Load saved preference
+                const savedTheme = localStorage.getItem('theme') || 'auto';
+                
+                // Set up system theme detection
+                this.updateSystemTheme();
+                this.mediaQuery.addEventListener('change', () => {
+                    this.updateSystemTheme();
+                    if (this.currentTheme === 'auto') {
+                        this.applyTheme();
+                    }
+                });
+
+                // Set up theme selector
+                const selector = document.getElementById('themeSelector');
+                selector.value = savedTheme;
+                selector.addEventListener('change', (e) => {
+                    this.setTheme(e.target.value);
+                });
+
+                // Apply initial theme
+                this.setTheme(savedTheme);
+            }
+
+            updateSystemTheme() {
+                this.systemTheme = this.mediaQuery.matches ? 'dark' : 'light';
+                this.updateUI();
+            }
+
+            setTheme(theme) {
+                this.currentTheme = theme;
+                localStorage.setItem('theme', theme);
+                this.applyTheme();
+                this.updateUI();
+            }
+
+            applyTheme() {
+                const body = document.body;
+                
+                if (this.currentTheme === 'auto') {
+                    // Use system preference
+                    if (this.systemTheme === 'dark') {
+                        body.removeAttribute('data-theme');
+                    } else {
+                        body.setAttribute('data-theme', 'light');
+                    }
+                } else {
+                    // Use explicit theme
+                    if (this.currentTheme === 'light') {
+                        body.setAttribute('data-theme', 'light');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            }
+
+            updateUI() {
+                const themeStatus = document.getElementById('themeStatus');
+                const currentThemeSpan = document.getElementById('currentTheme');
+                const activeTheme = document.getElementById('activeTheme');
+                const systemInfo = document.getElementById('systemPreference');
+                
+                // Update theme status
+                const themeIcons = {
+                    auto: '🌓',
+                    dark: '🌙',
+                    light: '☀️'
+                };
+                
+                const statusIcon = document.querySelector('.theme-icon');
+                statusIcon.textContent = themeIcons[this.currentTheme];
+                currentThemeSpan.textContent = 
+                    this.currentTheme.charAt(0).toUpperCase() + this.currentTheme.slice(1);
+                
+                // Update active theme info
+                let activeText = '';
+                if (this.currentTheme === 'auto') {
+                    activeText = `Auto (${this.systemTheme} mode active)`;
+                } else {
+                    activeText = this.currentTheme.charAt(0).toUpperCase() + this.currentTheme.slice(1);
+                }
+                activeTheme.textContent = activeText;
+                
+                // Update system info
+                systemInfo.textContent = this.systemTheme.charAt(0).toUpperCase() + this.systemTheme.slice(1);
+            }
+
+            getEffectiveTheme() {
+                if (this.currentTheme === 'auto') {
+                    return this.systemTheme;
+                }
+                return this.currentTheme;
+            }
+        }
+
+        // Initialize theme manager
+        const themeManager = new ThemeManager();
+
+        // Demo interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add some interactive behavior to demo elements
+            const tableRows = document.querySelectorAll('.data-table tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    tableRows.forEach(r => r.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Filter input interaction
+            const filterInput = document.querySelector('.filter-input');
+            filterInput.addEventListener('input', function() {
+                console.log('Filtering:', this.value);
+            });
+
+            // Query editor interaction
+            const queryEditor = document.querySelector('.query-editor');
+            queryEditor.addEventListener('focus', function() {
+                this.style.borderColor = 'var(--color-primary)';
+            });
+            queryEditor.addEventListener('blur', function() {
+                this.style.borderColor = 'var(--color-table-border)';
+            });
+        });
+
+        // Expose theme manager globally for debugging
+        window.themeManager = themeManager;
+    </script>
+</body>
+</html>
