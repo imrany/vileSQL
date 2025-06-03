@@ -15,531 +15,106 @@
     <link rel="apple-touch-icon" href="/static/favicon.png">
     <script defer src="/static/tailwindcss.js"></script>
     <script defer src="/static/alpine.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a1a;
-            min-height: 100vh;
-            color: #e5e5e5;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .card {
-            background: #2d2d2d;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: #333;
-            color: white;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #444;
-        }
-
-        .header h1 {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: #0078d4;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #106ebe;
-        }
-
-        .btn-danger {
-            background: #d83b01;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #a13100;
-        }
-
-        .btn-secondary {
-            background: #5a5a5a;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #4a4a4a;
-        }
-
-        .btn-success {
-            background: #107c10;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #0e6b0e;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            color: #e5e5e5;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #555;
-            border-radius: 4px;
-            font-size: 12px;
-            background: #404040;
-            color: #fff;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #0078d4;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.3);
-        }
-
-        .alert {
-            padding: 8px 12px;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-        }
-
-        .alert-success {
-            background: #dff6dd;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c2c7;
-        }
-
-        .main-layout {
-            display: flex;
-            height: calc(100vh - 100px);
-        }
-
-        .sidebar {
-            width: 250px;
-            background: #2d2d2d;
-            border-right: 1px solid #444;
-            overflow-y: auto;
-        }
-
-        .content-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #1a1a1a;
-        }
-
-        .toolbar {
-            padding: 12px;
-            background: #2d2d2d;
-            border-bottom: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .database-list {
-            padding: 12px;
-        }
-
-        .database-item {
-            background: #333;
-            border: 1px solid #444;
-            border-radius: 4px;
-            padding: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 12px;
-        }
-
-        .database-item:hover {
-            background: #3a3a3a;
-            border-color: #0078d4;
-        }
-
-        .database-item.active {
-            /* background: #0078d4; */
-            /* color: white; */
-            border-color: #0078d4;
-        }
-
-        .tables-section {
-            margin-top: 16px;
-        }
-
-        .table-item {
-            background: #404040;
-            border-radius: 4px;
-            padding: 6px 8px;
-            margin-bottom: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .table-item:hover {
-            background: #4a4a4a;
-        }
-
-        .table-item.active {
-            background: #0078d4;
-            color: white;
-        }
-
-        .table-icon {
-            width: 12px;
-            height: 12px;
-        }
-
-        .query-editor {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            border: 1px solid #444;
-            border-radius: 4px;
-            padding: 12px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            min-height: 120px;
-            resize: vertical;
-            width: 100%;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
-        }
-
-        .data-table-container {
-            flex: 1;
-            overflow: auto;
-            background: #1a1a1a;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            background: #2d2d2d;
-        }
-
-        .data-table th {
-            background: #404040;
-            color: #e5e5e5;
-            padding: 8px 12px;
-            text-align: left;
-            font-weight: 500;
-            border-bottom: 1px solid #555;
-            border-right: 1px solid #555;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .data-table th:last-child {
-            border-right: none;
-        }
-
-        .data-table td {
-            padding: 6px 12px;
-            border-bottom: 1px solid #444;
-            border-right: 1px solid #444;
-            color: #d4d4d4;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .data-table td:last-child {
-            border-right: none;
-        }
-
-        .data-table tr:nth-child(even) {
-            background: #252525;
-        }
-
-        .data-table tr:hover {
-            background: #333;
-        }
-
-        .row-number {
-            background: #333 !important;
-            color: #888;
-            text-align: center;
-            font-weight: 500;
-            width: 50px;
-            min-width: 50px;
-        }
-
-        .query-panel {
-            padding: 12px;
-            background: #2d2d2d;
-            border-top: 1px solid #444;
-            width: 100%;
-        }
-
-        .filter-bar {
-            padding: 8px 12px;
-            background: #333;
-            border-bottom: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-        }
-
-        .filter-input {
-            background: #404040;
-            border: 1px solid #555;
-            border-radius: 3px;
-            padding: 4px 8px;
-            color: #fff;
-            font-size: 11px;
-        }
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #888;
-            text-align: center;
-            padding: 40px;
-        }
-
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #555;
-            border-top: 2px solid #0078d4;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: #2d2d2d;
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid #444;
-        }
-
-        .auth-container {
-            max-width: 400px;
-            margin: 100px auto;
-            background: #2d2d2d;
-            border-radius: 8px;
-            border: 1px solid #444;
-        }
-
-        .tab-nav {
-            display: flex;
-            border-bottom: 1px solid #444;
-        }
-
-        .tab-btn {
-            padding: 12px 20px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            color: #888;
-            font-size: 12px;
-        }
-
-        .tab-btn.active {
-            color: #0078d4;
-            border-bottom-color: #0078d4;
-        }
-
-        .flex {
-            display: flex;
-        }
-
-        .gap-2 {
-            gap: 8px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .section-header {
-            font-size: 11px;
-            font-weight: 600;
-            color: #888;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            padding: 0 8px;
-        }
-    </style>
+    <script defer src="/static/themeManager.js"></script>
 </head>
 
 <body x-data="sqlitePanel()" x-init="init()">
+    <!-- Theme Selector UI -->
+    <div style="position: fixed; top: 12px; right: 12px; z-index: 1000;">
+         <div class="theme-controls">
+            <select class="theme-selector" id="themeSelector">
+                <option value="auto">🌓 Auto (System)</option>
+                <option value="dark">🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+            </select>
+            <div class="theme-status" id="themeStatus">
+                <span class="theme-icon">🌓</span>
+                <span id="currentTheme">Auto</span>
+            </div>
+        </div>
+        <div style="font-size: 11px; color: #aaa; margin-top: 2px;">
+            <span id="activeTheme">Auto (dark mode active)</span> | System: <span id="systemPreference">Dark</span>
+        </div>
+    </div>
+
     <!-- loading Screen -->
     <template x-if="screenLoading">
-        <div class="loading-overlay" style="background: #1a1a1a;">
+        <div class="screen-loading-overlay">
             <div class="spinner"></div>
         </div>
     </template>
 
     <!-- Authentication Screen -->
     <div x-show="!isAuthenticated && !sharedDb" class="auth-container">
-        <div class="header">
-            <h1>
-                <i data-lucide="database"></i>
-                VileSQL
-            </h1>
-        </div>
-
-        <div style="padding: 20px;">
-            <div x-show="message.text" class="alert"
-                :class="message.type === 'error' ? 'alert-error' : 'alert-success'">
-                <span x-text="message.text"></span>
+        <div class="card">
+            <div class="header">
+                <h1>
+                    <i data-lucide="database"></i>
+                    VileSQL
+                </h1>
             </div>
-
-            <div class="tab-nav">
-                <button class="tab-btn" :class="authMode === 'login' ? 'active' : ''" @click="authMode = 'login'">
-                    Login
-                </button>
-                <button class="tab-btn" :class="authMode === 'register' ? 'active' : ''" @click="authMode = 'register'">
-                    Register
-                </button>
-            </div>
-
-            <form @submit.prevent="authMode === 'login' ? login() : register()" style="padding: 20px 0;">
-                <template x-if="authMode === 'login'">
-                    <div>
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" class="form-control" x-model="authFormLogin.username" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" class="form-control" x-model="authFormLogin.password" required>
-                        </div>
-                    </div>
-                </template>
-                <template x-if="authMode === 'register'">
-                    <div>
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" class="form-control" x-model="authFormRegister.username" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" class="form-control" x-model="authFormRegister.email" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" class="form-control" x-model="authFormRegister.password" required>
-                        </div>
-                    </div>
-                </template>
-                <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="loading">
-                    <template x-if="loading">
-                        <div class="spinner" style="width: 16px; height: 16px;"></div>
-                    </template>
-                    <span x-text="loading ? 'Processing...' : (authMode === 'login' ? 'Login' : 'Register')"></span>
-                </button>
-            </form>
-
-            <div style="border-top: 1px solid #444; padding-top: 16px;">
-                <div class="section-header">Access Shared Database</div>
-                <div class="flex gap-2">
-                    <input type="text" class="form-control" x-model="sharedToken" placeholder="Enter share token">
-                    <button class="btn btn-secondary" @click="accessSharedDatabase()" :disabled="!sharedToken">
-                        <i data-lucide="share-2"></i>
-                        Access
+    
+            <div style="padding: 20px;">
+                <div x-show="message.text" class="alert"
+                    :class="message.type === 'error' ? 'alert-error' : 'alert-success'">
+                    <span x-text="message.text"></span>
+                </div>
+    
+                <div class="tab-nav">
+                    <button class="tab-btn" :class="authMode === 'login' ? 'active' : ''" @click="authMode = 'login'">
+                        Login
                     </button>
+                    <button class="tab-btn" :class="authMode === 'register' ? 'active' : ''" @click="authMode = 'register'">
+                        Register
+                    </button>
+                </div>
+    
+                <form @submit.prevent="authMode === 'login' ? login() : register()" style="padding: 20px 0;">
+                    <template x-if="authMode === 'login'">
+                        <div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" class="form-control" x-model="authFormLogin.username" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" class="form-control" x-model="authFormLogin.password" required>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="authMode === 'register'">
+                        <div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" class="form-control" x-model="authFormRegister.username" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-control" x-model="authFormRegister.email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" class="form-control" x-model="authFormRegister.password" required>
+                            </div>
+                        </div>
+                    </template>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="loading">
+                        <template x-if="loading">
+                            <div class="spinner" style="width: 16px; height: 16px;"></div>
+                        </template>
+                        <span x-text="loading ? 'Processing...' : (authMode === 'login' ? 'Login' : 'Register')"></span>
+                    </button>
+                </form>
+    
+                <div style="border-top: 1px solid #444; padding-top: 16px;">
+                    <div class="section-header">Access Shared Database</div>
+                    <div class="flex gap-2">
+                        <input type="text" class="form-control" x-model="sharedToken" placeholder="Enter share token">
+                        <button class="btn btn-secondary" @click="accessSharedDatabase()" :disabled="!sharedToken">
+                            <i data-lucide="share-2"></i>
+                            Access
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -565,18 +140,22 @@
                     </span>
                     <button x-show="isAuthenticated" class="btn btn-secondary" @click="logout()">
                         <!-- logout icon -->
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-                            <path d="M10.5 11L14 8m0 0l-3.5-3M14 8H6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6" stroke="#fff"
+                                stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M10.5 11L14 8m0 0l-3.5-3M14 8H6" stroke="#fff" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         Logout
                     </button>
                     <button x-show="sharedDb && !isAuthenticated" class="btn btn-secondary"
                         @click="sharedDb = null; sharedToken = ''">
                         <!-- close icon -->
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                            <line x1="4" y1="4" x2="12" y2="12" stroke="#fff" stroke-width="2"/>
-                            <line x1="12" y1="4" x2="4" y2="12" stroke="#fff" stroke-width="2"/>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle;"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <line x1="4" y1="4" x2="12" y2="12" stroke="#fff" stroke-width="2" />
+                            <line x1="12" y1="4" x2="4" y2="12" stroke="#fff" stroke-width="2" />
                         </svg>
                         Close
                     </button>
@@ -604,8 +183,7 @@
                         <template x-if="isAuthenticated">
                             <div>
                                 <div x-show="databases.length === 0"
-                                    class="text-[#888] text-[11px] flex items-center justify-center h-[80px]"
-                                >
+                                    class="text-[#888] text-[11px] flex items-center justify-center h-[80px]">
                                     No databases found
                                 </div>
 
@@ -777,9 +355,10 @@
                                 <!-- Delete Database Modal -->
                                 <div x-show="showDeleteModal" class="modal" @click.self="showDeleteModal = false">
                                     <div class="modal-content">
-                                        <h3 style="margin-bottom: 16px;">Are you sure you want to delete the database 
-                                            <strong class="text-[#2563eb]" x-text="selectedDb ? selectedDb.name : ''"></strong>? This action
-                                                cannot be undone.
+                                        <h3 style="margin-bottom: 16px;">Are you sure you want to delete the database
+                                            <strong class="text-[#2563eb]"
+                                                x-text="selectedDb ? selectedDb.name : ''"></strong>? This action
+                                            cannot be undone.
                                         </h3>
                                         <form @submit.prevent="deleteDatabase(selectedDb.id)">
                                             <div class="form-group">
@@ -876,14 +455,9 @@
                                         <td class="row-number" style="font-weight:bold;">+</td>
                                         <template x-for="(column, colIndex) in tableColumns" :key="column.name">
                                             <td>
-                                                <input
-                                                    type="text"
-                                                    class="form-control text-[11px]"
-                                                    :placeholder="column.name"
-                                                    x-model="insertRow[column.name]"
-                                                    @keydown.enter.stop.prevent="addRow()"
-                                                    style="padding:2px 6px;"
-                                                >
+                                                <input type="text" class="form-control text-[11px]"
+                                                    :placeholder="column.name" x-model="insertRow[column.name]"
+                                                    @keydown.enter.stop.prevent="addRow()" style="padding:2px 6px;">
                                             </td>
                                         </template>
                                     </tr>
@@ -897,8 +471,7 @@
                         <div class="query-panel">
                             <div class="form-group">
                                 <label>SQL Query</label>
-                                <textarea class="query-editor" x-model="queryText"
-                                    :placeholder="selectedTable && tableColumns.length > 0
+                                <textarea class="query-editor" x-model="queryText" :placeholder="selectedTable && tableColumns.length > 0
                                         ? `INSERT INTO ${selectedTable} (${tableColumns.map(col => col.name).join(', ')}) VALUES (${tableColumns.map(col => `'${col.name}'`).join(', ')})`
                                         : 'Enter your SQL query here...'
                                     "></textarea>
@@ -976,7 +549,8 @@
             <form @submit.prevent="insertData()">
                 <div class="form-group">
                     <label>Table Name</label>
-                    <input type="text" readonly :value="selectedTable ? `${selectedTable}` : `${null}`" class="form-control" x-model="insertForm.table" required
+                    <input type="text" readonly :value="selectedTable ? `${selectedTable}` : `${null}`"
+                        class="form-control" x-model="insertForm.table" required
                         :placeholder="selectedTable ? `${selectedTable}` : 'Enter table name'">
                 </div>
                 <div class="form-group">
@@ -1050,12 +624,6 @@
                 sharedDb: null,
 
                 init() {
-                    // Initialize Lucide icons
-                    if (typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-
-                    // Check if user is already authenticated
                     this.checkAuth();
                 },
 
@@ -1099,7 +667,7 @@
                     try {
                         const result = await this.apiCall('/api/authenticate');
                         this.user = result?.data.user.username || null;
-                        this.isAuthenticated = result?.data.authenticated ||  false;
+                        this.isAuthenticated = result?.data.authenticated || false;
                         // console.log(result.data)
                         if (this.isAuthenticated) {
                             this.loadDatabases();
@@ -1202,14 +770,14 @@
                             return;
                         }
                         this.loading = true;
-        
+
                         await this.apiCall(`/api/databases/${id}`, { method: 'DELETE' });
                         this.loadDatabases();
                         if (this.selectedDb && this.selectedDb.id === id) {
                             this.selectedDb = null;
                             this.queryResults = null;
                             this.showDeleteModal = false;
-                            this.deleteDbName = ''; 
+                            this.deleteDbName = '';
                         }
                         this.setMessage('Database deleted successfully', 'success');
                     } catch (error) {
@@ -1253,14 +821,14 @@
                     this.loading = false;
                 },
 
-                async addRow(){
+                async addRow() {
                     if (!this.insertRow.trim() || !this.insertRow) return;
                     this.loading = true;
 
                     try {
-                        
+
                     } catch (error) {
-                     this.setMessage(error.message, 'error');
+                        this.setMessage(error.message, 'error');
                     }
                     this.loading = false;
                 },

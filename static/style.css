@@ -46,6 +46,7 @@ html {
   --color-alert-error-text: #721c24;
   --color-alert-error-border: #f5c2c7;
   --color-overlay: rgba(0, 0, 0, 0.7);
+  --color-overlay-secondary: var(--color-bg);
   --MozillaText: MozillaText;
   --MozillaHeadline: MozillaHeadline;
   --font-size-base: 15px;
@@ -76,6 +77,7 @@ html {
   --color-alert-error-text: #991b1b;
   --color-alert-error-border: #fca5a5;
   --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-overlay-secondary: var(--color-bg);
   --MozillaText: MozillaText;
   --MozillaHeadline: MozillaHeadline;
   --font-size-base: 15px;
@@ -528,6 +530,19 @@ h6 {
   z-index: 100;
 }
 
+.screen-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-overlay-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
 .spinner {
   width: 24px;
   height: 24px;
@@ -567,6 +582,50 @@ h6 {
   border: 1px solid var(--color-table-border);
   color: var(--color-text);
   transition: background-color 0.3s ease;
+}
+
+.auth-container {
+  max-width: 400px;
+  margin: 100px auto;
+  background: var(--color-card);
+  border-radius: 8px;
+  border: 1px solid var(--color-table-border);
+}
+
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid var(--color-table-border);
+}
+
+.tab-btn {
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.flex {
+  display: flex;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.hidden {
+  display: none;
+}
+
+.text-center {
+  text-align: center;
 }
 
 .section-header {
