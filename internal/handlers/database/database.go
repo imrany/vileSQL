@@ -1886,9 +1886,15 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	// Build columns info array with name and constraint/type
 	columnsInfo := make([]map[string]interface{}, len(columns))
 	for i, col := range columns {
+		leng, _:=columnType[i].Length()
+		isNull, _:=columnType[i].Nullable()
 		columnsInfo[i] = map[string]interface{}{
 			"name":      col,
-			"constraint": columnType[i].DatabaseTypeName(),
+			"constraint": map[string]interface{}{
+				"type":columnType[i].DatabaseTypeName(),
+				"length":leng,
+				"is_null":isNull,
+			},
 		}
 	}
 

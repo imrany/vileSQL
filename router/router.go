@@ -15,9 +15,8 @@ func SetupRoutes(r *mux.Router){
 	viewsRouter := r.PathPrefix("/").Subrouter()
 
 
-	viewsRouter.HandleFunc("/", views.IndexPage).Methods("GET")
+	viewsRouter.HandleFunc("/", views.ControlPanel).Methods("GET")
 	viewsRouter.HandleFunc("/welcome", views.WelcomePage).Methods("GET")
-	viewsRouter.HandleFunc("/cpanel", views.ControlPanel).Methods("GET")
 
 	// Authentication routes
 	api.HandleFunc("/register", user.RegisterHandler).Methods("POST")
