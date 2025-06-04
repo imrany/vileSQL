@@ -327,6 +327,7 @@ h6 {
   align-items: center;
   gap: 8px;
   border-bottom: 1px solid var(--color-table-border);
+  border-bottom-left-radius: 8px;
 }
 
 .content-area {
@@ -348,7 +349,9 @@ h6 {
   transition: background-color 0.3s ease;
 }
 
-.database-list {
+.database-list .section-body {
+  overflow-y: auto;
+  max-height: calc(90vh/2);
   padding: 12px;
 }
 
@@ -373,8 +376,10 @@ h6 {
   border-color: var(--color-primary);
 }
 
-.tables-section {
-  margin-top: 16px;
+.tables-section .section-body {
+  overflow-y: auto;
+  max-height: calc(50vh/2);
+  padding: 12px;
 }
 
 .table-item {
@@ -532,6 +537,9 @@ h6 {
   color: var(--color-muted);
   text-align: center;
   padding: 40px;
+  border-bottom: 1px solid var(--color-table-border);
+  border-right: 1px solid var(--color-table-border);
+  border-bottom-right-radius: 8px;
 }
 
 .loading-overlay {
@@ -650,8 +658,7 @@ h6 {
   font-weight: 600;
   color: var(--color-muted);
   text-transform: uppercase;
-  margin-bottom: 8px;
-  padding: 0 8px;
+  padding: 12px 20px;
 }
 
 /* Demo content styles */
