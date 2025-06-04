@@ -3,12 +3,11 @@ class ThemeManager {
         this.currentTheme = 'auto';
         this.systemTheme = 'dark';
         this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        this.savedTheme = 'auto'; // Replace localStorage with property
         this.init();
     }
 
     init() {
-        const savedTheme = this.savedTheme || 'auto';
+        const savedTheme = localStorage.getItem('theme') || 'auto';
         const selector = document.getElementById('themeSelector');
         this.updateSystemTheme();
         this.mediaQuery.addEventListener('change', () => {
@@ -29,7 +28,7 @@ class ThemeManager {
 
     setTheme(theme) {
         this.currentTheme = theme;
-        this.savedTheme = theme; // Replace localStorage with property
+        localStorage.setItem('theme', theme);
         this.applyTheme();
         this.updateUI();
     }

@@ -25,7 +25,7 @@
             <div class="spinner"></div>
         </div>
     </template>
-    
+
     <!-- Theme Selector UI -->
     <div style="position: fixed; top: 12px; right: 12px; z-index: 1000;">
         <div class="theme-controls">
@@ -54,15 +54,16 @@
                         VileSQL
                     </h1>
                 </div>
-    
+
                 <div style="padding: 20px;">
                     <div x-show="message.text" class="alert"
                         :class="message.type === 'error' ? 'alert-error' : 'alert-success'">
                         <span x-text="message.text"></span>
                     </div>
-    
+
                     <div class="tab-nav">
-                        <button class="tab-btn" :class="authMode === 'login' ? 'active' : ''" @click="authMode = 'login'">
+                        <button class="tab-btn" :class="authMode === 'login' ? 'active' : ''"
+                            @click="authMode = 'login'">
                             Login
                         </button>
                         <button class="tab-btn" :class="authMode === 'register' ? 'active' : ''"
@@ -70,7 +71,7 @@
                             Register
                         </button>
                     </div>
-    
+
                     <form @submit.prevent="authMode === 'login' ? login() : register()" style="padding: 20px 0;">
                         <template x-if="authMode === 'login'">
                             <div>
@@ -80,7 +81,8 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Password</label>
-                                    <input type="password" class="form-control" x-model="authFormLogin.password" required>
+                                    <input type="password" class="form-control" x-model="authFormLogin.password"
+                                        required>
                                 </div>
                             </div>
                         </template>
@@ -88,7 +90,8 @@
                             <div>
                                 <div class="form-group">
                                     <label>Username</label>
-                                    <input type="text" class="form-control" x-model="authFormRegister.username" required>
+                                    <input type="text" class="form-control" x-model="authFormRegister.username"
+                                        required>
                                 </div>
                                 <div class="form-group">
                                     <label>Email</label>
@@ -105,14 +108,16 @@
                             <template x-if="loading">
                                 <div class="spinner" style="width: 16px; height: 16px;"></div>
                             </template>
-                            <span x-text="loading ? 'Processing...' : (authMode === 'login' ? 'Login' : 'Register')"></span>
+                            <span
+                                x-text="loading ? 'Processing...' : (authMode === 'login' ? 'Login' : 'Register')"></span>
                         </button>
                     </form>
-    
+
                     <div style="border-top: 1px solid #444; padding-top: 16px;">
                         <div class="section-header">Access Shared Database</div>
                         <div class="flex gap-2">
-                            <input type="text" class="form-control" x-model="sharedToken" placeholder="Enter share token">
+                            <input type="text" class="form-control" x-model="sharedToken"
+                                placeholder="Enter share token">
                             <button class="btn btn-secondary" @click="accessSharedDatabase()" :disabled="!sharedToken">
                                 <i data-lucide="share-2"></i>
                                 Access
@@ -140,33 +145,33 @@
                         <span x-text="sharedDb ? `Shared: ${sharedDb.name}` : 'VileSQL Database Manager'"></span>
                     </h1>
                 </div>
-    
-                <div x-show="message.text" class="alert" :class="message.type === 'error' ? 'alert-error' : 'alert-success'"
-                    style="margin: 12px;">
+
+                <div x-show="message.text" class="alert"
+                    :class="message.type === 'error' ? 'alert-error' : 'alert-success'" style="margin: 12px;">
                     <span x-text="message.text"></span>
                 </div>
-    
+
                 <div class="main-layout">
                     <!-- Sidebar -->
                     <div class="sidebar">
                         <div>
                             <div class="database-list">
                                 <div class="section-header">Databases</div>
-    
+
                                 <template x-if="sharedDb">
                                     <div class="database-item active" @click="selectDatabase(sharedDb)">
                                         <div style="font-weight: 500;" x-text="sharedDb.name"></div>
                                         <div style="font-size: 10px; color: #888;">Shared Database</div>
                                     </div>
                                 </template>
-    
+
                                 <template x-if="isAuthenticated">
                                     <div>
                                         <div x-show="databases.length === 0"
                                             class="text-[#888] text-[11px] flex items-center justify-center h-[80px]">
                                             No databases found
                                         </div>
-    
+
                                         <template x-for="db in databases" :key="db.id">
                                             <div class="database-item"
                                                 :class="selectedDb && selectedDb.id === db.id ? 'active' : ''"
@@ -189,7 +194,7 @@
                                                 </div>
                                             </div>
                                         </template>
-    
+
                                         <button class="btn btn-primary" style="width: 100%; margin-top: 8px;"
                                             @click="showCreateModal = true">
                                             <!-- plus icon -->
@@ -203,7 +208,7 @@
                                     </div>
                                 </template>
                             </div>
-    
+
                             <!-- Tables Section -->
                             <div x-show="selectedDb && tables.length > 0" class="tables-section flex-grow"
                                 style="padding: 0 12px;">
@@ -224,7 +229,7 @@
                                 </template>
                             </div>
                         </div>
-    
+
                         <div x-show="isAuthenticated" class="user-info">
                             <div class="flex items-center justify-center gap-2">
                                 <span x-show="isAuthenticated" style="margin-right: 16px; font-size: 12px;">
@@ -254,7 +259,7 @@
                             </div>
                         </div>
                     </div>
-    
+
                     <!-- Content Area -->
                     <div class="content-area" style="position: relative;">
                         <template x-if="loading">
@@ -262,7 +267,7 @@
                                 <div class="spinner"></div>
                             </div>
                         </template>
-    
+
                         <!-- Toolbar -->
                         <div class="toolbar">
                             <template x-if="selectedDb">
@@ -270,8 +275,8 @@
                                     <template x-if="!selectedTable">
                                         <button class="btn btn-primary" @click="showTableModal = true">
                                             <!-- Table SVG Icon -->
-                                            <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16" fill="none"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                            <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16"
+                                                fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
                                                 <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
                                                 <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
@@ -291,7 +296,7 @@
                                             Insert Data
                                         </button>
                                     </template>
-    
+
                                     <template x-if="isAuthenticated && selectedDb&& !selectedTable">
                                         <button class="btn btn-secondary" @click="shareDatabase(selectedDb)">
                                             <!-- lock icon -->
@@ -315,13 +320,14 @@
                                                 <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff"
                                                     stroke-width="1" />
                                                 <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff" />
-                                                <path d="M8 7V5a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1" fill="none" />
+                                                <path d="M8 7V5a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1"
+                                                    fill="none" />
                                                 <circle cx="12" cy="5" r="1" fill="#fff" />
                                             </svg>
                                             <span x-text="selectedDb.is_shared ? 'Unshare' : 'Share'"></span>
                                         </button>
                                     </template>
-    
+
                                     <template x-if="isAuthenticated && selectedTable">
                                         <button class="btn btn-danger" @click="showDeleteTableModal=true">
                                             <!-- trash icon -->
@@ -336,13 +342,15 @@
                                                 <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff"
                                                     fill-opacity="0.5" />
                                                 <rect x="2" y="5" width="12" height="1" fill="#fff" />
-                                                <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01" stroke-width="1.5" />
-                                                <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01" stroke-width="1.5" />
+                                                <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
+                                                <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
                                             </svg>
                                             Delete Table
                                         </button>
                                     </template>
-    
+
                                     <template x-if="isAuthenticated && selectedDb && !selectedTable">
                                         <button class="btn btn-danger" @click="showDeleteModal = true">
                                             <!-- trash icon -->
@@ -357,26 +365,30 @@
                                                 <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff"
                                                     fill-opacity="0.5" />
                                                 <rect x="2" y="5" width="12" height="1" fill="#fff" />
-                                                <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01" stroke-width="1.5" />
-                                                <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01" stroke-width="1.5" />
+                                                <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
+                                                <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
                                             </svg>
                                             Delete DB
                                         </button>
                                     </template>
-    
+
                                     <!-- Delete Database Modal -->
                                     <div x-show="showDeleteModal" class="modal" @click.self="showDeleteModal = false">
                                         <div class="modal-content">
-                                            <h3 style="margin-bottom: 16px;">Are you sure you want to delete the database
+                                            <h3 style="margin-bottom: 16px;">Are you sure you want to delete the
+                                                database
                                                 <strong class="text-[#2563eb]"
                                                     x-text="selectedDb ? selectedDb.name : ''"></strong>? This action
                                                 cannot be undone.
                                             </h3>
                                             <form @submit.prevent="deleteDatabase(selectedDb.id)">
                                                 <div class="form-group">
-                                                    <label class="text-sm mt-4">Type the database name to confirm</label>
-                                                    <input type="text" class="form-control" x-model="deleteDbName" required
-                                                        placeholder="Enter database name to confirm">
+                                                    <label class="text-sm mt-4">Type the database name to
+                                                        confirm</label>
+                                                    <input type="text" class="form-control" x-model="deleteDbName"
+                                                        required placeholder="Enter database name to confirm">
                                                 </div>
                                                 <div class="flex gap-2">
                                                     <button type="submit" class="btn btn-danger"
@@ -392,15 +404,16 @@
                                 </div>
                             </template>
                         </div>
-    
+
                         <!-- Filter Bar -->
                         <div x-show="selectedTable && tableData.length > 0" class="filter-bar">
                             <label>Filter:</label>
-                            <input type="text" class="filter-input" x-model="filterText" placeholder="Search in table...">
+                            <input type="text" class="filter-input" x-model="filterText"
+                                placeholder="Search in table...">
                             <span style="margin-left: auto; color: #888;"
                                 x-text="`${filteredTableData.length} rows`"></span>
                         </div>
-    
+
                         <!-- Data Table -->
                         <div class="data-table-container">
                             <template x-if="!selectedDb">
@@ -416,7 +429,7 @@
                                     <p>Choose a database from the sidebar to explore its contents</p>
                                 </div>
                             </template>
-    
+
                             <template x-if="selectedDb && !selectedTable">
                                 <div class="empty-state">
                                     <!-- table icon -->
@@ -431,7 +444,7 @@
                                     <p>Choose a table from the sidebar or create a new one</p>
                                 </div>
                             </template>
-    
+
                             <template x-if="selectedTable && tableColumns.length > 0">
                                 <table class="data-table">
                                     <thead>
@@ -444,9 +457,12 @@
                                                         <template x-if="column.constraint">
                                                             <span class="text-[10px] text-[#60a5fa] mr-2 ml-auto">
                                                                 <span x-text="column.constraint.type"></span>
-                                                                <span x-text="column.constraint.unique?'UNIQUE':''"></span>
-                                                                <span x-text="column.constraint.primary_key?'PRIMARY':''"></span>
-                                                                <span x-text="column.constraint.not_null?'NOT NULL':''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.unique?'UNIQUE':''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.primary_key?'PRIMARY':''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.not_null?'NOT NULL':''"></span>
                                                             </span>
                                                         </template>
                                                     </div>
@@ -458,35 +474,31 @@
                                         <!-- Data rows -->
                                         <template x-for="(row, index) in filteredTableData" :key="index">
                                             <tr>
-                                                <td class="row-number" x-text="index + 1"></td>
+                                                <td class="row-number cursor-pointer" x-text="index + 1"
+                                                    @click="showRowDropdown = { row: row, index: index }">
+                                                </td>
+
                                                 <template x-for="(column, colIndex) in tableColumns" :key="column.name">
-                                                    <td
-                                                        @dblclick="
+                                                    <td @dblclick="
                                                             if (!editingCell || editingCell.row !== index || editingCell.col !== column.name) {
                                                                 editingCell = { row: index, col: column.name, value: Array.isArray(row) ? row[colIndex] : row[column.name] }
                                                             }
-                                                        "
-                                                    >
-                                                        <template x-if="editingCell && editingCell.row === index && editingCell.col === column.name">
-                                                            <input
-                                                                type="text"
-                                                                class="form-control text-[11px]"
-                                                                x-model="editingCell.value"
-                                                                @keydown.enter.stop.prevent="
+                                                        ">
+                                                        <template
+                                                            x-if="editingCell && editingCell.row === index && editingCell.col === column.name">
+                                                            <input type="text" class="form-control text-[11px]"
+                                                                x-model="editingCell.value" @keydown.enter.stop.prevent="
                                                                     updateCell(index, column.name, editingCell.value, row[colIndex]);
                                                                     editingCell = null;
-                                                                "
-                                                                @keydown.esc="editingCell = null"
+                                                                " @keydown.esc="editingCell = null"
                                                                 @blur="editingCell = null"
-                                                                style="padding:2px 6px; min-width: 60px;"
-                                                                autofocus
-                                                            >
+                                                                style="padding:2px 6px; min-width: 60px;" autofocus>
                                                         </template>
-                                                        <template x-if="!editingCell || editingCell.row !== index || editingCell.col !== column.name">
+                                                        <template
+                                                            x-if="!editingCell || editingCell.row !== index || editingCell.col !== column.name">
                                                             <span
                                                                 x-text="Array.isArray(row) ? (row[colIndex] !== null ? row[colIndex] : 'NULL') : (row[column.name] !== null ? row[column.name] : 'NULL')"
-                                                                :title="Array.isArray(row) ? row[colIndex] : row[column.name]"
-                                                            ></span>
+                                                                :title="Array.isArray(row) ? row[colIndex] : row[column.name]"></span>
                                                         </template>
                                                     </td>
                                                 </template>
@@ -507,7 +519,7 @@
                                 </table>
                             </template>
                         </div>
-    
+
                         <!-- Query Panel -->
                         <div x-show="selectedDb" class="query-panel">
                             <div class="form-group">
@@ -534,9 +546,23 @@
         </div>
     </template>
 
-    
+
     <template x-if="isAuthenticated || sharedDb">
         <div>
+            <div x-show="showRowDropdown!=null" @click.self="showRowDropdown = null" class="modal">
+                <div class="modal-content">
+                    <h3 style="margin-bottom: 16px;">You've selected row #<span x-text="showRowDropdown ? showRowDropdown.index + 1 : ''"></span></h3>
+                    <button
+                        @click="deleteRow(showRowDropdown.row, showRowDropdown.index)"
+                        style="padding: 6px 16px; color: white; margin-bottom:8px;"
+                        class="btn btn-danger w-full text-left rounded-md cursor-pointer"
+                    >
+                        🗑️ Delete Row
+                    </button>
+                    <button type="button" class="btn btn-secondary" @click="showRowDropdown = null">Cancel</button>
+                </div>
+            </div>
+
             <!-- Create Database Modal -->
             <div x-show="showCreateModal" class="modal" @click.self="showCreateModal = false">
                 <div class="modal-content">
@@ -551,12 +577,13 @@
                             <button type="submit" class="btn btn-primary" :disabled="!newDbName.trim() || loading">
                                 <span x-text="loading ? 'Creating...' : 'Create'"></span>
                             </button>
-                            <button type="button" class="btn btn-secondary" @click="showCreateModal = false">Cancel</button>
+                            <button type="button" class="btn btn-secondary"
+                                @click="showCreateModal = false">Cancel</button>
                         </div>
                     </form>
                 </div>
             </div>
-        
+
             <!-- Create Table Modal -->
             <div x-show="showTableModal && selectedDb" class="modal" @click.self="showTableModal = false">
                 <div class="modal-content">
@@ -570,8 +597,10 @@
                         <div class="form-group">
                             <label>Columns (SQL format)</label>
                             <textarea class="form-control" x-model="newTableForm.columns" required
-                                placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE" rows="4"></textarea>
-                            <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT NOT NULL,
+                                placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE"
+                                rows="4"></textarea>
+                            <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT NOT
+                                NULL,
                                 email TEXT</small>
                         </div>
                         <div class="flex gap-2">
@@ -585,9 +614,10 @@
                     </form>
                 </div>
             </div>
-        
+
             <!-- Insert Data Modal -->
-            <div x-show="showInsertModal && selectedTable && selectedDb" class="modal" @click.self="showInsertModal = false">
+            <div x-show="showInsertModal && selectedTable && selectedDb" class="modal"
+                @click.self="showInsertModal = false">
                 <div class="modal-content">
                     <h3 style="margin-bottom: 16px;">Insert Data</h3>
                     <form @submit.prevent="insertData()">
@@ -598,8 +628,8 @@
                                     placeholder="Enter table name" required />
                             </template>
                             <template x-if="selectedTable">
-                                <input type="text" class="form-control" :value="selectedTable" :placeholder="selectedTable"
-                                    readonly />
+                                <input type="text" class="form-control" :value="selectedTable"
+                                    :placeholder="selectedTable" readonly />
                             </template>
                         </div>
                         <div class="form-group">
@@ -621,7 +651,8 @@
                                 :placeholder="`'John Doe', 'john@example.com', 30`">
                         </div>
                         <div class="flex gap-2">
-                            <button type="submit" class="btn btn-success" :disabled="!insertForm.values.trim() || loading">
+                            <button type="submit" class="btn btn-success"
+                                :disabled="!insertForm.values.trim() || loading">
                                 <span x-text="loading ? 'Inserting...' : 'Insert Data'"></span>
                             </button>
                             <button type="button" class="btn btn-secondary"
@@ -637,13 +668,13 @@
                     <h3 style="margin-bottom: 16px;">Are you sure you want to delete table
                         <strong class="text-[#2563eb]" x-text="selectedTable? selectedTable : ''"></strong>?
                     </h3>
-        
+
                     <div class="flex gap-2">
-                        <button @click="deleteTable" class="btn btn-danger"
-                            :disabled="loading">
+                        <button @click="deleteTable" class="btn btn-danger" :disabled="loading">
                             <span x-text="loading ? 'Deleting...' : 'Delete'"></span>
                         </button>
-                        <button type="button" class="btn btn-secondary" @click="showDeleteTableModal = false">Cancel</button>
+                        <button type="button" class="btn btn-secondary"
+                            @click="showDeleteTableModal = false">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -674,6 +705,8 @@
                 tableColumns: [],
                 filterText: '',
                 editingCell: null,
+                selectedRow: null,
+                index: 0,
 
                 // Modals
                 showCreateModal: false,
@@ -683,6 +716,9 @@
                 showDeleteTableModal: false,
                 deleteDbName: '',
                 sharedDbName: '',
+                showRowDropdown: null,
+                showDeleteRowModal: { show: false, row: null, index: null },
+                showEditRowModal: false,
 
                 // Forms
                 newDbName: '',
@@ -924,6 +960,30 @@
                     this.loading = false;
                 },
 
+                async deleteRow(selectedRow, index) {
+                    if (!this.selectedDb || !this.selectedTable) return;
+                    // Build condition using all columns to uniquely identify the row
+                    const condition = {};
+                    this.tableColumns.forEach((col, i) => {
+                        condition[col.name] = Array.isArray(selectedRow) ? selectedRow[i] : selectedRow[col.name];
+                    });
+
+                    this.loading = true;
+                    try {
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${this.selectedTable}/data`, {
+                            method: 'DELETE',
+                            body: JSON.stringify({ condition })
+                        });
+                        // Reload table data
+                        await this.selectTable(this.selectedTable);
+                        this.setMessage('Row deleted successfully!', 'success');
+                        this.showRowDropdown = null;
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    }
+                    this.loading = false;
+                },
+
                 // Query execution methods
                 async executeQuery() {
                     if (!this.queryText.trim() || !this.selectedDb) return;
@@ -974,7 +1034,7 @@
                 },
 
                 async deleteTable() {
-                    const tableName=this.selectedTable
+                    const tableName = this.selectedTable
                     this.loading = true;
                     try {
                         await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${tableName}`, { method: 'DELETE' });

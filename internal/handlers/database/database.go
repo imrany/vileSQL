@@ -2118,8 +2118,10 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer userDB.Close()
 
-	var condition map[string]any
-	if err := json.NewDecoder(r.Body).Decode(&condition); err != nil {
+	var req struct {
+		Condition map[string]any `json:"condition"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
 			Message: "Invalid JSON data",
@@ -2127,19 +2129,19 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var whereClauses []string
-	var whereValues []any
-	for key, value := range condition {
-		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
-		whereValues = append(whereValues, value)
-	}
-
-	if len(whereClauses) == 0 {
+	if len(req.Condition) == 0 {
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
 			Message: "No condition provided for deletion",
 		})
 		return
+	}
+
+	var whereClauses []string
+	var whereValues []any
+	for key, value := range req.Condition {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
+		whereValues = append(whereValues, value)
 	}
 
 	query := fmt.Sprintf("DELETE FROM %s WHERE %s",
