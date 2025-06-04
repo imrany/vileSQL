@@ -31,7 +31,7 @@ func main() {
 
 	PORT := config.GetValue("PORT")
 	if PORT == ""{
-		PORT = "8000"
+		PORT = "5050"
 	}
 	log.Printf("Server running on port %v...", PORT)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", PORT), corsHandler))
