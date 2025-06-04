@@ -272,7 +272,7 @@
                         <!-- Toolbar -->
                         <div class="toolbar">
                             <template x-if="selectedDb">
-                                <div class="flex gap-2">
+                                <div class="flex gap-2 w-full">
                                     <template x-if="!selectedTable">
                                         <button class="btn btn-primary" @click="showTableModal = true">
                                             <!-- Table SVG Icon -->
@@ -295,6 +295,13 @@
                                                 <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff" />
                                             </svg>
                                             Insert Data
+                                        </button>
+                                    </template>
+
+                                    <template x-if="selectedTable">
+                                        <button type="button" class="btn btn-secondary"
+                                            @click="selectTable(selectedTable)">
+                                            Reload Table
                                         </button>
                                     </template>
 
@@ -330,7 +337,8 @@
                                     </template>
 
                                     <template x-if="isAuthenticated && selectedTable">
-                                        <button class="btn btn-danger" @click="showDeleteTableModal=true">
+                                        <button class="btn btn-danger" style="margin-left: auto;"
+                                            @click="showDeleteTableModal=true">
                                             <!-- trash icon -->
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                                 style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
@@ -353,7 +361,8 @@
                                     </template>
 
                                     <template x-if="isAuthenticated && selectedDb && !selectedTable">
-                                        <button class="btn btn-danger" @click="showDeleteModal = true">
+                                        <button class="btn btn-danger" style="margin-left: auto;"
+                                            @click="showDeleteModal = true">
                                             <!-- trash icon -->
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                                 style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
@@ -375,33 +384,7 @@
                                         </button>
                                     </template>
 
-                                    <!-- Delete Database Modal -->
-                                    <div x-show="showDeleteModal" class="modal" @click.self="showDeleteModal = false">
-                                        <div class="modal-content">
-                                            <h3 style="margin-bottom: 16px;">Are you sure you want to delete the
-                                                database
-                                                <strong class="text-[#2563eb]"
-                                                    x-text="selectedDb ? selectedDb.name : ''"></strong>? This action
-                                                cannot be undone.
-                                            </h3>
-                                            <form @submit.prevent="deleteDatabase(selectedDb.id)">
-                                                <div class="form-group">
-                                                    <label class="text-sm mt-4">Type the database name to
-                                                        confirm</label>
-                                                    <input type="text" class="form-control" x-model="deleteDbName"
-                                                        required placeholder="Enter database name to confirm">
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <button type="submit" class="btn btn-danger"
-                                                        :disabled="deleteDbName !== (selectedDb ? selectedDb.name : '') || loading">
-                                                        <span x-text="loading ? 'Deleting...' : 'Delete'"></span>
-                                                    </button>
-                                                    <button type="button" class="btn btn-secondary"
-                                                        @click="showDeleteModal = false">Cancel</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
+
                                 </div>
                             </template>
                         </div>
@@ -414,6 +397,7 @@
                             <span style="margin-left: auto; color: #888;"
                                 x-text="`${filteredTableData.length} rows`"></span>
                         </div>
+
 
                         <!-- Data Table -->
                         <div class="data-table-container">
@@ -549,18 +533,45 @@
 
 
     <template x-if="isAuthenticated || sharedDb">
+        <!-- delete row modal -->
         <div>
             <div x-show="showRowDropdown!=null" @click.self="showRowDropdown = null" class="modal">
                 <div class="modal-content">
-                    <h3 style="margin-bottom: 16px;">You've selected row #<span x-text="showRowDropdown ? showRowDropdown.index + 1 : ''"></span></h3>
-                    <button
-                        @click="deleteRow(showRowDropdown.row, showRowDropdown.index)"
+                    <h3 style="margin-bottom: 16px;">You've selected row #<span
+                            x-text="showRowDropdown ? showRowDropdown.index + 1 : ''"></span></h3>
+                    <button @click="deleteRow(showRowDropdown.row, showRowDropdown.index)"
                         style="padding: 6px 16px; color: white; margin-bottom:8px;"
-                        class="btn btn-danger w-full text-left rounded-md cursor-pointer"
-                    >
+                        class="btn btn-danger w-full text-left rounded-md cursor-pointer">
                         🗑️ Delete Row
                     </button>
                     <button type="button" class="btn btn-secondary" @click="showRowDropdown = null">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Delete Database Modal -->
+            <div x-show="showDeleteModal" class="modal" @click.self="showDeleteModal = false">
+                <div class="modal-content">
+                    <h3 style="margin-bottom: 16px;">Are you sure you want to delete the
+                        database
+                        <strong class="text-[#2563eb]" x-text="selectedDb ? selectedDb.name : ''"></strong>? This action
+                        cannot be undone.
+                    </h3>
+                    <form @submit.prevent="deleteDatabase(selectedDb.id)">
+                        <div class="form-group">
+                            <label class="text-sm mt-4">Type the database name to
+                                confirm</label>
+                            <input type="text" class="form-control" x-model="deleteDbName" required
+                                placeholder="Enter database name to confirm">
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="btn btn-danger"
+                                :disabled="deleteDbName !== (selectedDb ? selectedDb.name : '') || loading">
+                                <span x-text="loading ? 'Deleting...' : 'Delete'"></span>
+                            </button>
+                            <button type="button" class="btn btn-secondary"
+                                @click="showDeleteModal = false">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
