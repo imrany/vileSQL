@@ -881,7 +881,7 @@
 
                     this.loading = true;
                     try {
-                        await this.apiCall('/api/databases', {
+                        const result = await this.apiCall('/api/databases', {
                             method: 'POST',
                             body: JSON.stringify({ name: this.newDbName })
                         });
@@ -889,6 +889,9 @@
                         this.newDbName = '';
                         this.showCreateModal = false;
                         this.loadDatabases();
+                        if (this.selectedDb) {
+                            this.selectedDb = result.data || [];
+                        }
                         this.setMessage('Database created successfully!', 'success');
                     } catch (error) {
                         this.setMessage(error.message, 'error');
@@ -917,6 +920,7 @@
                     } catch (error) {
                         this.setMessage(error.message, 'error');
                     }
+                    this.loading = false;
                 },
 
                 async shareDatabase(database) {

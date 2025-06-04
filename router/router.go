@@ -30,7 +30,7 @@ func SetupRoutes(r *mux.Router){
 
 	// Database management routes
 	protected.HandleFunc("/databases", database.CreateDatabaseHandler).Methods("POST")
-	protected.HandleFunc("/databases", database.GetUserDatabasesHandler).Methods("GET")
+	protected.HandleFunc("/databases", database.GetUserDatnullabasesHandler).Methods("GET")
 	protected.HandleFunc("/databases/{id:[0-9]+}", database.GetDatabaseHandler).Methods("GET")
 	protected.HandleFunc("/databases/{id:[0-9]+}", database.DeleteDatabaseHandler).Methods("DELETE")
 	protected.HandleFunc("/databases/{id:[0-9]+}/share", database.ShareDatabaseHandler).Methods("POST")
