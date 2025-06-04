@@ -451,7 +451,7 @@
                                         <tr>
                                             <th class="row-number">#</th>
                                             <template x-for="column in tableColumns" :key="column.name">
-                                                <th>
+                                                <th style="min-width: 300px;">
                                                     <div class="flex justify-between items-center">
                                                         <span x-text="column.name"></span>
                                                         <template x-if="column.constraint">
@@ -479,7 +479,7 @@
                                                 </td>
 
                                                 <template x-for="(column, colIndex) in tableColumns" :key="column.name">
-                                                    <td @dblclick="
+                                                    <td style="min-width: 300px;" @dblclick="
                                                             if (!editingCell || editingCell.row !== index || editingCell.col !== column.name) {
                                                                 editingCell = { row: index, col: column.name, value: Array.isArray(row) ? row[colIndex] : row[column.name] }
                                                             }
@@ -506,9 +506,9 @@
                                         </template>
                                         <!-- Extra row for adding data -->
                                         <tr>
-                                            <td class="row-number" style="font-weight:bold;">+</td>
+                                            <td class="row-number">+</td>
                                             <template x-for="(column, colIndex) in tableColumns" :key="column.name">
-                                                <td>
+                                                <td style="min-width: 300px;">
                                                     <input type="text" class="form-control text-[11px]"
                                                         :placeholder="column.name" x-model="insertRow[column.name]"
                                                         @keydown.enter.stop.prevent="addRow()" style="padding:2px 6px;">
@@ -999,6 +999,9 @@
                         this.setMessage('Query executed successfully!', 'success');
                         // Optionally reload table data if needed
                         if (this.selectedTable) {
+                            // Reload tables after creation
+                            const result = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables`);
+                            this.tables = result.data || [];
                             await this.selectTable(this.selectedTable);
                         }
                     } catch (error) {
