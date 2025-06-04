@@ -25,28 +25,28 @@
             <div class="spinner"></div>
         </div>
     </template>
+    
+    <!-- Theme Selector UI -->
+    <div style="position: fixed; top: 12px; right: 12px; z-index: 1000;">
+        <div class="theme-controls">
+            <select class="theme-selector" id="themeSelector">
+                <option value="auto">🌓 Auto (System)</option>
+                <option value="dark">🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+            </select>
+            <div class="theme-status" id="themeStatus">
+                <span class="theme-icon">🌓</span>
+                <span id="currentTheme">Auto</span>
+            </div>
+        </div>
+        <div style="font-size: 11px; color: #aaa; margin-top: 2px;">
+            <span id="activeTheme">Auto (dark mode active)</span> | System: <span id="systemPreference">Dark</span>
+        </div>
+    </div>
 
     <!-- Authentication Screen -->
     <template x-if="!isAuthenticated && !sharedDb">
         <div class="auth-container">
-            <!-- Theme Selector UI -->
-            <div style="position: fixed; top: 12px; right: 12px; z-index: 1000;">
-                <div class="theme-controls">
-                    <select class="theme-selector" id="themeSelector">
-                        <option value="auto">🌓 Auto (System)</option>
-                        <option value="dark">🌙 Dark</option>
-                        <option value="light">☀️ Light</option>
-                    </select>
-                    <div class="theme-status" id="themeStatus">
-                        <span class="theme-icon">🌓</span>
-                        <span id="currentTheme">Auto</span>
-                    </div>
-                </div>
-                <div style="font-size: 11px; color: #aaa; margin-top: 2px;">
-                    <span id="activeTheme">Auto (dark mode active)</span> | System: <span id="systemPreference">Dark</span>
-                </div>
-            </div>
-    
             <div class="card">
                 <div class="header">
                     <h1>
@@ -139,23 +139,6 @@
                         </svg>
                         <span x-text="sharedDb ? `Shared: ${sharedDb.name}` : 'VileSQL Database Manager'"></span>
                     </h1>
-                    <div>
-                        <div class="theme-controls">
-                            <select class="theme-selector" id="themeSelectorMain">
-                                <option value="auto">🌓 Auto (System)</option>
-                                <option value="dark">🌙 Dark</option>
-                                <option value="light">☀️ Light</option>
-                            </select>
-                            <div class="theme-status" id="themeStatusMain">
-                                <span class="theme-icon">🌓</span>
-                                <span id="currentThemeMain">Auto</span>
-                            </div>
-                        </div>
-                        <div style="font-size: 11px; color: #aaa; margin-top: 2px;">
-                            <span id="activeThemeMain">Auto (dark mode active)</span> | System: <span
-                                id="systemPreferenceMain">Dark</span>
-                        </div>
-                    </div>
                 </div>
     
                 <div x-show="message.text" class="alert" :class="message.type === 'error' ? 'alert-error' : 'alert-success'"
