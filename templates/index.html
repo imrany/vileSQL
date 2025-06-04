@@ -157,10 +157,15 @@
                     <div class="sidebar">
                         <div>
                             <div class="database-list">
-                                <div class="section-header">Databases</div>
+                                <div class="section-header">
+                                    Databases
+                                    <button class="cursor-pointer" @click="selectedDb=null">
+                                        Reload Databases
+                                    </button>
+                                </div>
                                 <div class="section-body">
                                     <template x-if="sharedDb">
-                                        <div class="database-item active" @click="selectDatabase(sharedDb)">
+                                        <div x-show="selectedDb?selectedDb.name===sharedDb.name:true" class="database-item active" @click="selectDatabase(sharedDb)">
                                             <div style="font-weight: 500;" x-text="sharedDb.name"></div>
                                             <div style="font-size: 10px; color: #888;">Shared Database</div>
                                         </div>
@@ -174,9 +179,10 @@
                                             </div>
 
                                             <template x-for="db in databases" :key="db.id">
-                                                <div class="database-item"
+                                                <div x-show="selectedDb?selectedDb.name===db.name:true" class="database-item"
                                                     :class="selectedDb && selectedDb.id === db.id ? 'active' : ''"
-                                                    @click="selectDatabase(db)">
+                                                    @click="selectDatabase(db)"
+                                                >
                                                     <div
                                                         style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
                                                         <!-- Pink SQL Database SVG Icon -->

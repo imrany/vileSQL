@@ -351,7 +351,7 @@ h6 {
 
 .database-list .section-body {
   overflow-y: auto;
-  max-height: calc(90vh/2);
+  max-height: 60vh;
   padding: 12px;
 }
 
@@ -378,7 +378,7 @@ h6 {
 
 .tables-section .section-body {
   overflow-y: auto;
-  max-height: calc(50vh/2);
+  max-height: calc(90vh/2);
   padding: 12px;
 }
 
@@ -654,6 +654,9 @@ h6 {
 }
 
 .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 11px;
   font-weight: 600;
   color: var(--color-muted);
