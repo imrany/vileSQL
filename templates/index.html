@@ -438,19 +438,39 @@
                                     <thead>
                                         <tr>
                                             <th class="row-number">#</th>
-                                            <template x-for="column in tableColumns" :key="column.name">
-                                                <th style="min-width: 300px;">
+                                            <template x-for="(column, colIndex) in tableColumns" :key="column.name">
+                                                <th 
+                                                    style="min-width: 300px;"
+                                                    @click="editingCell = { row: -1, col: column.name, value: column.name }"
+                                                >
                                                     <div class="flex justify-between items-center">
-                                                        <span x-text="column.name"></span>
+                                                        <template x-if="editingCell && editingCell.row === -1 && editingCell.col === column.name">
+                                                            <input type="text"
+                                                                class="form-control text-[11px]"
+                                                                x-model="editingCell.value"
+                                                                @keydown.enter.stop.prevent="
+                                                                    updateColumnName(editingCell);
+                                                                    editingCell = null;
+                                                                "
+                                                                @keydown.esc="editingCell = null"
+                                                                @blur="editingCell = null"
+                                                                style="padding:2px 6px; min-width: 60px;"
+                                                                autofocus
+                                                            >
+                                                        </template>
+                                                        <template x-if="!editingCell || editingCell.row !== -1 || editingCell.col !== column.name">
+                                                            <span
+                                                                x-text="column.name"
+                                                                class="cursor-pointer"
+                                                                title="Double-click to edit column name"
+                                                            ></span>
+                                                        </template>
                                                         <template x-if="column.constraint">
                                                             <span class="text-[10px] text-[#60a5fa] mr-2 ml-auto">
                                                                 <span x-text="column.constraint.type"></span>
-                                                                <span
-                                                                    x-text="column.constraint.unique?'UNIQUE':''"></span>
-                                                                <span
-                                                                    x-text="column.constraint.primary_key?'PRIMARY':''"></span>
-                                                                <span
-                                                                    x-text="column.constraint.not_null?'NOT NULL':''"></span>
+                                                                <span x-text="column.constraint.unique?'UNIQUE':''"></span>
+                                                                <span x-text="column.constraint.primary_key?'PRIMARY':''"></span>
+                                                                <span x-text="column.constraint.not_null?'NOT NULL':''"></span>
                                                             </span>
                                                         </template>
                                                     </div>
@@ -1465,6 +1485,39 @@
                     this.loading = false;
                 },
 
+                async updateColumnName(editingCell) {
+                    const newName = editingCell.value;
+                    const colIndex = this.tableColumns.findIndex(col => col.name === editingCell.col);
+                    if (!this.selectedDb || !this.selectedTable) return;
+                    if (!newName.trim()) {
+                        this.setMessage('Column name cannot be empty.', 'error');
+                        return;
+                    }
+                    if (colIndex < 0 || colIndex >= this.tableColumns.length) {
+                        this.setMessage('Invalid column index.', 'error');
+                        return;
+                    }
+                    const column = this.tableColumns[colIndex];
+                    if (!column) {
+                        this.setMessage('Column not found.', 'error');
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        // Use SQL query to rename the column
+                        const sql = `ALTER TABLE "${this.selectedTable}" RENAME COLUMN "${column.name}" TO "${newName}"`;
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                            method: 'POST',
+                            body: JSON.stringify({ sql })
+                        });
+                        // Reload table data
+                        await this.selectTable(this.selectedTable);
+                        this.setMessage('Column renamed successfully!', 'success');
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    }
+                    this.loading = false;
+                },
                 // Filtered table data
                 get filteredTableData() {
                     if (!this.filterText.trim()) return this.tableData;
