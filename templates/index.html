@@ -159,13 +159,15 @@
                             <div class="database-list">
                                 <div class="section-header">
                                     Databases
-                                    <button title="Shows all databases" x-text="selectedDb===null?'':'Back'" class="cursor-pointer" @click="selectedDb=null">
-                                        
+                                    <button title="Shows all databases" x-text="selectedDb===null?'':'Back'"
+                                        class="cursor-pointer" @click="selectedDb=null">
+
                                     </button>
                                 </div>
                                 <div class="section-body">
                                     <template x-if="sharedDb">
-                                        <div x-show="selectedDb?selectedDb.name===sharedDb.name:true" class="database-item active" @click="selectDatabase(sharedDb)">
+                                        <div x-show="selectedDb?selectedDb.name===sharedDb.name:true"
+                                            class="database-item active" @click="selectDatabase(sharedDb)">
                                             <div style="font-weight: 500;" x-text="sharedDb.name"></div>
                                             <div style="font-size: 10px; color: #888;">Shared Database</div>
                                         </div>
@@ -179,10 +181,10 @@
                                             </div>
 
                                             <template x-for="db in databases" :key="db.id">
-                                                <div x-show="selectedDb?selectedDb.name===db.name:true" class="database-item"
+                                                <div x-show="selectedDb?selectedDb.name===db.name:true"
+                                                    class="database-item"
                                                     :class="selectedDb && selectedDb.id === db.id ? 'active' : ''"
-                                                    @click="selectDatabase(db)"
-                                                >
+                                                    @click="selectDatabase(db)">
                                                     <div
                                                         style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
                                                         <!-- Pink SQL Database SVG Icon -->
@@ -231,8 +233,7 @@
 
                         <div x-show="isAuthenticated" class="user-info">
                             <div class="flex flex-col gap-2 w-full">
-                                <button class="btn btn-primary" style="width: 100%;"
-                                    @click="showCreateModal = true">
+                                <button class="btn btn-primary" style="width: 100%;" @click="showCreateModal = true">
                                     <!-- plus icon -->
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                         style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
@@ -313,42 +314,30 @@
                                             @click="selectTable(selectedTable)">
                                             <!-- reload icon -->
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                                style="vertical-align: middle; margin-right: 4px;" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M2 8a6 6 0 1 1 2.47 4.85" stroke="#ffff" stroke-width="1.5" fill="none"/>
-                                                <path d="M2 12v-3h3" stroke="#ffff" stroke-width="1.5" fill="none"/>
+                                                style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M2 8a6 6 0 1 1 2.47 4.85" stroke="#ffff" stroke-width="1.5"
+                                                    fill="none" />
+                                                <path d="M2 12v-3h3" stroke="#ffff" stroke-width="1.5" fill="none" />
                                             </svg>
                                             Reload Table
                                         </button>
                                     </template>
 
-                                    <template x-if="isAuthenticated && selectedDb&& !selectedTable">
-                                        <button class="btn btn-secondary" @click="shareDatabase(selectedDb)">
-                                            <!-- lock icon -->
+                                    <template x-if="isAuthenticated && selectedDb && !selectedTable">
+                                        <button class="btn btn-secondary" @click="tab='info'; showConfigModal = true"
+                                            title="Database Info & Connection">
+                                            <!-- gear icon -->
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg"
-                                                x-show="!selectedDb.is_shared">
-                                                <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff"
-                                                    fill-opacity="0.15" />
-                                                <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff"
-                                                    stroke-width="1" />
-                                                <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff" />
-                                                <path d="M5 7V5a3 3 0 1 1 6 0v2" stroke="#fff" stroke-width="1"
+                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="8" cy="8" r="2" fill="#fff" />
+                                                <path d="M2 8a6 6 0 0 1 12 0" stroke="#fff" stroke-width="1.2"
                                                     fill="none" />
+                                                <path
+                                                    d="M8 2v2M8 12v2M2 8h2M12 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5l1.5-1.5M11 5l1.5-1.5"
+                                                    stroke="#fff" stroke-width="1" fill="none" />
                                             </svg>
-                                            <!-- unlock icon -->
-                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg"
-                                                x-show="selectedDb.is_shared">
-                                                <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff"
-                                                    fill-opacity="0.15" />
-                                                <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff"
-                                                    stroke-width="1" />
-                                                <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff" />
-                                                <path d="M8 7V5a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1"
-                                                    fill="none" />
-                                                <circle cx="12" cy="5" r="1" fill="#fff" />
-                                            </svg>
-                                            <span x-text="selectedDb.is_shared ? 'Unshare' : 'Share'"></span>
+                                            Configurations
                                         </button>
                                     </template>
 
@@ -473,7 +462,8 @@
                                         <!-- Data rows -->
                                         <template x-for="(row, index) in filteredTableData" :key="index">
                                             <tr>
-                                                <td class="row-number cursor-pointer" x-text="selectShowDeleteRowIcon ? '🗑️' : index + 1"
+                                                <td class="row-number cursor-pointer"
+                                                    x-text="selectShowDeleteRowIcon ? '🗑️' : index + 1"
                                                     @mouseover="selectShowDeleteRowIcon = true"
                                                     @mouseenter="selectShowDeleteRowIcon = true"
                                                     @mouseleave="selectShowDeleteRowIcon = false"
@@ -550,8 +540,194 @@
 
 
     <template x-if="isAuthenticated || sharedDb">
-        <!-- delete row modal -->
         <div>
+            <!-- configuration modal -->
+            <template x-if="showConfigModal && selectedDb && tab != null" >
+                <div class="modal" @click.self="showConfigModal = false">
+                    <div class="modal-content" style="min-width: 420px;">
+                        <h3 style="margin-bottom: 16px;">Database Configuration</h3>
+                        <div>
+                            <div class="tab-nav" style="margin-bottom: 12px;">
+                                <button class="tab-btn" :class="tab==='info' ? 'active' : ''" @click="tab='info'">Info</button>
+                                <button class="tab-btn" :class="tab==='share' ? 'active' : ''"
+                                    @click="tab='share'">Share</button>
+                                <button class="tab-btn" x-show="selectedDb.share_token" :class="tab==='connect' ? 'active' : ''"
+                                    @click="tab='connect'">Connect</button>
+                            </div>
+                            <!-- Info Tab -->
+                            <div x-show="tab==='info'">
+                                <div class="form-group">
+                                    <label>Database ID</label>
+                                    <input type="text" class="form-control" :value="selectedDb.id" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Database Name</label>
+                                    <input type="text" class="form-control" :value="selectedDb.name" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Database Owner</label>
+                                    <input type="text" class="form-control" :value="selectedDb.username || 'N/A'" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Created At</label>
+                                    <input type="text" class="form-control"
+                                        :value="new Date(selectedDb.created_at).toLocaleString()" readonly>
+                                </div>
+                            </div>
+                            <!-- Share Tab -->
+                            <div x-show="tab==='share'">
+                                <template x-if="selectedDb.share_token">
+                                    <div>
+                                        <div class="alert alert-success" style="margin-bottom: 8px;">
+                                            <span>This database is currently <strong>shared</strong>.</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Share Token</label>
+                                            <input type="text" class="form-control" :value="selectedDb.share_token || 'N/A'"
+                                                readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Share Link</label>
+                                            <input type="text" class="form-control"
+                                                :value="`${location.origin}/api/share/${selectedDb.share_token}`" readonly>
+                                        </div>
+                                        <button class="btn btn-danger w-full" style="margin-top: 8px;"
+                                            @click="shareDatabase(selectedDb); showConfigModal = false;"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff"
+                                                    fill-opacity="0.15" />
+                                                <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff"
+                                                    stroke-width="1" />
+                                                <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff" />
+                                                <path d="M5 7V5a3 3 0 1 1 6 0v2" stroke="#fff" stroke-width="1"
+                                                    fill="none" />
+                                            </svg>
+                                            Unshare Database
+                                        </button>
+                                    </div>
+                                </template>
+                                <template x-if="!selectedDb.share_token">
+                                    <div>
+                                        <div class="alert alert-info" style="margin-bottom: 8px;">
+                                            <span>This database is <strong>private</strong>.</span>
+                                        </div>
+                                        <button class="btn btn-primary w-full" @click="shareDatabase(selectedDb); showConfigModal = false;">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <rect x="3" y="7" width="10" height="7" rx="2" fill="#fff"
+                                                    fill-opacity="0.15" />
+                                                <rect x="3" y="7" width="10" height="7" rx="2" stroke="#fff"
+                                                    stroke-width="1" />
+                                                <rect x="7" y="10" width="2" height="3" rx="1" fill="#fff" />
+                                                <path d="M8 7V5a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1"
+                                                    fill="none" />
+                                                <circle cx="12" cy="5" r="1" fill="#fff" />
+                                            </svg>
+                                            Share Database
+                                        </button>
+                                    </div>
+                                </template>
+                            </div> 
+                            <!-- Connect Tab -->
+                            <div x-show="selectedDb.share_token &&tab==='connect'">
+                                <div class="form-group">
+                                    <label>Share Token</label>
+                                    <div @click="navigator.clipboard.writeText(selectedDb.share_token)" class="flex items-center gap-2 form-control">
+                                        <input type="text" class="flex-grow"
+                                            :value="selectedDb.share_token" readonly>
+                                        <button type="button" class="cursor-pointer" title="Copy token"
+                                            @click="navigator.clipboard.writeText(selectedDb.share_token)">
+                                            <!-- Copy SVG icon -->
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="4" y="6" width="16" height="12" rx="3" fill="#d1d5db" fill-opacity="0.5"/>
+                                                <rect x="4" y="6" width="16" height="12" rx="3" stroke="#6b7280" stroke-width="1.5"/>
+                                                <rect x="8" y="2" width="8" height="16" rx="2" fill="#6b7280" fill-opacity="0.2"/>
+                                                <rect x="8" y="2" width="8" height="16" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <p class="flex flex-col" style="margin-top: 4px;">
+                                        <small class="text-[#888] text-[11px]">Use this token to access the database via API.</small>
+                                        <small class="text-[11px]">
+                                            <span class="text-[#888]">Expires on:</span> <span x-text="new Date(selectedDb.token_expiry).toLocaleString()"></span>
+                                        </small>
+                                    </p>
+                                </div>
+                                <div class="form-group">
+                                    <label>API Endpoint</label>
+                                    <div @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token)"
+                                     class="flex items-center gap-2 form-control"
+                                    >
+                                        <input type="text" class="flex-grow"
+                                            :value="window.location.origin + '/api/shared/' + selectedDb.share_token" readonly>
+                                        <button type="button" class="cursor-pointer" title="Copy link"
+                                            @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token)">    
+                                            <!-- Copy SVG icon -->
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="4" y="6" width="16" height="12" rx="3" fill="#d1d5db" fill-opacity="0.5"/>
+                                                <rect x="4" y="6" width="16" height="12" rx="3" stroke="#6b7280" stroke-width="1.5"/>
+                                                <rect x="8" y="2" width="8" height="16" rx="2" fill="#6b7280" fill-opacity="0.2"/>
+                                                <rect x="8" y="2" width="8" height="16" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Query API Endpoint</label>
+                                    <div @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token + '/query')"
+                                     class="flex items-center gap-2 form-control"
+                                    >
+                                        <input type="text" class="flex-grow"
+                                            :value="window.location.origin + '/api/shared/' + selectedDb.share_token + '/query'" readonly>
+                                        <button type="button" class="cursor-pointer" title="Copy link"
+                                            @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token + '/query')">    
+                                            <!-- Copy SVG icon -->
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="4" y="6" width="16" height="12" rx="3" fill="#d1d5db" fill-opacity="0.5"/>
+                                                <rect x="4" y="6" width="16" height="12" rx="3" stroke="#6b7280" stroke-width="1.5"/>
+                                                <rect x="8" y="2" width="8" height="16" rx="2" fill="#6b7280" fill-opacity="0.2"/>
+                                                <rect x="8" y="2" width="8" height="16" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Instructions</label>
+                                    <div style="font-size: 12px; color: #888;">
+                                        <ol style="padding-left: 18px;">
+                                            <li>1. Use the Query API endpoint above to access this database programmatically.</li>
+                                            <li>2. For shared databases, use the share token in the URL or via
+                                                <code x-text="window.location.origin + '/api/shared/&lt;token&gt;'"></code>.
+                                            </li>
+                                            <li>3. Example: <br/>
+                                                <div 
+                                                    class="form-control"
+                                                    @click="navigator.clipboard.writeText(`curl -X POST -H 'Content-Type: application/json' -d '{\'sql\':\'SELECT * FROM mytable\'}' ${window.location.origin}/api/shared/${selectedDb.share_token}/query`)"
+                                                >
+                                                    <code x-text="`curl -X POST -H 'Content-Type: application/json' -d '{\'sql\':\'SELECT * FROM mytable\'}' ${window.location.origin}/api/shared/${selectedDb.share_token}/query`"></code>
+                                                </div>
+                                            </li>
+                                            <li>4. For more details, see the documentation or contact your administrator.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                        <div class="flex gap-2" style="margin-top: 16px;">
+                            <button type="button" class="btn btn-secondary" @click="showConfigModal = false">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            
+            <!-- delete row modal -->
             <div x-show="showRowDropdown!=null" @click.self="showRowDropdown = null" class="modal">
                 <div class="modal-content">
                     <h3 style="margin-bottom: 16px;">You've selected row #<span
@@ -724,6 +900,7 @@
                 loading: false,
                 screenLoading: false,
                 message: { text: '', type: '' },
+                tab: null,
 
                 // Database state
                 databases: [],
@@ -749,6 +926,7 @@
                 showDeleteRowModal: { show: false, row: null, index: null },
                 showEditRowModal: false,
                 selectShowDeleteRowIcon: false,
+                showConfigModal: false,
 
                 // Forms
                 newDbName: '',
@@ -933,14 +1111,18 @@
 
                 async shareDatabase(database) {
                     try {
-                        if (database.is_shared) {
+                        if (database.share_token) {
                             // Disable sharing
                             await this.apiCall(`/api/databases/${database.id}/share`, { method: 'DELETE' });
+                            this.selectedDb.share_token = '';
+                            this.selectedDb.token_expiry = '';
                             this.setMessage('Database sharing disabled', 'success');
                         } else {
                             // Enable sharing
                             const result = await this.apiCall(`/api/databases/${database.id}/share`, { method: 'POST' });
-                            this.setMessage(`Database shared! Token: ${result.token}`, 'success');
+                            this.selectedDb.share_token = result.data.share_token;
+                            this.selectedDb.token_expiry = result.data.token_expiry;
+                            this.setMessage(`Database shared! Token: ${result.data.share_token}`, 'success');
                         }
                         this.loadDatabases();
                     } catch (error) {

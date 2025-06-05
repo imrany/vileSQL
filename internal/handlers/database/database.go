@@ -28,6 +28,8 @@ type Database struct {
 	TokenExpiry time.Time `json:"token_expiry,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+	Username    string    `json:"username,omitempty"` 
+	Email 		string		`json:"email,omitempty"`
 }
 
 type TableInfo struct {
@@ -299,7 +301,10 @@ func GetUserDatabasesHandler(w http.ResponseWriter, r *http.Request) {
 	userID := session.Values["user_id"].(int)
 
 	rows, err := SystemDB.Query(
-		"SELECT id, name, description, share_token, token_expiry, created_at, updated_at FROM databases WHERE user_id = ?",
+		`SELECT d.id, d.name, d.description, d.share_token, d.token_expiry, d.created_at, d.updated_at, u.username, u.email, d.share_token
+		 FROM databases d
+		 INNER JOIN users u ON d.user_id = u.id
+		 WHERE d.user_id = ?`,
 		userID,
 	)
 	if err != nil {
@@ -323,6 +328,9 @@ func GetUserDatabasesHandler(w http.ResponseWriter, r *http.Request) {
 			&tokenExpiry,
 			&db.CreatedAt,
 			&db.UpdatedAt,
+			&db.Username,
+			&db.Email,
+			&db.ShareToken,
 		)
 		if err != nil {
 			log.Printf("Error scanning database row: %v", err)
@@ -462,7 +470,7 @@ func DisableSharingHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Remove the share token
 	_, err = SystemDB.Exec(
-		"UPDATE databases SET share_token = NULL, token_expiry = NULL WHERE id = ?",
+		"UPDATE databases SET share_token = '', token_expiry = '' WHERE id = ?",
 		dbID,
 	)
 
@@ -1219,6 +1227,7 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 		SQL string `json:"sql"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&queryRequest); err != nil {
+		log.Printf("Error decoding request body: %v", err)
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
 			Message: "Invalid request format",
