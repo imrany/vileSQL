@@ -1573,22 +1573,23 @@
                     this.loading = false;
                 },
 
-                async changeColumnType(editingCell) {
+                async updateColumnName(editingCell) {
                     if (!this.selectedDb || !this.selectedTable) return;
                     const columnName = editingCell.col;
-                    const newType = editingCell.value;
-                    if (!columnName || !newType) {
-                        this.setMessage('Column name and type are required.', 'error');
+                    const newColumnName = editingCell.value;
+                    if (!columnName || !newColumnName) {
+                        this.setMessage('Old and new column are required.', 'error');
                         return;
                     }
                     this.loading = true;
                     try {
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${this.selectedTable}/data`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ column:columnName, newType })
+                        const sql = `ALTER TABLE "${this.selectedTable}" RENAME ${columnName.trim()} TO ${newColumnName.trim()}`;
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                            method: 'POST',
+                            body: JSON.stringify({ sql })
                         });
                         await this.selectTable(this.selectedTable);
-                        this.setMessage('Column type changed successfully!', 'success');
+                        this.setMessage('Column name changed successfully!', 'success');
                     } catch (error) {
                         this.setMessage(error.message, 'error');
                     }
