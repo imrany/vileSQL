@@ -441,7 +441,6 @@
                                             <template x-for="(column, colIndex) in tableColumns" :key="column.name">
                                                 <th 
                                                     style="min-width: 300px;"
-                                                    @click="editingCell = { row: -1, col: column.name, value: column.name }"
                                                 >
                                                     <div class="flex justify-between items-center">
                                                         <template x-if="editingCell && editingCell.row === -1 && editingCell.col === column.name">
@@ -462,16 +461,17 @@
                                                             <span
                                                                 x-text="column.name"
                                                                 class="cursor-pointer"
-                                                                title="Double-click to edit column name"
+                                                                title="Click to edit column name"
+                                                                @click="editingCell = { row: -1, col: column.name, value: column.name }"
                                                             ></span>
                                                         </template>
                                                         <template x-if="column.constraint">
-                                                            <span class="text-[10px] text-[#60a5fa] mr-2 ml-auto">
+                                                            <div @click="tab ='editType'; showColumnInfo=true" title="Click to open column modal" class="text-[10px] text-[#60a5fa] mr-2 ml-auto flex gap-[2px] cursor-pointer">
                                                                 <span x-text="column.constraint.type"></span>
-                                                                <span x-text="column.constraint.unique?'UNIQUE':''"></span>
-                                                                <span x-text="column.constraint.primary_key?'PRIMARY':''"></span>
-                                                                <span x-text="column.constraint.not_null?'NOT NULL':''"></span>
-                                                            </span>
+                                                                <span x-text="column.constraint.unique ? 'UNIQUE' : ''"></span>
+                                                                <span x-text="column.constraint.primary_key ? 'PRIMARY' : ''"></span>
+                                                                <span x-text="column.constraint.not_null ? 'NOT NULL' : ''"></span>
+                                                            </div>
                                                         </template>
                                                     </div>
                                                 </th>
@@ -561,6 +561,51 @@
 
     <template x-if="isAuthenticated || sharedDb">
         <div>
+            <!-- column info -->
+            <template x-if="showColumnInfo && selectedDb && tab != null && selectedTable && tableColumns.length > 0">
+                <div class="modal" @click.self="showColumnInfo = false">
+                    <div class="modal-content" style="min-width: 420px;">
+                        <h3 style="margin-bottom: 16px;">Edit Columns for <span class="text-[#2563eb]" x-text="selectedTable"></span></h3>
+                        <div class="tab-nav" style="margin-bottom: 12px;">
+                            <button class="tab-btn" :class="tab==='editType' ? 'active' : ''" @click="tab='editType'">Edit Type</button>
+                            <button class="tab-btn" :class="tab==='danger' ? 'active' : ''" @click="tab='danger'">Danger</button>
+                        </div>
+                        <!-- Edit Type Tab -->
+                        <div x-show="tab==='editType'">
+                            <template x-for="(column, colIndex) in tableColumns" :key="column.name">
+                                <div class="form-group flex items-center gap-2">
+                                    <label class="w-1/3" x-text="column.name"></label>
+                                    <input type="text" class="form-control w-1/2" :placeholder="column.type || 'Type'" x-model="column.newType" />
+                                    <button class="btn btn-primary btn-sm"
+                                        @click="changeColumnType({col: column.name, value: column.newType}); column.newType=''; showColumnInfo= false"
+                                        :disabled="!column.newType || column.newType === column.type">
+                                        Change Type
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                        <!-- Danger Tab -->
+                        <div x-show="tab==='danger'">
+                            <template x-for="(column, colIndex) in tableColumns" :key="column.name">
+                                <div class="form-group flex items-center gap-2">
+                                    <label class="w-1/2" x-text="column.name"></label>
+                                    <button class="btn btn-danger btn-sm"
+                                        @click="deleteColumn({col: column.name}); showColumnInfo=false"
+                                        :disabled="tableColumns.length <= 1">
+                                        Delete Column
+                                    </button>
+                                </div>
+                            </template>
+                            <div class="alert alert-warning mt-2">
+                                <strong>Warning:</strong> Deleting a column is irreversible and may result in data loss.
+                            </div>
+                        </div>
+                        <div class="flex gap-2" style="margin-top: 16px;">
+                            <button type="button" class="btn btn-secondary" @click="showColumnInfo = false">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
             <!-- configuration modal -->
             <template x-if="showConfigModal && selectedDb && tab != null">
                 <div class="modal" @click.self="showConfigModal = false">
@@ -983,6 +1028,7 @@
                 showEditRowModal: false,
                 selectShowDeleteRowIcon: false,
                 showConfigModal: false,
+                showColumnInfo: false,
 
                 // Forms
                 newDbName: '',
@@ -1429,7 +1475,6 @@
                     this.loading = true;
                     try {
                         const result = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data`);
-                        console.log(result.data)
                         this.tableData = result.data.values || [];
                         this.tableColumns = result.data.columns || [];
                     } catch (error) {
@@ -1518,6 +1563,56 @@
                     }
                     this.loading = false;
                 },
+
+                async deleteColumn(editingCell) {
+                    if (!this.selectedDb || !this.selectedTable) return;
+                    const columnName = editingCell.col;
+                    if (!columnName) {
+                        this.setMessage('Column name is required.', 'error');
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        // Use SQL query to drop the column
+                        const sql = `ALTER TABLE "${this.selectedTable}" DROP COLUMN "${columnName}"`;
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                            method: 'POST',
+                            body: JSON.stringify({ sql })
+                        });
+                        // Reload table data
+                        await this.selectTable(this.selectedTable);
+                        this.setMessage('Column deleted successfully!', 'success');
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    }
+                    this.loading = false;
+                },
+
+                async changeColumnType(editingCell) {
+                    if (!this.selectedDb || !this.selectedTable) return;
+                    const columnName = editingCell.col;
+                    const newType = editingCell.value;
+                    if (!columnName || !newType) {
+                        this.setMessage('Column name and type are required.', 'error');
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        // Use SQL query to alter the column type
+                        const sql = `ALTER TABLE "${this.selectedTable}" ALTER COLUMN "${columnName}" TYPE ${newType}`;
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                            method: 'POST',
+                            body: JSON.stringify({ sql })
+                        });
+                        // Reload table data
+                        await this.selectTable(this.selectedTable);
+                        this.setMessage('Column type changed successfully!', 'success');
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    }
+                    this.loading = false;
+                },
+
                 // Filtered table data
                 get filteredTableData() {
                     if (!this.filterText.trim()) return this.tableData;
