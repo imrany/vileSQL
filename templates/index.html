@@ -437,43 +437,37 @@
                                 <table class="data-table">
                                     <thead>
                                         <tr>
-                                            <th class="cursor-pointer row-number" 
-                                                @click="tab ='editType'; showColumnInfo=true" 
-                                                title="Click to open column modal"
-                                            >#</th>
+                                            <th class="cursor-pointer row-number"
+                                                @click="tab ='editType'; showColumnInfo=true"
+                                                title="Click to open column modal">#</th>
                                             <template x-for="(column, colIndex) in tableColumns" :key="column.name">
-                                                <th 
-                                                    style="min-width: 300px;"
-                                                    title="Click to edit column name"
-                                                    @click="editingCell = { row: -1, col: column.name, value: column.name }"
-                                                >
+                                                <th style="min-width: 300px;" title="Click to edit column name"
+                                                    @click="editingCell = { row: -1, col: column.name, value: column.name }">
                                                     <div class="flex justify-between items-center">
-                                                        <template x-if="editingCell && editingCell.row === -1 && editingCell.col === column.name">
-                                                            <input type="text"
-                                                                class="form-control text-[11px]"
-                                                                x-model="editingCell.value"
-                                                                @keydown.enter.stop.prevent="
+                                                        <template
+                                                            x-if="editingCell && editingCell.row === -1 && editingCell.col === column.name">
+                                                            <input type="text" class="form-control text-[11px]"
+                                                                x-model="editingCell.value" @keydown.enter.stop.prevent="
                                                                     updateColumnName(editingCell);
                                                                     editingCell = null;
-                                                                "
-                                                                @keydown.esc="editingCell = null"
+                                                                " @keydown.esc="editingCell = null"
                                                                 @blur="editingCell = null"
-                                                                style="padding:2px 6px; min-width: 60px;"
-                                                                autofocus
-                                                            >
+                                                                style="padding:2px 6px; min-width: 60px;" autofocus>
                                                         </template>
-                                                        <template x-if="!editingCell || editingCell.row !== -1 || editingCell.col !== column.name">
-                                                            <span
-                                                                x-text="column.name"
-                                                                class="cursor-pointer"
-                                                            ></span>
+                                                        <template
+                                                            x-if="!editingCell || editingCell.row !== -1 || editingCell.col !== column.name">
+                                                            <span x-text="column.name" class="cursor-pointer"></span>
                                                         </template>
                                                         <template x-if="column.constraint">
-                                                            <div class="text-[10px] text-[#60a5fa] mr-2 ml-auto flex gap-[2px] cursor-pointer">
+                                                            <div
+                                                                class="text-[10px] text-[#60a5fa] mr-2 ml-auto flex gap-[2px] cursor-pointer">
                                                                 <span x-text="column.constraint.type"></span>
-                                                                <span x-text="column.constraint.unique ? 'UNIQUE' : ''"></span>
-                                                                <span x-text="column.constraint.primary_key ? 'PRIMARY' : ''"></span>
-                                                                <span x-text="column.constraint.not_null ? 'NOT NULL' : ''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.unique ? 'UNIQUE' : ''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.primary_key ? 'PRIMARY' : ''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.not_null ? 'NOT NULL' : ''"></span>
                                                             </div>
                                                         </template>
                                                     </div>
@@ -568,19 +562,27 @@
             <template x-if="showColumnInfo && selectedDb && tab != null && selectedTable && tableColumns.length > 0">
                 <div class="modal" @click.self="showColumnInfo = false">
                     <div class="modal-content" style="min-width: 420px;">
-                        <h3 style="margin-bottom: 16px;">Edit Columns for <span class="text-[#2563eb]" x-text="selectedTable"></span></h3>
+                        <h3 style="margin-bottom: 16px;">Edit Columns for <span class="text-[#2563eb]"
+                                x-text="selectedTable"></span></h3>
                         <div class="tab-nav" style="margin-bottom: 12px;">
-                            <button class="tab-btn" :class="tab==='editType' ? 'active' : ''" @click="tab='editType'">Add Column</button>
-                            <button class="tab-btn" :class="tab==='danger' ? 'active' : ''" @click="tab='danger'">Danger</button>
+                            <button class="tab-btn" :class="tab==='editType' ? 'active' : ''"
+                                @click="tab='editType'">Add Column</button>
+                            <button class="tab-btn" :class="tab==='danger' ? 'active' : ''"
+                                @click="tab='danger'">Danger</button>
                         </div>
                         <!-- Edit Type Tab -->
                         <div x-show="tab==='editType'">
                             <h4 style="margin-bottom: 8px;">Add New Column</h4>
-                            <form @submit.prevent="addColumn(newColumnName, newColumnType); newColumnName=''; newColumnType=''; showColumnInfo=false;">
+                            <form
+                                @submit.prevent="addColumn(newColumnName, newColumnType); newColumnName=''; newColumnType=''; showColumnInfo=false;">
                                 <div class="form-group flex items-center gap-2">
-                                    <input type="text" class="form-control w-1/2" placeholder="Column Name" x-model="newColumnName" required />
-                                    <input type="text" class="form-control w-1/2" placeholder="Column Type (e.g. TEXT, INTEGER)" x-model="newColumnType" required />
-                                    <button type="submit" class="btn btn-primary btn-sm" :disabled="!newColumnName || !newColumnType">Add</button>
+                                    <input type="text" class="form-control w-1/2" placeholder="Column Name"
+                                        x-model="newColumnName" required />
+                                    <input type="text" class="form-control w-1/2"
+                                        placeholder="Column Type (e.g. TEXT, INTEGER)" x-model="newColumnType"
+                                        required />
+                                    <button type="submit" class="btn btn-primary btn-sm"
+                                        :disabled="!newColumnName || !newColumnType">Add</button>
                                 </div>
                             </form>
                         </div>
@@ -601,11 +603,13 @@
                             </div>
                         </div>
                         <div class="flex gap-2" style="margin-top: 16px;">
-                            <button type="button" class="btn btn-secondary" @click="showColumnInfo = false">Close</button>
+                            <button type="button" class="btn btn-secondary"
+                                @click="showColumnInfo = false">Close</button>
                         </div>
                     </div>
                 </div>
             </template>
+
             <!-- configuration modal -->
             <template x-if="showConfigModal && selectedDb && tab != null">
                 <div class="modal" @click.self="showConfigModal = false">
@@ -619,6 +623,8 @@
                                     @click="tab='share'">Share</button>
                                 <button class="tab-btn" x-show="selectedDb.share_token"
                                     :class="tab==='connect' ? 'active' : ''" @click="tab='connect'">Connect</button>
+                                <button class="tab-btn" :class="tab==='backup' ? 'active' : ''"
+                                    @click="tab='backup'">Backup</button>
                             </div>
                             <!-- Info Tab -->
                             <div x-show="tab==='info'">
@@ -703,23 +709,22 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <button
-                                            class="btn btn-primary w-full"
-                                            style="margin-top: 8px;"
+                                        <button class="btn btn-primary w-full" style="margin-top: 8px;"
                                             @click="renewShareToken(selectedDb); showConfigModal = false;">
                                             <!-- edit icon -->
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                                 style="vertical-align: middle; margin-right: 4px;"
                                                 xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12.8 3.2a1.067 1.067 0 0 1 1.507 1.507l-7.2 7.2-2.4.267.267-2.4 7.2-7.2z" stroke="#fff" stroke-width="1.2" fill="none"/>
-                                                <rect x="2" y="11" width="3" height="1.2" rx="0.6" fill="#fff"/>
+                                                <path
+                                                    d="M12.8 3.2a1.067 1.067 0 0 1 1.507 1.507l-7.2 7.2-2.4.267.267-2.4 7.2-7.2z"
+                                                    stroke="#fff" stroke-width="1.2" fill="none" />
+                                                <rect x="2" y="11" width="3" height="1.2" rx="0.6" fill="#fff" />
                                             </svg>
                                             Update Token
                                         </button>
                                         <button
                                             x-show="selectedDb.token_expiry && new Date(selectedDb.token_expiry) < new Date()"
-                                            class="btn btn-secondary w-full"
-                                            style="margin-top: 8px;"
+                                            class="btn btn-secondary w-full" style="margin-top: 8px;"
                                             @click="renewTokenExpiry(selectedDb); showConfigModal = false;">
                                             <!-- reload icon -->
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
@@ -818,6 +823,31 @@
                                         </ol>
                                     </div>
                                 </div>
+                            </div>
+                            <!-- backup -->
+                            <div x-show="tab==='backup'">
+                                <div class="form-group">
+                                    <label>Filename</label>
+                                    <input type="text" class="form-control" :value="selectedDb.name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Storage Location</label>
+                                    <input type="text" class="form-control" :value="selectedDb.name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Format</label>
+                                    <div class="w-full">
+                                        <select class="format-selector" id="">
+                                            <option value="custom">Custom</option>
+                                            <option value="tar">Tar (.tar)</option>
+                                            <option value="zip">Directory (.zip)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button class="btn btn-success w-full" style="margin-top: 8px;"
+                                    @click="renewShareToken(selectedDb); showConfigModal = false;">
+                                    <!-- disk icon -->
+                                    Backup Database
                             </div>
                         </div>
                         <div class="flex gap-2" style="margin-top: 16px;">
@@ -1002,7 +1032,7 @@
                 screenLoading: false,
                 message: { text: '', type: '' },
                 tab: null,
-                newColumnName: null, newColumnType:null,
+                newColumnName: null, newColumnType: null,
 
                 // Database state
                 databases: [],
@@ -1249,7 +1279,7 @@
                     this.loading = false;
                 },
 
-                async renewShareToken (database) {
+                async renewShareToken(database) {
                     try {
                         if (!database || !database.id) return;
                         this.loading = true;
@@ -1533,7 +1563,7 @@
 
                 async addColumn(columnName, columnType) {
                     if (!this.selectedDb || !this.selectedTable) return;
-                  
+
                     this.loading = true;
                     try {
                         const sql = `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()}`;

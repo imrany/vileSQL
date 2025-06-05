@@ -175,7 +175,7 @@ h6 {
   gap: 12px;
 }
 
-.theme-selector {
+.theme-selector, .format-selector {
   background: var(--color-input-bg);
   border: 1px solid var(--color-input-border);
   border-radius: 6px;
@@ -186,7 +186,7 @@ h6 {
   transition: all 0.2s ease;
 }
 
-.theme-selector:focus {
+.theme-selector:focus, .format-selector:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
