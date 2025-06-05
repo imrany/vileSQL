@@ -567,22 +567,19 @@
                     <div class="modal-content" style="min-width: 420px;">
                         <h3 style="margin-bottom: 16px;">Edit Columns for <span class="text-[#2563eb]" x-text="selectedTable"></span></h3>
                         <div class="tab-nav" style="margin-bottom: 12px;">
-                            <button class="tab-btn" :class="tab==='editType' ? 'active' : ''" @click="tab='editType'">Edit Type</button>
+                            <button class="tab-btn" :class="tab==='editType' ? 'active' : ''" @click="tab='editType'">Add Column</button>
                             <button class="tab-btn" :class="tab==='danger' ? 'active' : ''" @click="tab='danger'">Danger</button>
                         </div>
                         <!-- Edit Type Tab -->
                         <div x-show="tab==='editType'">
-                            <template x-for="(column, colIndex) in tableColumns" :key="column.name">
+                            <h4 style="margin-bottom: 8px;">Add New Column</h4>
+                            <form @submit.prevent="addColumn(newColumnName, newColumnType); newColumnName=''; newColumnType=''; showColumnInfo=false;">
                                 <div class="form-group flex items-center gap-2">
-                                    <label class="w-1/3" x-text="column.name"></label>
-                                    <input type="text" class="form-control w-1/2" :placeholder="column.type || 'Type'" x-model="column.newType" />
-                                    <button class="btn btn-primary btn-sm"
-                                        @click="changeColumnType({col: column.name, value: column.newType}); column.newType=''; showColumnInfo= false"
-                                        :disabled="!column.newType || column.newType === column.type">
-                                        Change Type
-                                    </button>
+                                    <input type="text" class="form-control w-1/2" placeholder="Column Name" x-model="newColumnName" required />
+                                    <input type="text" class="form-control w-1/2" placeholder="Column Type (e.g. TEXT, INTEGER)" x-model="newColumnType" required />
+                                    <button type="submit" class="btn btn-primary btn-sm" :disabled="!newColumnName || !newColumnType">Add</button>
                                 </div>
-                            </template>
+                            </form>
                         </div>
                         <!-- Danger Tab -->
                         <div x-show="tab==='danger'">
@@ -1002,6 +999,7 @@
                 screenLoading: false,
                 message: { text: '', type: '' },
                 tab: null,
+                newColumnName: null, newColumnType:null,
 
                 // Database state
                 databases: [],
@@ -1530,34 +1528,18 @@
                     this.loading = false;
                 },
 
-                async updateColumnName(editingCell) {
-                    const newName = editingCell.value;
-                    const colIndex = this.tableColumns.findIndex(col => col.name === editingCell.col);
+                async addColumn(columnName, columnType) {
                     if (!this.selectedDb || !this.selectedTable) return;
-                    if (!newName.trim()) {
-                        this.setMessage('Column name cannot be empty.', 'error');
-                        return;
-                    }
-                    if (colIndex < 0 || colIndex >= this.tableColumns.length) {
-                        this.setMessage('Invalid column index.', 'error');
-                        return;
-                    }
-                    const column = this.tableColumns[colIndex];
-                    if (!column) {
-                        this.setMessage('Column not found.', 'error');
-                        return;
-                    }
+                  
                     this.loading = true;
                     try {
-                        // Use SQL query to rename the column
-                        const sql = `ALTER TABLE "${this.selectedTable}" RENAME COLUMN "${column.name}" TO "${newName}"`;
+                        const sql = `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()}`;
                         await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
                             method: 'POST',
                             body: JSON.stringify({ sql })
                         });
-                        // Reload table data
                         await this.selectTable(this.selectedTable);
-                        this.setMessage('Column renamed successfully!', 'success');
+                        this.setMessage('Column added successfully!', 'success');
                     } catch (error) {
                         this.setMessage(error.message, 'error');
                     }
@@ -1598,13 +1580,10 @@
                     }
                     this.loading = true;
                     try {
-                        // Use SQL query to alter the column type
-                        const sql = `ALTER TABLE "${this.selectedTable}" ALTER COLUMN "${columnName}" TYPE ${newType}`;
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
-                            method: 'POST',
-                            body: JSON.stringify({ sql })
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${this.selectedTable}/data`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ column:columnName, newType })
                         });
-                        // Reload table data
                         await this.selectTable(this.selectedTable);
                         this.setMessage('Column type changed successfully!', 'success');
                     } catch (error) {
