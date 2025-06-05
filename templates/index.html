@@ -437,10 +437,15 @@
                                 <table class="data-table">
                                     <thead>
                                         <tr>
-                                            <th class="row-number">#</th>
+                                            <th class="cursor-pointer row-number" 
+                                                @click="tab ='editType'; showColumnInfo=true" 
+                                                title="Click to open column modal"
+                                            >#</th>
                                             <template x-for="(column, colIndex) in tableColumns" :key="column.name">
                                                 <th 
                                                     style="min-width: 300px;"
+                                                    title="Click to edit column name"
+                                                    @click="editingCell = { row: -1, col: column.name, value: column.name }"
                                                 >
                                                     <div class="flex justify-between items-center">
                                                         <template x-if="editingCell && editingCell.row === -1 && editingCell.col === column.name">
@@ -461,12 +466,10 @@
                                                             <span
                                                                 x-text="column.name"
                                                                 class="cursor-pointer"
-                                                                title="Click to edit column name"
-                                                                @click="editingCell = { row: -1, col: column.name, value: column.name }"
                                                             ></span>
                                                         </template>
                                                         <template x-if="column.constraint">
-                                                            <div @click="tab ='editType'; showColumnInfo=true" title="Click to open column modal" class="text-[10px] text-[#60a5fa] mr-2 ml-auto flex gap-[2px] cursor-pointer">
+                                                            <div class="text-[10px] text-[#60a5fa] mr-2 ml-auto flex gap-[2px] cursor-pointer">
                                                                 <span x-text="column.constraint.type"></span>
                                                                 <span x-text="column.constraint.unique ? 'UNIQUE' : ''"></span>
                                                                 <span x-text="column.constraint.primary_key ? 'PRIMARY' : ''"></span>
