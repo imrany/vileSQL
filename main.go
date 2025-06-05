@@ -33,7 +33,7 @@ func main() {
 	if PORT == ""{
 		PORT = "5050"
 	}
-	log.Printf("Server running on port %v...", PORT)
+	log.Printf("Open vilesql at http://localhost:%v", PORT)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", PORT), corsHandler))
 }
 

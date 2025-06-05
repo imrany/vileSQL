@@ -159,8 +159,8 @@
                             <div class="database-list">
                                 <div class="section-header">
                                     Databases
-                                    <button title="Shows all databases" class="cursor-pointer" @click="selectedDb=null">
-                                        Reload Databases
+                                    <button title="Shows all databases" x-text="selectedDb===null?'':'Back'" class="cursor-pointer" @click="selectedDb=null">
+                                        
                                     </button>
                                 </div>
                                 <div class="section-body">
@@ -311,6 +311,12 @@
                                     <template x-if="selectedTable">
                                         <button type="button" class="btn btn-secondary"
                                             @click="selectTable(selectedTable)">
+                                            <!-- reload icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle; margin-right: 4px;" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M2 8a6 6 0 1 1 2.47 4.85" stroke="#ffff" stroke-width="1.5" fill="none"/>
+                                                <path d="M2 12v-3h3" stroke="#ffff" stroke-width="1.5" fill="none"/>
+                                            </svg>
                                             Reload Table
                                         </button>
                                     </template>
