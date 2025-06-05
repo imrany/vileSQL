@@ -35,6 +35,8 @@ func SetupRoutes(r *mux.Router){
 	protected.HandleFunc("/databases/{id:[0-9]+}", database.DeleteDatabaseHandler).Methods("DELETE")
 	protected.HandleFunc("/databases/{id:[0-9]+}/share", database.ShareDatabaseHandler).Methods("POST")
 	protected.HandleFunc("/databases/{id:[0-9]+}/share", database.DisableSharingHandler).Methods("DELETE")
+	protected.HandleFunc("/databases/{id:[0-9]+}/share/renew", database.ShareDatabaseRenewShareTokenExpiryHandler).Methods("PATCH")
+	protected.HandleFunc("/databases/{id:[0-9]+}/share/renew", database.ShareDatabaseRenewShareTokenHandler).Methods("POST")
 	
 	// Database content manipulation routes
 	protected.HandleFunc("/databases/{id:[0-9]+}/query", database.ExecuteQueryHandler).Methods("POST")

@@ -75,6 +75,7 @@ type ApiResponse struct {
 const (
 	MAX_DB_SIZE       = 50 * 1024 * 1024             // 50MB max database size
 	TOKEN_EXPIRY_DAYS = 30
+	SHARE_TOKEN_EXPIRY_DAYS = 178 // 6 months for share token expiry
 )
 
 // Main SQLite database to store user information and database metadata
@@ -384,7 +385,7 @@ func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate a random share token
 	token := fmt.Sprintf("%d-%d", time.Now().UnixNano(), dbID)
-	tokenExpiry := time.Now().AddDate(0, 0, TOKEN_EXPIRY_DAYS)
+	shareTokenExpiry := time.Now().AddDate(0, 0, SHARE_TOKEN_EXPIRY_DAYS)
 
 	// First, check if the database belongs to the user
 	var count int
@@ -404,7 +405,7 @@ func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	// Update the database with the share token
 	_, err = SystemDB.Exec(
 		"UPDATE databases SET share_token = ?, token_expiry = ? WHERE id = ?",
-		token, tokenExpiry.Format(time.RFC3339), dbID,
+		token, shareTokenExpiry.Format(time.RFC3339), dbID,
 	)
 
 	if err != nil {
@@ -422,7 +423,7 @@ func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 		Message: "Database shared successfully",
 		Data: map[string]interface{}{
 			"share_token":  token,
-			"token_expiry": tokenExpiry,
+			"token_expiry": shareTokenExpiry,
 			"share_url":    shareURL,
 		},
 	})
@@ -599,6 +600,142 @@ func GetSharedDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
 		Success: true,
 		Data:    response,
+	})
+}
+
+func ShareDatabaseRenewShareTokenHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	if SESSION_KEY == "" {
+		log.Fatal("SESSION_KEY is empty")
+	}
+
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if COOKIE_STORE_KEY == "" {
+		log.Fatal("COOKIE_STORE_KEY is empty")
+	}
+
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, _ := store.Get(r, SESSION_KEY)
+	userID := session.Values["user_id"].(int)
+
+	vars := mux.Vars(r)
+	dbID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid database ID",
+		})
+		return
+	}
+
+	// Check if the database belongs to the user
+	var count int
+	err = SystemDB.QueryRow(
+		"SELECT COUNT(*) FROM databases WHERE id = ? AND user_id = ?",
+		dbID, userID,
+	).Scan(&count)
+	if err != nil || count == 0 {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "You don't have permission to renew the share token for this database",
+		})
+		return
+	}
+
+	// Generate a new share token and expiry
+	token := fmt.Sprintf("%d-%d", time.Now().UnixNano(), dbID)
+	shareTokenExpiry := time.Now().AddDate(0, 0, SHARE_TOKEN_EXPIRY_DAYS)
+
+	// Update the database with the new share token and expiry
+	_, err = SystemDB.Exec(
+		"UPDATE databases SET share_token = ?, token_expiry = ? WHERE id = ?",
+		token, shareTokenExpiry.Format(time.RFC3339), dbID,
+	)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to renew share token",
+		})
+		return
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Message: "Share token renewed successfully",
+		Data: map[string]interface{}{
+			"share_token":  token,
+			"token_expiry": shareTokenExpiry,
+		},
+	})
+}
+
+func ShareDatabaseRenewShareTokenExpiryHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	if SESSION_KEY == "" {
+		log.Fatal("SESSION_KEY is empty")
+	}
+
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if COOKIE_STORE_KEY == "" {
+		log.Fatal("COOKIE_STORE_KEY is empty")
+	}
+
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, _ := store.Get(r, SESSION_KEY)
+	userID := session.Values["user_id"].(int)
+
+	vars := mux.Vars(r)
+	dbID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid database ID",
+		})
+		return
+	}
+
+	// Check if the database belongs to the user and get current share_token and token_expiry
+	var shareToken string
+	var tokenExpiryStr string
+	err = SystemDB.QueryRow(
+		"SELECT share_token, token_expiry FROM databases WHERE id = ? AND user_id = ?",
+		dbID, userID,
+	).Scan(&shareToken, &tokenExpiryStr)
+	if err != nil || shareToken == "" || tokenExpiryStr == "" {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "You don't have permission to renew the share token for this database or no share token exists",
+		})
+		return
+	}
+
+	// Parse the current expiry and add 6 months
+	tokenExpiry, err := time.Parse(time.RFC3339, tokenExpiryStr)
+	if err != nil {
+		tokenExpiry = time.Now()
+	}
+	newExpiry := tokenExpiry.AddDate(0, 0, SHARE_TOKEN_EXPIRY_DAYS)
+
+	// Update the expiry only, keep the token the same
+	_, err = SystemDB.Exec(
+		"UPDATE databases SET token_expiry = ? WHERE id = ?",
+		newExpiry.Format(time.RFC3339), dbID,
+	)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to renew share token",
+		})
+		return
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Message: "Share token renewed successfully",
+		Data: map[string]interface{}{
+			"share_token":  shareToken,
+			"token_expiry": newExpiry,
+		},
 	})
 }
 

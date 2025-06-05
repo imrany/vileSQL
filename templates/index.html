@@ -638,6 +638,34 @@
                                                 </button>
                                             </div>
                                         </div>
+                                        <button
+                                            class="btn btn-primary w-full"
+                                            style="margin-top: 8px;"
+                                            @click="renewShareToken(selectedDb); showConfigModal = false;">
+                                            <!-- edit icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12.8 3.2a1.067 1.067 0 0 1 1.507 1.507l-7.2 7.2-2.4.267.267-2.4 7.2-7.2z" stroke="#fff" stroke-width="1.2" fill="none"/>
+                                                <rect x="2" y="11" width="3" height="1.2" rx="0.6" fill="#fff"/>
+                                            </svg>
+                                            Update Token
+                                        </button>
+                                        <button
+                                            x-show="selectedDb.token_expiry && new Date(selectedDb.token_expiry) < new Date()"
+                                            class="btn btn-secondary w-full"
+                                            style="margin-top: 8px;"
+                                            @click="renewTokenExpiry(selectedDb); showConfigModal = false;">
+                                            <!-- reload icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M2 8a6 6 0 1 1 2.47 4.85" stroke="#ffff" stroke-width="1.5"
+                                                    fill="none" />
+                                                <path d="M2 12v-3h3" stroke="#ffff" stroke-width="1.5" fill="none" />
+                                            </svg>
+                                            Extend Token Expiry Period
+                                        </button>
                                         <button class="btn btn-danger w-full" style="margin-top: 8px;"
                                             @click="shareDatabase(selectedDb); showConfigModal = false;">
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
@@ -1136,6 +1164,38 @@
                     } catch (error) {
                         this.setMessage(error.message, 'error');
                     }
+                },
+
+                async renewTokenExpiry(database) {
+                    try {
+                        if (!database || !database.id) return;
+                        this.loading = true;
+
+                        const result = await this.apiCall(`/api/databases/${database.id}/share/renew`, { method: 'PATCH' });
+                        this.selectedDb.share_token = result.data.share_token;
+                        this.selectedDb.token_expiry = result.data.token_expiry;
+                        this.setMessage('Share token expiry period renewed successfully!', 'success');
+                        this.loadDatabases();
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    }
+                    this.loading = false;
+                },
+
+                async renewShareToken (database) {
+                    try {
+                        if (!database || !database.id) return;
+                        this.loading = true;
+
+                        const result = await this.apiCall(`/api/databases/${database.id}/share/renew`, { method: 'POST' });
+                        this.selectedDb.share_token = result.data.share_token;
+                        this.selectedDb.token_expiry = result.data.token_expiry;
+                        this.setMessage('Share token updated successfully!', 'success');
+                        this.loadDatabases();
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    }
+                    this.loading = false;
                 },
 
                 async selectDatabase(database) {
