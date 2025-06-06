@@ -138,7 +138,7 @@ func setupSystemDB() {
 			plan TEXT NOT NULL,
 			start_date TIMESTAMP NOT NULL,
 			end_date TIMESTAMP NOT NULL,
-			payment_method TEXT,
+			payment_method TEXT DEFAULT 'mpesa',
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id)
@@ -154,10 +154,10 @@ func setupSystemDB() {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
-			description TEXT,
+			description TEXT NOT NULL DEFAULT '',
 			file_path TEXT NOT NULL,
-			share_token TEXT,
-			token_expiry TIMESTAMP,
+			share_token TEXT NOT NULL DEFAULT '',
+			token_expiry TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id),
@@ -206,6 +206,10 @@ func CreateDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "Database name is required",
 		})
 		return
+	}
+
+	if dbInfo.Description == "" {
+		dbInfo.Description = "No description provided"
 	}
 
 	// Sanitize database name (keep it alphanumeric with underscores)
@@ -2121,54 +2125,57 @@ func InsertTableDataHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Server configuration error",
-		})
-		return
-	}
-	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
-	session, _ := store.Get(r, SESSION_KEY)
-	userID := session.Values["user_id"].(int)
-
 	vars := mux.Vars(r)
-	dbID, err := strconv.Atoi(vars["id"])
+	dbID := vars["id"]
 	tableName := vars["table"]
-	if err != nil || tableName == "" {
+	shareToken := r.URL.Query().Get("share_token")
+
+	if tableName == "" {
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
-			Message: "Invalid database ID or table name",
+			Message: "Invalid table name",
 		})
 		return
 	}
 
-	var filePath string
-	var dbUserID int
-	err = SystemDB.QueryRow("SELECT file_path, user_id FROM databases WHERE id = ?", dbID).Scan(&filePath, &dbUserID)
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-			Success: false,
-			Message: "Database not found",
-		})
-		return
-	}
-	if dbUserID != userID {
-		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-			Success: false,
-			Message: "You don't have permission to access this database",
-		})
-		return
-	}
+	var userDB *sql.DB
+	var ok bool
 
-	userDB, err := sql.Open("sqlite3", filePath)
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Failed to open database",
-		})
+	if shareToken != "" {
+		// Validate share token and open DB in read-only mode
+		var filePath string
+		var tokenExpiry time.Time
+		err := SystemDB.QueryRow(
+			"SELECT file_path, token_expiry FROM databases WHERE share_token = ?",
+			shareToken,
+		).Scan(&filePath, &tokenExpiry)
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Invalid or expired share token",
+			})
+			return
+		}
+		if time.Now().After(tokenExpiry) {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Share link has expired",
+			})
+			return
+		}
+		userDB, err = sql.Open("sqlite3", filePath+"?mode=ro")
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+				Success: false,
+				Message: "Failed to open shared database",
+			})
+			return
+		}
+		ok = true
+	} else {
+		userDB, _, _, ok = authenticateAndGetDB(w, r, dbID)
+	}
+	if !ok {
 		return
 	}
 	defer userDB.Close()
@@ -2184,7 +2191,7 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	columns, _ := rows.Columns()
-	columnType, _:=rows.ColumnTypes()
+	columnType, _ := rows.ColumnTypes()
 
 	result := make([]map[string]interface{}, 0)
 	values := make([]interface{}, len(columns))
@@ -2221,15 +2228,14 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	// Build columns info array with name and constraint/type
 	columnsInfo := make([]map[string]interface{}, len(columns))
 	for i, col := range columns {
-		leng, _:=columnType[i].Length()
-		isNull, _:=columnType[i].Nullable()
+		leng, _ := columnType[i].Length()
+		isNull, _ := columnType[i].Nullable()
 		columnsInfo[i] = map[string]any{
 			"name": col,
 			"constraint": map[string]any{
-				"type":     columnType[i].DatabaseTypeName(),
-				"length":   leng,
-				"not_null": !isNull, // NOT NULL constraint
-				// Add more constraints below
+				"type":       columnType[i].DatabaseTypeName(),
+				"length":     leng,
+				"not_null":   !isNull, // NOT NULL constraint
 				"primary_key": false,
 				"default":     nil,
 				"unique":      false,
@@ -2503,8 +2509,45 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
 func GetTablesHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dbID := vars["id"]
+	shareToken := r.URL.Query().Get("share_token")
 
-	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	var userDB *sql.DB
+	var ok bool
+
+	if shareToken != "" {
+		// Validate share token and open DB in read-only mode
+		var filePath string
+		var tokenExpiry time.Time
+		err := SystemDB.QueryRow(
+			"SELECT file_path, token_expiry FROM databases WHERE share_token = ?",
+			shareToken,
+		).Scan(&filePath, &tokenExpiry)
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Invalid or expired share token",
+			})
+			return
+		}
+		if time.Now().After(tokenExpiry) {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Share link has expired",
+			})
+			return
+		}
+		userDB, err = sql.Open("sqlite3", filePath+"?mode=ro")
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+				Success: false,
+				Message: "Failed to open shared database",
+			})
+			return
+		}
+		ok = true
+	} else {
+		userDB, _, _, ok = authenticateAndGetDB(w, r, dbID)
+	}
 	if !ok {
 		return
 	}

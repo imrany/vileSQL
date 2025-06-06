@@ -14,14 +14,22 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	if SESSION_KEY == "" {
 		log.Fatal("SESSION_KEY is empty")
 	}
-	
+
 	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
+	if COOKIE_STORE_KEY == "" {
 		log.Fatal("COOKIE_STORE_KEY is empty")
 	}
-	
+
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check for share_token in URL query
+		shareToken := r.URL.Query().Get("share_token")
+		if shareToken != "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Fallback to session authentication
 		session, _ := store.Get(r, SESSION_KEY)
 		if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)

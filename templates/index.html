@@ -116,10 +116,10 @@
 
                     <div style="border-top: 1px solid #444; padding-top: 16px;">
                         <div class="section-header">Access Shared Database</div>
-                        <div class="flex gap-2">
+                        <form @submit.prevent="accessSharedDatabase()" class="flex gap-2">
                             <input type="text" class="form-control" x-model="sharedToken"
                                 placeholder="Enter share token">
-                            <button class="btn btn-secondary" @click="accessSharedDatabase()" :disabled="!sharedToken">
+                            <button class="btn btn-secondary" :disabled="!sharedToken">
                                 <!-- share svg -->
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle; margin-right: 4px;" xmlns="http://www.w3.org/2000/svg">
                                     <circle cx="12" cy="4" r="2" fill="#ffff"/>
@@ -130,7 +130,7 @@
                                 </svg>
                                 Access
                             </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -182,7 +182,7 @@
 
                                     <template x-if="isAuthenticated">
                                         <div>
-                                            <div x-show="databases.length === 0"
+                                            <div x-show="databases.length === 0 && !sharedToken"
                                                 class="text-[#888] text-[11px] flex items-center justify-center h-[80px]">
                                                 No databases found
                                             </div>
@@ -240,7 +240,7 @@
 
                         <div x-show="isAuthenticated" class="user-info">
                             <div class="flex flex-col gap-2 w-full">
-                                <button class="btn btn-primary" style="width: 100%;" @click="showCreateModal = true">
+                                <button x-show="!sharedToken" class="btn btn-primary" style="width: 100%;" @click="showCreateModal = true">
                                     <!-- plus icon -->
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                         style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
@@ -251,7 +251,7 @@
                                 </button>
                                 <div class="flex items-center justify-center gap-2">
                                     <span x-show="isAuthenticated" style="margin-right: 16px; font-size: 12px;">
-                                        Welcome, <span x-text="user"></span>
+                                        Welcome, <span x-text="sharedToken?'Guest':user"></span>
                                     </span>
                                     <button x-show="isAuthenticated" class="btn btn-secondary" @click="logout()">
                                         <!-- logout icon -->
@@ -288,8 +288,8 @@
                         </template>
 
                         <!-- Toolbar -->
-                        <div class="toolbar">
-                            <template x-if="selectedDb">
+                        <template x-if="selectedDb">
+                            <div class="toolbar">
                                 <div class="flex gap-2 w-full">
                                     <template x-if="!selectedTable">
                                         <button class="btn btn-primary" @click="showTableModal = true">
@@ -396,8 +396,8 @@
                                         </button>
                                     </template>
                                 </div>
-                            </template>
-                        </div>
+                            </div>
+                        </template>
 
                         <!-- Filter Bar -->
                         <div x-show="selectedTable && tableData.length > 0" class="filter-bar">
@@ -537,7 +537,7 @@
                         </div>
 
                         <!-- Query Panel -->
-                        <div x-show="selectedDb" class="query-panel">
+                        <div x-show="selectedDb && !sharedToken" class="query-panel">
                             <div class="form-group">
                                 <label>SQL Query</label>
                                 <textarea class="query-editor" x-model="queryText" :placeholder="selectedTable && tableColumns.length > 0
@@ -776,10 +776,13 @@
                                 </template>
                                 <template x-if="!selectedDb.share_token">
                                     <div>
-                                        <div class="alert alert-info" style="margin-bottom: 8px;">
+                                        <div x-show="!sharedToken" class="alert alert-info" style="margin-bottom: 8px;">
                                             <span>This database is <strong>private</strong>.</span>
                                         </div>
-                                        <button class="btn btn-primary w-full"
+                                        <div x-show="sharedToken" class="alert alert-info" style="margin-bottom: 8px;">
+                                            <span>Cannot share database, <strong>not allowed</strong>.</span>
+                                        </div>
+                                        <button class="btn btn-primary w-full" x-show="!sharedToken"
                                             @click="shareDatabase(selectedDb); showConfigModal = false;">
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                                 style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
@@ -949,6 +952,11 @@
                             <input type="text" class="form-control" x-model="newDbName" required
                                 placeholder="Enter database name">
                         </div>
+                         <div class="form-group">
+                            <label>Description</label>
+                            <textarea type="text" class="form-control" x-model="newDbDescription"
+                                placeholder="Enter database description"></textarea>
+                        </div>
                         <div class="flex gap-2">
                             <button type="submit" class="btn btn-primary" :disabled="!newDbName.trim() || loading">
                                 <span x-text="loading ? 'Creating...' : 'Create'"></span>
@@ -1104,6 +1112,7 @@
 
                 // Forms
                 newDbName: '',
+                newDbDescription:'',
                 newTableForm: { name: '', columns: '' },
                 insertForm: { table: '', columns: '', values: '' },
                 backup_filename: '',
@@ -1116,7 +1125,7 @@
                 insertRow: {},
 
                 // Shared database state
-                sharedToken: '',
+                sharedToken: localStorage.getItem('sharedToken') || '',
                 sharedDb: null,
 
                 init() {
@@ -1161,10 +1170,13 @@
                 async checkAuth() {
                     this.screenLoading = true
                     try {
-                        const result = await this.apiCall('/api/authenticate');
-                        this.user = result?.data.user.username || null;
-                        this.isAuthenticated = result?.data.authenticated || false;
-                        // console.log(result.data)
+                        if(this.sharedToken){
+                            this.isAuthenticated = true
+                        }else{
+                            const result = await this.apiCall('/api/authenticate');
+                            this.user = result?.data.user.username || null;
+                            this.isAuthenticated = result?.data.authenticated || false;
+                        }
                         if (this.isAuthenticated) {
                             this.loadDatabases();
                         }
@@ -1216,9 +1228,11 @@
 
                 async logout() {
                     try {
-                        await this.apiCall('/api/logout', { method: 'POST' });
+                        this.sharedToken ? localStorage.removeItem("sharedToken"): await this.apiCall('/api/logout', { method: 'POST' });
                         this.isAuthenticated = false;
                         this.user = null;
+                        this.sharedToken = '';
+                        this.sharedDb = null;
                         this.databases = [];
                         this.selectedDb = null;
                         this.queryResults = null;
@@ -1231,10 +1245,37 @@
                 // Database management methods
                 async loadDatabases() {
                     try {
-                        const result = await this.apiCall('/api/databases');
-                        this.databases = result.data || [];
+                        if(this.sharedToken){
+                            // Load shared database if token is set
+                            const result = await this.apiCall(`/api/shared/${this.sharedToken}`);
+                            this.sharedDb = result.data.database;
+                            this.selectedDb = result.data.database;
+                            this.tables = [];
+                            this.selectedTable = null;
+                            this.tableData = [];
+                            this.tableColumns = [];
+                        
+                            if (this.sharedDb) {
+                                this.selectedDb = this.sharedDb;;
+                                const tablesResult = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables?share_token=${this.sharedToken}`);
+                                this.tables = tablesResult.data || [];
+                            } else {
+                                this.setMessage('Invalid or expired share token', 'error');
+                            }
+                            return;
+                        }else{
+                            const result = await this.apiCall('/api/databases');
+                            this.databases = result.data || [];
+                        }
                     } catch (error) {
                         this.setMessage('Failed to load databases', 'error');
+                        this.isAuthenticated = false;
+                        this.user = null;
+                        this.sharedToken = '';
+                        this.sharedDb = null;
+                        this.databases = [];
+                        this.selectedDb = null;
+                        this.queryResults = null;
                     }
                 },
 
@@ -1245,15 +1286,18 @@
                     try {
                         const result = await this.apiCall('/api/databases', {
                             method: 'POST',
-                            body: JSON.stringify({ name: this.newDbName })
+                            body: JSON.stringify({ name: this.newDbName, description: this.newDbDescription })
                         });
 
                         this.newDbName = '';
                         this.showCreateModal = false;
-                        this.loadDatabases();
-                        if (this.selectedDb) {
-                            this.selectedDb = result.data || [];
-                        }
+                        await this.loadDatabases();
+                        this.selectedDb = result.data;
+                        this.tables = [];
+                        this.selectedTable = null;
+                        this.tableData = [];
+                        this.tableColumns = [];
+                        this.queryResults = null;
                         this.setMessage('Database created successfully!', 'success');
                     } catch (error) {
                         this.setMessage(error.message, 'error');
@@ -1348,8 +1392,7 @@
                     this.queryText = '';
                     this.loading = true;
                     try {
-                        // Load tables for the selected database
-                        const result = await this.apiCall(`/api/databases/${database.id}/tables`);
+                        const result =  !this.sharedToken ? await this.apiCall(`/api/databases/${database.id}/tables`) : await this.apiCall(`/api/databases/${database.id}/tables?share_token=${this.sharedToken}`);
                         this.tables = result.data || [];
                     } catch (error) {
                         this.setMessage('Failed to load tables', 'error');
@@ -1525,17 +1568,26 @@
                     this.loading = true;
                     try {
                         const result = await this.apiCall(`/api/shared/${this.sharedToken}`);
-                        console.log(result.data)
                         this.sharedDb = result.data.database;
                         this.selectedDb = result.data.database;
                         this.tables = [];
                         this.selectedTable = null;
                         this.tableData = [];
                         this.tableColumns = [];
-                        // Load tables for shared database
-                        const tablesResult = await this.apiCall(`/api/databases/${this.sharedDb.id}/tables`);
-                        this.tables = tablesResult.data || [];
-                        this.setMessage('Shared database accessed successfully!', 'success');
+                        if (!this.sharedDb) {
+                            this.setMessage('Invalid or expired share token', 'error');
+                            this.sharedToken = '';
+                            localStorage.removeItem('sharedToken');
+                            this.isAuthenticated= false
+                            return;
+                        }else{
+                            // Load tables for shared database
+                            const tablesResult = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables?share_token=${this.sharedToken}`);
+                            this.tables = tablesResult.data || [];
+                            this.setMessage('Shared database accessed successfully!', 'success');
+                            localStorage.setItem('sharedToken', this.sharedToken);
+                            this.isAuthenticated = true;
+                        }
                     } catch (error) {
                         this.setMessage(error.message, 'error');
                     }
@@ -1549,11 +1601,20 @@
                     this.tableColumns = [];
                     this.loading = true;
                     try {
-                        const result = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data`);
+                        const result = this.sharedToken ? 
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data?share_token=${this.sharedToken}`) : 
+                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data`);
                         this.tableData = result.data.values || [];
                         this.tableColumns = result.data.columns || [];
                     } catch (error) {
                         this.setMessage('Failed to load table data', 'error');
+                        this.isAuthenticated = false;
+                        this.user = null;
+                        this.sharedToken = '';
+                        this.sharedDb = null;
+                        this.databases = [];
+                        this.selectedDb = null;
+                        this.queryResults = null;
                     }
                     this.loading = false;
                 },
