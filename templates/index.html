@@ -331,6 +331,21 @@
                                         </button>
                                     </template>
 
+                                    <template x-if="selectedTable">
+                                        <button type="button" class="btn btn-secondary"
+                                            @click="showQueryPanel? showQueryPanel = false: showQueryPanel = true">
+                                            <!-- reload icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M2 8a6 6 0 1 1 2.47 4.85" stroke="#ffff" stroke-width="1.5"
+                                                    fill="none" />
+                                                <path d="M2 12v-3h3" stroke="#ffff" stroke-width="1.5" fill="none" />
+                                            </svg>
+                                            <span x-text="showQueryPanel===false?'Show Query Panel':'Hide Query Panel'" x-show=""></span>
+                                        </button>
+                                    </template>
+
                                     <template x-if="isAuthenticated && selectedDb && !selectedTable">
                                         <button class="btn btn-secondary" @click="tab='info'; showConfigModal = true"
                                             title="Database Info & Connection">
@@ -537,7 +552,7 @@
                         </div>
 
                         <!-- Query Panel -->
-                        <div x-show="selectedDb && !sharedToken" class="query-panel">
+                        <div x-show="selectedDb && !sharedToken && showQueryPanel" class="query-panel">
                             <div class="form-group">
                                 <label>SQL Query</label>
                                 <textarea class="query-editor" x-model="queryText" :placeholder="selectedTable && tableColumns.length > 0
@@ -1109,6 +1124,7 @@
                 selectShowDeleteRowIcon: null,
                 showConfigModal: false,
                 showColumnInfo: false,
+                showQueryPanel: false,
 
                 // Forms
                 newDbName: '',
