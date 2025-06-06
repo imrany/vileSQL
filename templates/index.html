@@ -480,10 +480,10 @@
                                         <template x-for="(row, index) in filteredTableData" :key="index">
                                             <tr>
                                                 <td class="row-number cursor-pointer"
-                                                    x-text="selectShowDeleteRowIcon ? '🗑️' : index + 1"
-                                                    @mouseover="selectShowDeleteRowIcon = true"
-                                                    @mouseenter="selectShowDeleteRowIcon = true"
-                                                    @mouseleave="selectShowDeleteRowIcon = false"
+                                                    x-text="selectShowDeleteRowIcon===index ? '🗑️' : index + 1"
+                                                    @mouseover="selectShowDeleteRowIcon = index"
+                                                    @mouseenter="selectShowDeleteRowIcon = index"
+                                                    @mouseleave="selectShowDeleteRowIcon = null"
                                                     @click="showRowDropdown = { row: row, index: index }">
                                                 </td>
 
@@ -1061,7 +1061,7 @@
                 showRowDropdown: null,
                 showDeleteRowModal: { show: false, row: null, index: null },
                 showEditRowModal: false,
-                selectShowDeleteRowIcon: false,
+                selectShowDeleteRowIcon: null,
                 showConfigModal: false,
                 showColumnInfo: false,
 
