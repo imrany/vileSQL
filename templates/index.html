@@ -1525,8 +1525,9 @@
                     this.loading = true;
                     try {
                         const result = await this.apiCall(`/api/shared/${this.sharedToken}`);
-                        this.sharedDb = result.database;
-                        this.selectedDb = result.database;
+                        console.log(result.data)
+                        this.sharedDb = result.data.database;
+                        this.selectedDb = result.data.database;
                         this.tables = [];
                         this.selectedTable = null;
                         this.tableData = [];
