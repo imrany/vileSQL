@@ -57,7 +57,7 @@ This web application allows users to:
 ### Setup and Configuration
 The application uses several configurable constants:
 
-- HTTP port (default: 8080)
+- HTTP port (default: 5050)
 - Storage path for user databases
 - Session and cookie keys (should be replaced with secure values)
 - Database size limits
@@ -91,28 +91,6 @@ The application uses several configurable constants:
 - GET `/api/shared/{token}` - Access a shared database
 - POST `/api/shared/{token}/query` - Query a shared database (read-only)
 
-### How to Deploy
-
-Set up a Go environment on your VPS
-Install dependencies using go get:
-
-github.com/gorilla/mux
-github.com/gorilla/sessions
-github.com/mattn/go-sqlite3
-github.com/rs/cors
-golang.org/x/crypto/bcrypt
-
-
 Configure the constants in the code (especially security keys)
-Build the application: go build -o sqlite-web-manager
-Create a static directory for frontend files
-Run the server: ./sqlite-web-manager
-
-Next Steps
-To complete this project, you would need to:
-
-Develop a frontend web application to interact with this API
-Implement more robust error handling and logging
-Add more security features like rate limiting and input validation
-Set up HTTPS for secure communications
-Consider adding user role management (admin, regular users)
+Build the application: go build -o vilesql
+Run the server: ./vilesql
