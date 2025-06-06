@@ -120,7 +120,14 @@
                             <input type="text" class="form-control" x-model="sharedToken"
                                 placeholder="Enter share token">
                             <button class="btn btn-secondary" @click="accessSharedDatabase()" :disabled="!sharedToken">
-                                <i data-lucide="share-2"></i>
+                                <!-- share svg -->
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle; margin-right: 4px;" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="4" r="2" fill="#ffff"/>
+                                    <circle cx="4" cy="8" r="2" fill="#ffff"/>
+                                    <circle cx="12" cy="12" r="2" fill="#ffff"/>
+                                    <line x1="5.7" y1="8.7" x2="10.3" y2="11.3" stroke="#ffff" stroke-width="1.2"/>
+                                    <line x1="10.3" y1="4.7" x2="5.7" y2="7.3" stroke="#ffff" stroke-width="1.2"/>
+                                </svg>
                                 Access
                             </button>
                         </div>
