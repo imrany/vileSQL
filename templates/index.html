@@ -660,10 +660,17 @@
                                                 class="flex items-center gap-2 form-control">
                                                 <input type="text" class="flex-grow" :value="selectedDb.share_token"
                                                     readonly>
-                                                <button type="button" class="cursor-pointer" title="Copy token"
-                                                    @click="navigator.clipboard.writeText(selectedDb.share_token)">
+                                                <button type="button" class="cursor-pointer" title="Copy token" @click="navigator.clipboard.writeText(selectedDb.share_token); 
+                                                        showTick='copied_token'
+                                                        setTimeout(() => { showTick = null; }, 2000);">
+                                                    <!-- Tick SVG icon -->
+                                                    <div x-show="showTick==='copied_token'">
+                                                        ✅ 
+                                                    </div>
+
                                                     <!-- Copy SVG icon -->
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                    <svg x-show="showTick===null" width="20" height="20"
+                                                        viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <rect x="4" y="6" width="16" height="12" rx="3" fill="#d1d5db"
                                                             fill-opacity="0.5" />
@@ -692,10 +699,18 @@
                                                 <input type="text" class="flex-grow"
                                                     :value="window.location.origin + '/api/shared/' + selectedDb.share_token"
                                                     readonly>
-                                                <button type="button" class="cursor-pointer" title="Copy link"
-                                                    @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token)">
+                                                <button type="button" class="cursor-pointer" title="Copy link" @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token)
+                                                        showTick='copied_share_link'
+                                                        setTimeout(() => { showTick = null; }, 2000);
+                                                    ">
+                                                    <!-- Tick SVG icon -->
+                                                    <div x-show="showTick==='copied_share_link'">
+                                                        ✅ 
+                                                    </div>
+
                                                     <!-- Copy SVG icon -->
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                    <svg x-show="showTick===null" width="20" height="20"
+                                                        viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <rect x="4" y="6" width="16" height="12" rx="3" fill="#d1d5db"
                                                             fill-opacity="0.5" />
@@ -779,16 +794,29 @@
                             <div x-show="selectedDb.share_token &&tab==='connect'">
                                 <div class="form-group">
                                     <label>Connection Link</label>
-                                    <div @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token + '/query')"
-                                        class="flex items-center gap-2 form-control">
+                                    <div @click="
+                                            navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token + '/query');
+                                            showTick='copied_connection_link';
+                                            setTimeout(() => { showTick = null; }, 2000);
+                                        "
+                                        class="flex items-center gap-2 form-control"
+                                        >
                                         <input type="text" class="flex-grow"
                                             :value="window.location.origin + '/api/shared/' + selectedDb.share_token + '/query'"
                                             readonly>
                                         <button type="button" class="cursor-pointer" title="Copy link"
-                                            @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token + '/query')">
+                                            @click="navigator.clipboard.writeText(window.location.origin + '/api/shared/' + selectedDb.share_token + '/query');
+                                            showTick='copied_connection_link';
+                                            setTimeout(() => { showTick = null; }, 2000);
+                                        ">
+                                            <!-- Tick SVG icon -->
+                                            <div x-show="showTick==='copied_connection_link'">
+                                                ✅ 
+                                            </div>
+
                                             <!-- Copy SVG icon -->
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                            <svg x-show="showTick===null" width="20" height="20" viewBox="0 0 24 24"
+                                                fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="4" y="6" width="16" height="12" rx="3" fill="#d1d5db"
                                                     fill-opacity="0.5" />
                                                 <rect x="4" y="6" width="16" height="12" rx="3" stroke="#6b7280"
@@ -833,7 +861,8 @@
                                 <div class="form-group">
                                     <label>Format</label>
                                     <div class="w-full">
-                                        <select class="format-selector" x-model="backup_format" style="width: 100%;" id="">
+                                        <select class="format-selector" x-model="backup_format" style="width: 100%;"
+                                            id="">
                                             <option value="custom" disabled>Select format</option>
                                             <option value="sqlite">Custom (.sqlite)</option>
                                             <option value="tar">Tar (.tar)</option>
@@ -1037,6 +1066,7 @@
                 message: { text: '', type: '' },
                 tab: null,
                 newColumnName: null, newColumnType: null,
+                showTick: null,
 
                 // Database state
                 databases: [],
@@ -1664,7 +1694,7 @@
                     }
                     this.loading = false;
                 },
-                
+
                 // Filtered table data
                 get filteredTableData() {
                     if (!this.filterText.trim()) return this.tableData;
