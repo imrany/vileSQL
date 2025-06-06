@@ -42,6 +42,8 @@ func SetupRoutes(r *mux.Router){
 	protected.HandleFunc("/databases/{id:[0-9]+}/query", database.ExecuteQueryHandler).Methods("POST")
 	protected.HandleFunc("/databases/{id:[0-9]+}/tables", database.CreateTableHandler).Methods("POST")
 	protected.HandleFunc("/databases/{id:[0-9]+}/tables/{table}", database.DeleteTableHandler).Methods("DELETE")
+	// backup and download database
+	protected.HandleFunc("/databases/{id:[0-9]+}/backup", database.BackupDatabaseHandler).Methods("POST")
 	// insert table data
 	protected.HandleFunc("/databases/{id:[0-9]+}/data", database.InsertDataHandler).Methods("POST")
 

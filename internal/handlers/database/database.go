@@ -1,9 +1,12 @@
 package database
 
 import (
+	"archive/zip"
+	"archive/tar"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -910,15 +913,15 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 
 func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
+	if SESSION_KEY == "" {
 		log.Fatal("SESSION_KEY is empty")
 	}
 
 	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
+	if COOKIE_STORE_KEY == "" {
 		log.Fatal("COOKIE_STORE_KEY is empty")
 	}
-	
+
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -935,7 +938,7 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the table creation request
 	var tableRequest struct {
-		Name    string   `json:"name"`
+		Name    string `json:"name"`
 		Columns string `json:"columns"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&tableRequest); err != nil {
@@ -1353,6 +1356,192 @@ func DeleteDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Database deleted successfully",
 	})
+}
+
+
+// BackupDatabaseHandler with support for "zip" and "tar" formats
+func BackupDatabaseHandler(w http.ResponseWriter, r *http.Request) {
+	SESSION_KEY := config.GetValue("SESSION_KEY")
+	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
+	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Server configuration error",
+		})
+		return
+	}
+	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
+	session, _ := store.Get(r, SESSION_KEY)
+	userID := session.Values["user_id"].(int)
+
+	vars := mux.Vars(r)
+	dbID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid database ID",
+		})
+		return
+	}
+
+	// Parse request body for filename and format
+	var req struct {
+		Filename string `json:"filename"`
+		Format   string `json:"format"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid request format",
+		})
+		return
+	}
+	if req.Filename == "" {
+		req.Filename = fmt.Sprintf("backup_%d.db", dbID)
+	}
+	if req.Format == "" {
+		req.Format = "sqlite"
+	}
+
+	// Get the database file path and check ownership
+	var filePath string
+	var dbUserID int
+	err = SystemDB.QueryRow("SELECT file_path, user_id FROM databases WHERE id = ?", dbID).Scan(&filePath, &dbUserID)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "Database not found",
+		})
+		return
+	}
+	if dbUserID != userID {
+		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+			Success: false,
+			Message: "You don't have permission to backup this database",
+		})
+		return
+	}
+
+	// Open the database file for reading
+	file, err := os.Open(filePath)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to open database file for backup",
+		})
+		return
+	}
+	defer file.Close()
+
+	switch req.Format {
+	case "sqlite":
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", req.Filename))
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.WriteHeader(http.StatusOK)
+		_, err = io.Copy(w, file)
+		if err != nil {
+			log.Printf("Error streaming backup file: %v", err)
+		}
+	case "zip":
+		zipFilename := req.Filename
+		if !strings.HasSuffix(zipFilename, ".zip") {
+			zipFilename += ".zip"
+		}
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", zipFilename))
+		w.Header().Set("Content-Type", "application/zip")
+		w.WriteHeader(http.StatusOK)
+
+		zipWriter := NewZipWriter(w)
+		defer zipWriter.Close()
+		if err := zipWriter.AddFileFromReader(filepath.Base(filePath), file); err != nil {
+			log.Printf("Error writing zip: %v", err)
+		}
+	case "tar":
+		tarFilename := req.Filename
+		if !strings.HasSuffix(tarFilename, ".tar") {
+			tarFilename += ".tar"
+		}
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", tarFilename))
+		w.Header().Set("Content-Type", "application/x-tar")
+		w.WriteHeader(http.StatusOK)
+
+		tarWriter := NewTarWriter(w)
+		defer tarWriter.Close()
+		if err := tarWriter.AddFileFromReader(filepath.Base(filePath), file); err != nil {
+			log.Printf("Error writing tar: %v", err)
+		}
+	default:
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Only sqlite, zip, or tar format is supported for backup",
+		})
+		return
+	}
+}
+
+// ZipWriter wraps a zip.Writer for streaming
+type ZipWriter struct {
+	zw *zip.Writer
+}
+
+func NewZipWriter(w io.Writer) *ZipWriter {
+	return &ZipWriter{zw: zip.NewWriter(w)}
+}
+
+func (z *ZipWriter) AddFileFromReader(name string, r io.Reader) error {
+	fw, err := z.zw.Create(name)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(fw, r)
+	return err
+}
+
+func (z *ZipWriter) Close() error {
+	return z.zw.Close()
+}
+
+// TarWriter wraps a tar.Writer for streaming
+type TarWriter struct {
+	tw *tar.Writer
+}
+
+func NewTarWriter(w io.Writer) *TarWriter {
+	return &TarWriter{tw: tar.NewWriter(w)}
+}
+
+func (t *TarWriter) AddFileFromReader(name string, r io.Reader) error {
+	// Get file size (rewind if needed)
+	var size int64
+	if seeker, ok := r.(io.Seeker); ok {
+		cur, _ := seeker.Seek(0, io.SeekCurrent)
+		end, _ := seeker.Seek(0, io.SeekEnd)
+		size = end - cur
+		seeker.Seek(cur, io.SeekStart)
+	} else {
+		// fallback: read all into memory (not ideal for large files)
+		b, err := io.ReadAll(r)
+		if err != nil {
+			return err
+		}
+		size = int64(len(b))
+		r = io.NopCloser(strings.NewReader(string(b)))
+	}
+
+	hdr := &tar.Header{
+		Name: name,
+		Mode: 0600,
+		Size: size,
+	}
+	if err := t.tw.WriteHeader(hdr); err != nil {
+		return err
+	}
+	_, err := io.Copy(t.tw, r)
+	return err
+}
+
+func (t *TarWriter) Close() error {
+	return t.tw.Close()
 }
 
 func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {

@@ -828,21 +828,29 @@
                             <div x-show="tab==='backup'">
                                 <div class="form-group">
                                     <label>Filename</label>
-                                    <input type="text" class="form-control" :value="selectedDb.name">
+                                    <input type="text" class="form-control" x-model="backup_filename">
                                 </div>
                                 <div class="form-group">
                                     <label>Format</label>
                                     <div class="w-full">
-                                        <select class="format-selector" style="width: 100%;" id="">
-                                            <option value="custom">Custom</option>
+                                        <select class="format-selector" x-model="backup_format" style="width: 100%;" id="">
+                                            <option value="custom" disabled>Select format</option>
+                                            <option value="sqlite">Custom (.sqlite)</option>
                                             <option value="tar">Tar (.tar)</option>
                                             <option value="zip">Directory (.zip)</option>
                                         </select>
                                     </div>
                                 </div>
                                 <button class="btn btn-success w-full" style="margin-top: 8px;"
-                                    @click="renewShareToken(selectedDb); showConfigModal = false;">
+                                    @click="backupDB(selectedDb); showConfigModal = false;">
                                     <!-- disk icon -->
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                        style="vertical-align: middle; margin-right: 4px;"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="2" y="2" width="12" height="12" rx="2" fill="#2563eb" />
+                                        <rect x="4" y="4" width="8" height="6" rx="1" fill="#fff" />
+                                        <rect x="6" y="11" width="4" height="2" rx="1" fill="#fff" />
+                                    </svg>
                                     Backup Database
                             </div>
                         </div>
@@ -1061,6 +1069,8 @@
                 newDbName: '',
                 newTableForm: { name: '', columns: '' },
                 insertForm: { table: '', columns: '', values: '' },
+                backup_filename: '',
+                backup_format: '',
 
                 // Query state
                 queryText: '',
@@ -1622,6 +1632,39 @@
                     this.loading = false;
                 },
 
+                async backupDB(selectedDB) {
+                    if (!selectedDB || !this.backup_filename || !this.backup_format) return;
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`/api/databases/${selectedDB.id}/backup`, {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                filename: this.backup_filename,
+                                format: this.backup_format
+                            })
+                        });
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(errorText || `HTTP ${response.status}`);
+                        }
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = this.backup_filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(url);
+                        this.setMessage('Backup downloaded successfully!', 'success');
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    }
+                    this.loading = false;
+                },
+                
                 // Filtered table data
                 get filteredTableData() {
                     if (!this.filterText.trim()) return this.tableData;
