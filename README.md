@@ -31,10 +31,7 @@ Or, integrate with **Golang**:
 [GoLang integration documentation](./Docs/golang.md)
 
 ## **🛠️ Using VileSQL DBMS**
-<video width="480" controls>
-  <source src="./Docs/videos/vilesql%20basic%20tutorial.webm" type="video/webm">
-  Your browser does not support the video tag.
-</video>
+[▶️ Watch demo video](https://drive.google.com/file/d/1pbVJRTb5vDIw6WfXV8jwW--DIHQ7Du4y/view?usp=drive_web)
 
 
 ## **🚀 Who Can Use VileSQL?**
