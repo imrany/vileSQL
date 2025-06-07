@@ -1,96 +1,41 @@
-## VileSQL
+### **🚀 VileSQL: SQLite Database Hosting & Management**  
+VileSQL offers **server-mode SQLite database hosting, powerful, cloud-hosted SQLite DBMS** with **secure database hosting, controlled access, and an intuitive control panel** for managing your databases effortlessly.
 
-We provide sqLite database hosting and management (Server mode for sqLite database) with controlled access.
-
-### System Overview
-This web application allows users to:
-
-1. Register and login to their accounts
-2. Create, view, and manage multiple SQLite databases
-3. Execute SQL queries against their databases
-4. Create and modify database tables and data
-5. Share databases with others via unique links (read-only access)
-6. Delete databases when no longer needed
-
-### Key Components
-
-1. #### User Management System
-
-- Registration and authentication
-- Session management for protected routes
-- Secure password handling using bcrypt
+## **📌 Features**
+✔ **Cloud-hosted SQLite databases** – No need to install or configure SQLite manually.  
+✔ **Secure authentication with API tokens** – Ensure **safe and private** data access.  
+✔ **Intuitive Control Panel** – Manage users, queries, and settings with a **user-friendly dashboard**.  
+✔ **Automated Backups** – Never lose your data, even in critical operations.  
+✔ **Query Execution & Monitoring** – Track real-time database activity in the **control panel**.  
+✔ **Performance Optimization** – Indexing and caching mechanisms for **faster queries**.  
 
 
-2. #### Database Management
+## **🔗 Getting Started**
+### **1️⃣ Create Your Account**
+Sign up at **[VileSQL.com](#)**
 
-- Creating new SQLite databases
-- Listing user's databases
-- Getting database schema (tables and columns)
-- Sharing and unsharing databases
-- Deleting databases
+### **2️⃣ Access Your Control Panel**
+Once registered, log in to the **VileSQL Control Panel** to:
+- Manage databases  
+- Monitor query performance  
+- Set up automated backups  
 
+### **3️⃣ Connect Your Application**
+Use **API requests** to interact with the database programmatically:
+```bash
+   curl -X POST -H "Content-Type: application/json" -d '{"sql":"SELECT * FROM mytable"}'  https://example.com/api/shared/<your-token>/query
+```
 
-3. #### Query Execution
+Or, integrate with **Golang**:
 
-- Executing SQL queries on user databases
-- Read-only access for shared databases
-- Security measures to prevent unauthorized access
-
-
-4. #### Table Management
-
-- Creating new tables with custom schemas
-- Inserting data into tables
-- Deleting tables
+[GoLang integration documentation](./Docs/golang.md)
 
 
+## **🚀 Who Can Use VileSQL?**
+✅ **Developers** – Build apps with **server-managed SQLite databases**  
+✅ **Businesses** – Store, analyze, and manage critical data remotely  
+✅ **Researchers & Educators** – Easily maintain structured datasets  
+✅ **Organizations** – Enforce **RBAC-based access control**  
 
-5. #### Security Features
+VileSQL gives you **the power of an enterprise-grade DBMS** while keeping **SQLite lightweight and accessible**.  
 
-- Password hashing using bcrypt
-- Session-based authentication
-- Database ownership validation
-- Read-only mode for shared databases
-- Prevention of write operations on shared databases
-- Size limits on databases
-
-### Setup and Configuration
-The application uses several configurable constants:
-
-- HTTP port (default: 5050)
-- Storage path for user databases
-- Session and cookie keys (should be replaced with secure values)
-- Database size limits
-- Token expiration for shared links
-
-### API Endpoints
-#### Authentication
-
-- POST `/api/register` - Create a new user account
-- POST `/api/login` - Authenticate a user
-- POST `/api/logout` - End a user session
-
-#### Database Management (authenticated)
-
-- GET `/api/databases` - List user's databases
-- POST `/api/databases` - Create a new database
-- GET `/api/databases/{id}` - Get database details
-- DELETE `/api/databases/{id}` - Delete a database
-- POST `/api/databases/{id}/share` - Generate share link
-- DELETE `/api/databases/{id}/share` - Disable sharing
-
-#### Data Operations (authenticated)
-
-- POST `/api/databases/{id}/query` - Execute SQL query
-- POST `/api/databases/{id}/tables` - Create a new table
-- DELETE `/api/databases/{id}/tables/{table}` - Delete a table
-- POST `/api/databases/{id}/data` - Insert data into a table
-
-#### Shared Access (public)
-
-- GET `/api/shared/{token}` - Access a shared database
-- POST `/api/shared/{token}/query` - Query a shared database (read-only)
-
-Configure the constants in the code (especially security keys)
-Build the application: go build -o vilesql
-Run the server: ./vilesql
