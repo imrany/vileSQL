@@ -98,7 +98,7 @@ func init() {
 
 	// Initialize the system database
 	var err error
-	SystemDB, err = sql.Open("sqlite3", "./data/system.db")
+	SystemDB, err = sql.Open("sqlite", "./data/system.db")
 	if err != nil {
 		log.Fatalf("Failed to open system database: %v", err)
 	}
@@ -242,7 +242,7 @@ func CreateDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a new SQLite database file
-	db, err := sql.Open("sqlite3", dbFilePath)
+	db, err := sql.Open("sqlite", dbFilePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -535,7 +535,7 @@ func GetSharedDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the database schema (tables and columns) in read-only mode
-	userDB, err := sql.Open("sqlite3", db.FilePath+"?mode=ro")
+	userDB, err := sql.Open("sqlite", db.FilePath+"?mode=ro")
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -819,7 +819,7 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Open the user's database
-	userDB, err := sql.Open("sqlite3", filePath)
+	userDB, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -998,7 +998,7 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Open the user's database
-	userDB, err := sql.Open("sqlite3", filePath)
+	userDB, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -1120,7 +1120,7 @@ func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Open the user's database
-	userDB, err := sql.Open("sqlite3", filePath)
+	userDB, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -1265,7 +1265,7 @@ func DeleteTableHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Open the user's database
-	userDB, err := sql.Open("sqlite3", filePath)
+	userDB, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -1599,7 +1599,7 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Open the user's database in read-only mode
-	userDB, err := sql.Open("sqlite3", filePath+"?mode=ro")
+	userDB, err := sql.Open("sqlite", filePath+"?mode=ro")
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -1828,7 +1828,7 @@ func GetDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the database schema (tables and columns)
-	userDB, err := sql.Open("sqlite3", db.FilePath)
+	userDB, err := sql.Open("sqlite", db.FilePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -1976,7 +1976,7 @@ func GetTableHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDB, err := sql.Open("sqlite3", filePath)
+	userDB, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -2163,7 +2163,7 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		userDB, err = sql.Open("sqlite3", filePath+"?mode=ro")
+		userDB, err = sql.Open("sqlite", filePath+"?mode=ro")
 		if err != nil {
 			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 				Success: false,
@@ -2361,7 +2361,7 @@ func authenticateAndGetDB(w http.ResponseWriter, r *http.Request, dbID string) (
 		return nil, 0, "", false
 	}
 
-	userDB, err := sql.Open("sqlite3", filePath)
+	userDB, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
@@ -2555,7 +2555,7 @@ func GetTablesHandler(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		userDB, err = sql.Open("sqlite3", filePath+"?mode=ro")
+		userDB, err = sql.Open("sqlite", filePath+"?mode=ro")
 		if err != nil {
 			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 				Success: false,

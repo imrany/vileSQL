@@ -4,6 +4,7 @@
 # Binaries for programs and plugins
 data
 vilesql
+bin
 
 *.exe
 *.exe~

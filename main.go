@@ -11,7 +11,7 @@ import (
 	"github.com/imrany/vilesql/config"
 	"github.com/imrany/vilesql/internal/middleware"
 	"github.com/imrany/vilesql/internal/router"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	"github.com/rs/cors"
 )
 

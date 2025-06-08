@@ -6,9 +6,9 @@ delete:
 
 build:
 	$(MAKE) delete
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o vilesql-linux main.go
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o vilesql-windows.exe main.go
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o vilesql-darwin main.go	
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/vilesql-linux main.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/vilesql-windows.exe main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o bin/vilesql-darwin main.go	
 
 run:
 	./vilesql
