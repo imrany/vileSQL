@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/gorilla/sessions"
-	"github.com/imrany/vileSQL/config"
-	"github.com/imrany/vileSQL/internal/handlers/database"
-	"github.com/imrany/vileSQL/internal/helper"
+	"github.com/imrany/vilesql/config"
+	"github.com/imrany/vilesql/internal/handlers/database"
+	"github.com/imrany/vilesql/internal/helper"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -34,6 +34,17 @@ Or, integrate with **Golang**:
 [▶️ Watch demo video](https://drive.google.com/file/d/1pbVJRTb5vDIw6WfXV8jwW--DIHQ7Du4y/view?usp=drive_web)
 
 
+## **Build and Run with Docker**
+```bash
+docker build -t vilesql .
+```
+
+```bash
+docker run -p 5000:5000 vilesql
+```
+
+
+
 ## **🚀 Who Can Use VileSQL?**
 ✅ **Developers** – Build apps with **server-managed SQLite databases**  
 ✅ **Businesses** – Store, analyze, and manage critical data remotely  

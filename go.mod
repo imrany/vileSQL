@@ -1,4 +1,4 @@
-module github.com/imrany/vileSQL
+module github.com/imrany/vilesql
 
 go 1.23.0
 

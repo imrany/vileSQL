@@ -334,15 +334,22 @@
                                     <template x-if="selectedTable">
                                         <button type="button" class="btn btn-secondary"
                                             @click="showQueryPanel? showQueryPanel = false: showQueryPanel = true">
-                                            <!-- reload icon -->
-                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            <!-- show icon -->
+                                            <svg x-show="!showQueryPanel" width="16" height="16" viewBox="0 0 16 16" fill="none"
                                                 style="vertical-align: middle; margin-right: 4px;"
                                                 xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M2 8a6 6 0 1 1 2.47 4.85" stroke="#ffff" stroke-width="1.5"
-                                                    fill="none" />
-                                                <path d="M2 12v-3h3" stroke="#ffff" stroke-width="1.5" fill="none" />
+                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2" fill="none"/>
+                                                <rect x="7" y="4" width="2" height="8" rx="1" fill="#ffff"/>
+                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff"/>
                                             </svg>
-                                            <span x-text="showQueryPanel===false?'Show Query Panel':'Hide Query Panel'" x-show=""></span>
+                                            <!-- hide icon -->
+                                            <svg x-show="showQueryPanel" width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2" fill="none"/>
+                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff"/>
+                                            </svg>
+                                            <span x-text="showQueryPanel===false?'Show Query Panel':'Hide Query Panel'"></span>
                                         </button>
                                     </template>
 
@@ -517,13 +524,19 @@
                                                         ">
                                                         <template
                                                             x-if="editingCell && editingCell.row === index && editingCell.col === column.name">
-                                                            <input type="text" class="form-control text-[11px]"
-                                                                x-model="editingCell.value" @keydown.enter.stop.prevent="
+                                                            <input
+                                                                :type="getInputType(column.constraint ? column.constraint.type : '')"
+                                                                class="form-control text-[11px]"
+                                                                x-model="editingCell.value"
+                                                                @keydown.enter.stop.prevent="
                                                                     updateCell(index, column.name, editingCell.value, row[colIndex]);
                                                                     editingCell = null;
-                                                                " @keydown.esc="editingCell = null"
+                                                                "
+                                                                @keydown.esc="editingCell = null"
                                                                 @blur="editingCell = null"
-                                                                style="padding:2px 6px; min-width: 60px;" autofocus>
+                                                                style="padding:2px 6px; min-width: 60px;"
+                                                                autofocus
+                                                            >
                                                         </template>
                                                         <template
                                                             x-if="!editingCell || editingCell.row !== index || editingCell.col !== column.name">
@@ -540,7 +553,9 @@
                                             <td class="row-number">+</td>
                                             <template x-for="(column, colIndex) in tableColumns" :key="column.name">
                                                 <td style="min-width: 300px;">
-                                                    <input type="text" class="form-control text-[11px]"
+                                                    <input 
+                                                        :type="getInputType(column.constraint ? column.constraint.type : '')"
+                                                        class="form-control text-[11px]"
                                                         :placeholder="column.name" x-model="insertRow[column.name]"
                                                         @keydown.enter.stop.prevent="addRow()" style="padding:2px 6px;">
                                                 </td>
@@ -600,9 +615,17 @@
                                 <div class="form-group flex items-center gap-2">
                                     <input type="text" class="form-control w-1/2" placeholder="Column Name"
                                         x-model="newColumnName" required />
-                                    <input type="text" class="form-control w-1/2"
-                                        placeholder="Column Type (e.g. TEXT, INTEGER)" x-model="newColumnType"
-                                        required />
+                                    <select class="form-control w-1/2" x-model="newColumnType" required>
+                                        <option value="" disabled selected>Select Type</option>
+                                        <option value="INTEGER NOT NULL DEFAULT 0">INTEGER</option>
+                                        <option value="TEXT NOT NULL DEFAULT ''">TEXT</option>
+                                        <option value="REAL NOT NULL DEFAULT 0.0">REAL</option>
+                                        <option value="BLOB NOT NULL">BLOB</option>
+                                        <option value="NUMERIC NOT NULL DEFAULT 0">NUMERIC</option>
+                                        <option value="BOOLEAN NOT NULL DEFAULT 0">BOOLEAN</option>
+                                        <option value="DATE NOT NULL DEFAULT '1970-01-01'">DATE</option>
+                                        <option value="DATETIME NOT NULL DEFAULT '1970-01-01 00:00:00'">DATETIME</option>
+                                    </select>
                                     <button type="submit" class="btn btn-primary btn-sm"
                                         :disabled="!newColumnName || !newColumnType">Add</button>
                                 </div>
@@ -1680,6 +1703,16 @@
                         this.setMessage(error.message, 'error');
                     }
                     this.loading = false;
+                },
+
+                // Helper to get input type based on column type
+                getInputType(type) {
+                    if (!type) return 'text';
+                    const t = type.toLowerCase();
+                    if (t.includes('int') || t.includes('real')) return 'number';
+                    if (t.includes('date')) return 'date';
+                    if (t.includes('bool')) return 'checkbox';
+                    return 'text';
                 },
 
                 async addColumn(columnName, columnType) {

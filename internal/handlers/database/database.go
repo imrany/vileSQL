@@ -17,8 +17,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/imrany/vileSQL/config"
-	"github.com/imrany/vileSQL/internal/helper"
+	"github.com/imrany/vilesql/config"
+	"github.com/imrany/vilesql/internal/helper"
 )
 
 type Database struct {
@@ -2208,7 +2208,26 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 			val := values[i]
 			switch v := val.(type) {
 			case []byte:
-				entry[col] = string(v)
+				strVal := string(v)
+				// Try to parse as RFC3339 or 2006-01-02 date and convert to YYYY-MM-DD
+				if t, err := time.Parse(time.RFC3339, strVal); err == nil {
+					entry[col] = t.Format("2006-01-02")
+				} else if t, err := time.Parse("2006-01-02", strVal); err == nil {
+					entry[col] = t.Format("2006-01-02")
+				} else {
+					entry[col] = strVal
+				}
+			case string:
+				// Try to parse as RFC3339 or 2006-01-02 date and convert to YYYY-MM-DD
+				if t, err := time.Parse(time.RFC3339, v); err == nil {
+					entry[col] = t.Format("2006-01-02")
+				} else if t, err := time.Parse("2006-01-02", v); err == nil {
+					entry[col] = t.Format("2006-01-02")
+				} else {
+					entry[col] = v
+				}
+			case time.Time:
+				entry[col] = v.Format("2006-01-02")
 			default:
 				entry[col] = v
 			}
