@@ -5,6 +5,7 @@
 data
 vilesql
 bin
+dist
 
 *.exe
 *.exe~

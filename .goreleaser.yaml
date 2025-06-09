@@ -1,0 +1,107 @@
+# .goreleaser.yaml
+project_name: vilesql
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    binary: vilesql
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - config/
+      - templates/
+      - static/
+      - .env
+
+nfpms:
+  - id: packages
+    package_name: vilesql
+    file_name_template: "{{ .ConventionalFileName }}"
+    vendor: VileSQL
+    homepage: https://github.com/imrany/vilesql
+    maintainer: imrany imranmat254@gmail.com
+    description: |-
+      VilesQL - SQLite Database Management Tool
+      A powerful web-based SQLite database management interface.
+    license: GNU General Public License v3.0
+    formats:
+      - deb
+      - rpm
+      - apk
+    dependencies:
+      - ca-certificates
+    recommends:
+      - sqlite3
+    bindir: /usr/bin
+    contents:
+      - src: ./config/
+        dst: /etc/vilesql/
+        type: config
+      - src: ./static/
+        dst: /usr/share/vilesql/static/
+        type: data
+      - src: ./templates/
+        dst: /usr/share/vilesql/templates/
+        type: data
+      - src: .env
+        dst: /etc/vilesql/.env
+        type: config
+
+# macOS packages
+brews:
+  - name: vilesql
+    homepage: https://github.com/imrany/vilesql
+    description: SQLite Database Management Tool
+    repository:
+      owner: imrany
+      name: homebrew-tap
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+release:
+  github:
+    owner: imrany
+    name: vilesql
+  draft: true
+  prerelease: auto

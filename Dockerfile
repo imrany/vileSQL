@@ -24,7 +24,11 @@ WORKDIR /app
 COPY --from=builder /app/vilesql .
 
 # Copy .env file from the host to the final image
-COPY .env .
+# COPY .env .
+ENV PORT=5000
+ENV DB_STORAGE_PATH=./data
+ENV SESSION_KEY=vilesql_2025
+ENV COOKIE_STORE_KEY=vilesql_2025
 
 # Expose the application port
 EXPOSE 5000
