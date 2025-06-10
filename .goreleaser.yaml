@@ -128,6 +128,15 @@ release:
   name_template: "Release {{.Version}}"
   header: |
     ## VileSQL {{.Version}}
+
+    ## **📌 Features**
+    ✔ **Cloud-hosted SQLite databases** – No need to install or configure SQLite manually.  
+    ✔ **Secure authentication with API tokens** – Ensure **safe and private** data access.  
+    ✔ **Intuitive Control Panel** – Manage users, queries, and settings with a **user-friendly dashboard**.  
+    ✔ **Automated Backups** – Never lose your data, even in critical operations.  
+    ✔ **Query Execution & Monitoring** – Track real-time database activity in the **control panel**.  
+    ✔ **Performance Optimization** – Indexing and caching mechanisms for **faster queries**.  
+    ✔ **Cross-Platform Compatibility** – Works seamlessly on **Linux, macOS, and Windows**.  
     
     ### Installation
     
