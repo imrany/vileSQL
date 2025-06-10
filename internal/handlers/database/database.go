@@ -204,11 +204,6 @@ func CreateDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal("SESSION_KEY is empty")
 	}
 
-	DB_STORAGE_PATH := config.GetValue("DB_STORAGE_PATH")
-	if DB_STORAGE_PATH == ""{
-		log.Fatal("DB_STORAGE_PATH is empty")
-	}
-
 	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
 	if COOKIE_STORE_KEY == ""{
 		log.Fatal("COOKIE_STORE_KEY is empty")
@@ -249,7 +244,7 @@ func CreateDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}, dbInfo.Name)
 
 	// Create file path for the new database
-	userDir := filepath.Join(DB_STORAGE_PATH, username)
+	userDir := filepath.Join(GetDataDir(), username)
 	if err := os.MkdirAll(userDir, 0755); err != nil {
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,

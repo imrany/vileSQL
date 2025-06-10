@@ -31,6 +31,8 @@ type ApiResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+var dataDir = database.GetDataDir()
+
 // User Authentication API
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
@@ -83,13 +85,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DB_STORAGE_PATH:=config.GetValue("DB_STORAGE_PATH")
-	if DB_STORAGE_PATH == ""{
-		log.Fatal("DB_STORAGE_PATH is empty")
-	}
-
 	// Create user directory for databases
-	userDir := filepath.Join(DB_STORAGE_PATH, user.Username)
+	userDir := filepath.Join(dataDir, user.Username)
 	if err := os.MkdirAll(userDir, 0755); err != nil {
 		log.Printf("Failed to create user directory: %v", err)
 	}
