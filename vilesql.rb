@@ -5,20 +5,21 @@
 class Vilesql < Formula
   desc "SQLite Database Management Tool"
   homepage "https://github.com/imrany/vilesql"
-  version "0.1.5"
+  version "0.2.1"
+  license "GPL-3.0-only"
 
   on_macos do
     on_intel do
-      url "https://github.com/imrany/vilesql/releases/download/v0.1.5/vilesql_Darwin_x86_64.tar.gz"
-      sha256 "468e6dee1b543e244dddae1fe1fcd3fdb3f31461149c3eac99191da9907d4992"
+      url "https://github.com/imrany/vilesql/releases/download/v0.2.1/vilesql_Darwin_x86_64.tar.gz"
+      sha256 "1fc2de9d932aa5309ed1da28aba346f0c5c5a5a4a33b64f01d4955f1cb9d472b"
 
       def install
         bin.install "vilesql"
       end
     end
     on_arm do
-      url "https://github.com/imrany/vilesql/releases/download/v0.1.5/vilesql_Darwin_arm64.tar.gz"
-      sha256 "e6c7fd89e910925c4dc290881dfd03b7868f565f12a8d425a4338ccc52b2cb8c"
+      url "https://github.com/imrany/vilesql/releases/download/v0.2.1/vilesql_Darwin_arm64.tar.gz"
+      sha256 "7c607811f79d2de19552a24060812ab15b9b0954268cea19fb4ed1083851add0"
 
       def install
         bin.install "vilesql"
@@ -29,8 +30,8 @@ class Vilesql < Formula
   on_linux do
     on_intel do
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/imrany/vilesql/releases/download/v0.1.5/vilesql_Linux_x86_64.tar.gz"
-        sha256 "558118b8e622de81fef4119b510e0adc4517933021cddee0aace0de38b4bd927"
+        url "https://github.com/imrany/vilesql/releases/download/v0.2.1/vilesql_Linux_x86_64.tar.gz"
+        sha256 "2e4ac96d1413a3ef6770439062846c7009aa7da3fcc0e1e31c093a86c618134a"
 
         def install
           bin.install "vilesql"
@@ -39,13 +40,36 @@ class Vilesql < Formula
     end
     on_arm do
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/imrany/vilesql/releases/download/v0.1.5/vilesql_Linux_arm64.tar.gz"
-        sha256 "5e88ea9698109e86985d23a6908d60a26a7047f41497dcb0ea1eff7c57166a7e"
+        url "https://github.com/imrany/vilesql/releases/download/v0.2.1/vilesql_Linux_arm64.tar.gz"
+        sha256 "7ba30eefdb1349569552a3601cc7e35d0f8b1702756dbba30ad1e5dc14a9db0f"
 
         def install
           bin.install "vilesql"
         end
       end
     end
+  end
+
+  def caveats
+    <<~EOS
+      VileSQL will create a data directory at ~/.vilesql on first run.
+      This directory contains your database files and configuration.
+
+      Data locations:
+        - ~/.vilesql (user data)
+        - ~/Library/Application Support/vilesql (macOS)
+
+      To specify a custom data directory, use:
+        vilesql --data-dir /path/to/your/data
+
+      To completely uninstall VileSQL and remove all data:
+        brew uninstall vilesql
+        rm -rf ~/.vilesql
+        rm -rf ~/Library/Application\ Support/vilesql
+
+      Or use the built-in uninstall command before removing:
+        vilesql uninstall --remove-data
+        brew uninstall vilesql
+    EOS
   end
 end
