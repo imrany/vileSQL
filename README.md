@@ -117,5 +117,4 @@ sudo rm $(which vilesql)
 3. Or download our uninstall script: 
 ```bash
 curl -sSL https://raw.githubusercontent.com/imrany/vilesql/main/scripts/uninstall.sh | bash
-chmod +x scripts/*.sh
 ```
