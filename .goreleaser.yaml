@@ -84,7 +84,6 @@ brews:
     repository:
       owner: imrany
       name: vilesql
-    folder: Formula
     caveats: |
       VileSQL will create a data directory at ~/.vilesql on first run.
       This directory contains your database files and configuration.
