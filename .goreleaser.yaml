@@ -127,7 +127,7 @@ nfpms:
           group: root
     scripts:
       postinstall: "scripts/postinstall.sh"
-      postupgrade: "scripts/postupgrade.sh"
+      post_upgrade: "scripts/postupgrade.sh" 
       preremove: "scripts/preremove.sh"
       postremove: "scripts/postremove.sh"
 
