@@ -1,0 +1,21 @@
+[Unit]
+Description=VileSQL Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/vilesql
+Restart=always
+RestartSec=5
+User=nobody
+Group=nogroup
+WorkingDirectory=/usr/local/bin
+Environment="PORT=5000"
+EnvironmentFile=/etc/vilesql/.env
+
+# Logging
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=vilesql
+
+[Install]
+WantedBy=multi-user.target

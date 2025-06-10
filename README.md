@@ -43,7 +43,29 @@ docker build -t vilesql .
 docker run -p 5000:5000 vilesql
 ```
 
+## **Usage: Example**
+```bash
+# Start server (default)
+vilesql
 
+# Start on custom port
+vilesql --port 8080
+
+# Use custom data directory
+vilesql --data-dir /path/to/data
+
+# Show version
+vilesql --version
+
+# Uninstall with dry run
+vilesql uninstall --dry-run
+
+# Uninstall and remove data with backup
+vilesql uninstall --remove-data
+
+# Uninstall without backup
+vilesql uninstall --remove-data --backup-data=false
+```
 
 ## **🚀 Who Can Use VileSQL?**
 ✅ **Developers** – Build apps with **server-managed SQLite databases**  
@@ -53,3 +75,47 @@ docker run -p 5000:5000 vilesql
 
 VileSQL gives you **the power of an enterprise-grade DBMS** while keeping **SQLite lightweight and accessible**.  
 
+
+## Uninstalling VileSQL
+
+### Package Manager Installation
+
+**Ubuntu/Debian:**
+```bash
+sudo apt remove vilesql
+# To remove all data:
+sudo apt purge vilesql
+rm -rf ~/.vilesql
+```
+
+**CentOS/RHEL/Fedora**
+```bash
+sudo rpm -e vilesql
+# Remove data manually:
+rm -rf ~/.vilesql
+sudo rm -rf /var/lib/vilesql
+```
+
+**macOS (Homebrew)**
+```bash
+brew uninstall vilesql
+# Remove data:
+rm -rf ~/.vilesql
+rm -rf ~/Library/Application\ Support/vilesql
+```
+
+### Manual Installation
+
+1. Use built-in uninstall: 
+```bash
+vilesql uninstall --remove-data
+```
+2. Remove binary: 
+```bash
+sudo rm $(which vilesql)
+```
+3. Or download our uninstall script: 
+```bash
+curl -sSL https://raw.githubusercontent.com/imrany/vilesql/main/scripts/uninstall.sh | bash
+chmod +x scripts/*.sh
+```
