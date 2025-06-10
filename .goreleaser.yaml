@@ -126,8 +126,7 @@ nfpms:
           owner: root
           group: root
     scripts:
-      postinstall: "scripts/postinstall.sh"
-      post_upgrade: "scripts/postupgrade.sh" 
+      postinstall: "scripts/postinstall.sh" 
       preremove: "scripts/preremove.sh"
       postremove: "scripts/postremove.sh"
 
