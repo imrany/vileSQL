@@ -72,7 +72,7 @@ brews:
     description: SQLite Database Management Tool
     repository:
       owner: imrany
-      name: homebrew-tap
+      name: vilesql
 
 checksum:
   name_template: 'checksums.txt'
