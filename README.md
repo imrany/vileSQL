@@ -43,6 +43,10 @@ docker build -t vilesql .
 docker run -p 5000:5000 vilesql
 ```
 
+## **Installation Guide**
+Follow our installation guide [user guide](./Docs/userguide.md)
+
+
 ## **Usage: Example**
 ```bash
 # Start server (default)
@@ -56,6 +60,24 @@ vilesql --data-dir /path/to/data
 
 # Show version
 vilesql --version
+
+# Check if updates are available
+vilesql upgrade --check-only
+
+# Include pre-release versions
+vilesql upgrade --check-only --pre-release
+
+# Standard upgrade with backup
+vilesql upgrade
+
+# Upgrade without creating backup
+vilesql upgrade --no-backup-data
+
+# Force upgrade even if same version
+vilesql upgrade --force
+
+# Include pre-release versions
+vilesql upgrade --pre-release
 
 # Uninstall with dry run
 vilesql uninstall --dry-run
@@ -78,7 +100,7 @@ VileSQL gives you **the power of an enterprise-grade DBMS** while keeping **SQLi
 
 ## Uninstalling VileSQL
 
-### Package Manager Installation
+### Package Manager Uninstallation
 
 **Ubuntu/Debian:**
 ```bash
@@ -104,7 +126,7 @@ rm -rf ~/.vilesql
 rm -rf ~/Library/Application\ Support/vilesql
 ```
 
-### Manual Installation
+### Manual Uninstallation
 
 1. Use built-in uninstall: 
 ```bash

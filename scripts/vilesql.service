@@ -1,0 +1,58 @@
+[Unit]
+Description=VileSQL Database Management Service
+Documentation=https://github.com/imrany/vilesql
+After=network.target network-online.target
+Wants=network-online.target
+RequiresMountsFor=/var/lib/vilesql
+
+[Service]
+Type=exec
+User=vilesql
+Group=vilesql
+WorkingDirectory=/var/lib/vilesql
+ExecStart=/usr/bin/vilesql server --config=/etc/vilesql/.env
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+TimeoutStartSec=30
+TimeoutStopSec=30
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Environment
+Environment=VILESQL_DATA_DIR=/var/lib/vilesql
+Environment=VILESQL_CONFIG_DIR=/etc/vilesql
+Environment=VILESQL_LOG_DIR=/var/log/vilesql
+EnvironmentFile=-/etc/default/vilesql
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+
+# File system permissions
+ReadWritePaths=/var/lib/vilesql /var/log/vilesql
+ReadOnlyPaths=/etc/vilesql
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vilesql
+
+[Install]
+WantedBy=multi-user.target

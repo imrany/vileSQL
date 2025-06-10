@@ -1,33 +1,70 @@
-# Step 1: Build Stage
+# Multi-stage build for smaller final image
 FROM golang:1.23-alpine AS builder
 
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
+# Set working directory
 WORKDIR /app
 
-# Copy go modules files first (better caching)
+# Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies and update go.mod
-RUN go mod download && go mod tidy
+# Download dependencies
+RUN go mod download
 
 # Copy source code
 COPY . .
 
-# Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o vilesql .
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o vilesql .
 
-# Step 2: Run Stage (Uses Small Final Image)
+# Final stage - minimal image
 FROM alpine:latest
 
-WORKDIR /app
+# Install runtime dependencies
+RUN apk --no-cache add ca-certificates tzdata sqlite
 
-# Copy built binary from builder stage
-COPY --from=builder /app/vilesql .
+# Create non-root user
+RUN addgroup -g 1001 -S vilesql && \
+    adduser -u 1001 -S vilesql -G vilesql
 
-# Copy .env file from the host to the final image
-COPY .env .
+# Create directories
+RUN mkdir -p /var/lib/vilesql && \
+    mkdir -p /etc/vilesql && \
+    chown -R vilesql:vilesql /var/lib/vilesql /etc/vilesql
 
-# Expose the application port
+# Copy binary from builder stage
+COPY --from=builder /app/vilesql /usr/local/bin/vilesql
+
+# Copy configuration files
+COPY --from=builder /app/.env /etc/vilesql/.env
+COPY --from=builder /app/scripts/ /usr/local/share/vilesql/scripts/
+
+# Set proper permissions
+RUN chmod +x /usr/local/bin/vilesql && \
+    chown vilesql:vilesql /etc/vilesql/.env
+
+# Switch to non-root user
+USER vilesql
+
+# Set working directory
+WORKDIR /var/lib/vilesql
+
+# Environment variables
+ENV VILESQL_DATA_DIR=/var/lib/vilesql
+ENV PORT=5000
+ENV HOST=0.0.0.0
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1
+
+# Expose port
 EXPOSE 5000
 
-# Run the application
-CMD ["./vilesql"]
+# Volume for persistent data
+VOLUME ["/var/lib/vilesql"]
+
+# Command to run the application
+CMD ["vilesql", "--host=0.0.0.0", "--port=5000"]

@@ -1,14 +1,6 @@
 #!/bin/bash
 
-# Pre-removal script
-echo "Preparing to remove VileSQL..."
-# Stop any running instances
-pkill -f vilesql || true
-
-
 # scripts/preremove.sh - Pre-removal script
-#!/bin/bash
-
 set -e
 
 log() {
