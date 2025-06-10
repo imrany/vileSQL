@@ -38,9 +38,6 @@ archives:
     files:
       - README.md
       - LICENSE
-      - config/
-      - templates/
-      - static/
       - .env
 
 nfpms:
@@ -64,15 +61,6 @@ nfpms:
       - sqlite3
     bindir: /usr/bin
     contents:
-      - src: ./config/
-        dst: /etc/vilesql/
-        type: config
-      - src: ./static/
-        dst: /usr/share/vilesql/static/
-        type: data
-      - src: ./templates/
-        dst: /usr/share/vilesql/templates/
-        type: data
       - src: .env
         dst: /etc/vilesql/.env
         type: config
