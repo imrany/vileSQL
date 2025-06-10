@@ -2,6 +2,7 @@ all: build run
 
 delete: 
 	rm -rf bin
+	rm -rf dist
 	rm -rf ./vilesql
 
 build:
@@ -12,6 +13,10 @@ build:
 
 run:
 	./vilesql
+
+publish:
+	$(MAKE) delete
+	goreleaser release
 
 dev: 
 	CompileDaemon -build="go build -o vilesql main.go" -command="./vilesql"

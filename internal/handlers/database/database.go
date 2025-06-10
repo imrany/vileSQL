@@ -1,8 +1,8 @@
 package database
 
 import (
-	"archive/zip"
 	"archive/tar"
+	"archive/zip"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -84,21 +85,48 @@ const (
 // Main SQLite database to store user information and database metadata
 var SystemDB *sql.DB
 
-// Initialize the application
-func init() {
-	DB_STORAGE_PATH := config.GetValue("DB_STORAGE_PATH")
-	if DB_STORAGE_PATH == ""{
-		log.Fatal("DB_STORAGE_PATH is empty")
-	}
-	
-	// Create data directory if it doesn't exist
-	if err := os.MkdirAll(DB_STORAGE_PATH, 0755); err != nil {
-		log.Fatalf("Failed to create data directory: %v", err)
+// getDataDir returns the appropriate data directory for the current OS
+func GetDataDir() string {
+	// Check for custom data directory first
+	if customDir := os.Getenv("VILESQL_DATA_DIR"); customDir != "" {
+		return customDir
 	}
 
-	// Initialize the system database
+	// Use OS-specific default locations
+	switch runtime.GOOS {
+	case "linux":
+		// Try user config dir first, fallback to home
+		if configDir, err := os.UserConfigDir(); err == nil {
+			return filepath.Join(configDir, "vilesql")
+		}
+		if homeDir, err := os.UserHomeDir(); err == nil {
+			return filepath.Join(homeDir, ".vilesql")
+		}
+	case "darwin":
+		if homeDir, err := os.UserHomeDir(); err == nil {
+			return filepath.Join(homeDir, "Library", "Application Support", "vilesql")
+		}
+	case "windows":
+		if appData := os.Getenv("APPDATA"); appData != "" {
+			return filepath.Join(appData, "vilesql")
+		}
+	}
+	return "./data" // fallback to current directory
+}
+
+// Initialize the application
+func init() {
+	dataDir := GetDataDir()
+    
+    if _, err := os.Stat(dataDir); os.IsNotExist(err) {
+        if err := os.MkdirAll(dataDir, 0755); err != nil {
+            log.Fatalf("failed to create data directory: %v", err)
+        }
+    }
+	systemDBPath := filepath.Join(dataDir, "system.db")
+
 	var err error
-	SystemDB, err = sql.Open("sqlite", "./data/system.db")
+	SystemDB, err = sql.Open("sqlite", systemDBPath)
 	if err != nil {
 		log.Fatalf("Failed to open system database: %v", err)
 	}

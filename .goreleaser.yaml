@@ -48,9 +48,9 @@ nfpms:
     homepage: https://github.com/imrany/vilesql
     maintainer: imrany imranmat254@gmail.com
     description: |-
-      VilesQL - SQLite Database Management Tool
+      VileSQL - SQLite Database Management Tool
       A powerful web-based SQLite database management interface.
-    license: GNU General Public License v3.0
+    license: GPL-3.0-only
     formats:
       - deb
       - rpm
@@ -64,15 +64,46 @@ nfpms:
       - src: .env
         dst: /etc/vilesql/.env
         type: config
+      # Pre-create system data directory
+      - dst: /var/lib/vilesql
+        type: dir
+        file_info:
+          mode: 0755
+          owner: root
+          group: root
+    scripts:
+      postinstall: "scripts/postinstall.sh"
+      preremove: "scripts/uninstall.sh"
 
-# macOS packages
+# Homebrew tap
 brews:
   - name: vilesql
     homepage: https://github.com/imrany/vilesql
     description: SQLite Database Management Tool
+    license: GPL-3.0-only
     repository:
       owner: imrany
       name: vilesql
+    folder: Formula
+    caveats: |
+      VileSQL will create a data directory at ~/.vilesql on first run.
+      This directory contains your database files and configuration.
+     
+      Data locations:
+        - ~/.vilesql (user data)
+        - ~/Library/Application Support/vilesql (macOS)
+      
+      To specify a custom data directory, use:
+        vilesql --data-dir /path/to/your/data
+      
+      To completely uninstall VileSQL and remove all data:
+        brew uninstall vilesql
+        rm -rf ~/.vilesql
+        rm -rf ~/Library/Application\ Support/vilesql
+
+      Or use the built-in uninstall command before removing:
+        vilesql uninstall --remove-data
+        brew uninstall vilesql
 
 checksum:
   name_template: 'checksums.txt'
@@ -86,6 +117,8 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+      - '^chore:'
+      - '^ci:'
 
 release:
   github:
@@ -93,3 +126,30 @@ release:
     name: vilesql
   draft: true
   prerelease: auto
+  name_template: "Release {{.Version}}"
+  header: |
+    ## VileSQL {{.Version}}
+    
+    ### Installation
+    
+    **Homebrew (macOS):**
+    ```bash
+    brew install imrany/tap/vilesql
+    ```
+    
+    **Debian/Ubuntu:**
+    ```bash
+    wget https://github.com/imrany/vilesql/releases/download/{{.Tag}}/vilesql_{{.Version}}_linux_amd64.deb
+    sudo dpkg -i vilesql_{{.Version}}_linux_amd64.deb
+    ```
+    
+    **Manual Installation:**
+    Download the appropriate binary for your platform from the assets below.
+  footer: |
+    ### Support
+    
+    - 📚 Documentation: https://github.com/imrany/vilesql#readme
+    - 🐛 Report Issues: https://github.com/imrany/vilesql/issues
+    - 💬 Discussions: https://github.com/imrany/vilesql/discussions
+    
+    **Full Changelog**: https://github.com/imrany/vilesql/compare/{{.PreviousTag}}...{{.Tag}}
