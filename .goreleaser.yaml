@@ -49,7 +49,6 @@ nfpms:
     maintainer: imrany imranmat254@gmail.com
     description: |-
       VileSQL - SQLite Database Management Tool
-      A powerful web-based SQLite database management interface.
     license: GPL-3.0-only
     formats:
       - deb
@@ -73,7 +72,9 @@ nfpms:
           group: root
     scripts:
       postinstall: "scripts/postinstall.sh"
-      preremove: "scripts/uninstall.sh"
+      # postupgrade: "scripts/postupgrade.sh"
+      preremove: "scripts/preremove.sh"
+      postremove: "scripts/postremove.sh"
 
 # Homebrew tap
 brews:

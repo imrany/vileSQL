@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -187,6 +188,12 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 	backupData, _ := cmd.Flags().GetBool("backup-data")
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
 
+	// Find the binary path using "which" (if available)
+	binaryPath := os.Args[0]
+	if path, err := execLookPath("vilesql"); err == nil {
+		binaryPath = path
+	}
+
 	// Get data directories
 	dataDirs := []string{
 		database.GetDataDir(), // User data dir
@@ -246,10 +253,23 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 		fmt.Println("  vilesql uninstall --remove-data")
 	}
 
-	fmt.Println("\nTo complete uninstall, remove the vilesql binary:")
-	fmt.Printf("  sudo rm %s\n", os.Args[0])
+	// Remove the binary itself
+	if !dryRun {
+		if err := os.Remove(binaryPath); err != nil {
+			fmt.Printf("Warning: Could not remove binary %s: %v\n", binaryPath, err)
+			fmt.Println("\nTo complete uninstall, remove the vilesql binary:")
+			fmt.Printf("  sudo rm %s\n", binaryPath)
+		} else {
+			fmt.Printf("Removed binary: %s\n", binaryPath)
+		}
+	}
 
 	return nil
+}
+
+// execLookPath is a helper to find the binary path (like "which" command)
+func execLookPath(file string) (string, error) {
+	return exec.LookPath(file)
 }
 
 // exists checks if a file or directory exists
