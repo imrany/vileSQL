@@ -53,8 +53,14 @@ Follow our installation guide [user guide](./Docs/userguide.md)
 
 ## **Usage: Example**
 ```bash
-# Start server (default)
+# Default: Silent background mode
 vilesql
+
+# Verbose foreground mode with full logging
+vilesql --verbose
+
+# Silent foreground mode (no daemon, but no logging)
+vilesql --foreground
 
 # Start on custom port
 vilesql --port 8080

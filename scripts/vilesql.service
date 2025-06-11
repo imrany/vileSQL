@@ -6,14 +6,12 @@ Wants=network-online.target
 RequiresMountsFor=/var/lib/vilesql
 
 [Service]
-Type=exec
-User=vilesql
-Group=vilesql
+Type=simple
 WorkingDirectory=/var/lib/vilesql
 ExecStart=/usr/bin/vilesql server --config=/etc/vilesql/.env
-ExecReload=/bin/kill -HUP $MAINPID
+ExecReload=/bin/kill -USR2 $MAINPID
 Restart=always
-RestartSec=10
+RestartSec=5
 TimeoutStartSec=30
 TimeoutStopSec=30
 KillMode=mixed
@@ -28,16 +26,11 @@ EnvironmentFile=-/etc/default/vilesql
 # Security settings
 NoNewPrivileges=yes
 PrivateTmp=yes
-PrivateDevices=yes
 ProtectSystem=strict
 ProtectHome=yes
-ProtectControlGroups=yes
-ProtectKernelModules=yes
-ProtectKernelTunables=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 RestrictNamespaces=yes
 RestrictRealtime=yes
-RestrictSUIDSGID=yes
 RemoveIPC=yes
 SystemCallArchitectures=native
 
@@ -48,6 +41,7 @@ ReadOnlyPaths=/etc/vilesql
 # Resource limits
 LimitNOFILE=65536
 LimitNPROC=4096
+LimitMEMLOCK=51200
 
 # Logging
 StandardOutput=journal

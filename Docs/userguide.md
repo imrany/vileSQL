@@ -80,16 +80,16 @@ sudo dpkg -i vilesql_1.2.0_linux_amd64.deb
 
 ```bash
 # Download and install new .rpm package
-wget https://github.com/imrany/vilesql/releases/download/v1.2.0/vilesql_1.2.0_linux_amd64.rpm
-sudo rpm -Uvh vilesql_1.2.0_linux_amd64.rpm
+wget https://github.com/imrany/vilesql/releases/download/v1.2.0/vilesql_1.2.0_amd64.rpm
+sudo rpm -Uvh vilesql_1.2.0_amd64.rpm
 ```
 
 ### APK (Alpine Linux)
 
 ```bash
 # Download and install new .apk package
-wget https://github.com/imrany/vilesql/releases/download/v1.2.0/vilesql_1.2.0_linux_amd64.apk
-sudo apk add --allow-untrusted vilesql_1.2.0_linux_amd64.apk
+wget https://github.com/imrany/vilesql/releases/download/v1.2.0/vilesql_1.2.0_amd64.apk
+sudo apk add --allow-untrusted vilesql_1.2.0_amd64.apk
 ```
 
 ## Manual Upgrades

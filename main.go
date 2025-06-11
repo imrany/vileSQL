@@ -48,6 +48,9 @@ type GitHubRelease struct {
 	Prerelease bool `json:"prerelease"`
 }
 
+// Global verbose flag
+var verboseMode bool
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "vilesql",
@@ -61,6 +64,8 @@ func main() {
 	rootCmd.Flags().StringP("host", "H", "0.0.0.0", "Host to bind the server to")
 	rootCmd.Flags().String("data-dir", "", "Custom data directory path")
 	rootCmd.Flags().BoolP("version", "v", false, "Show version information")
+	rootCmd.Flags().Bool("verbose", false, "Enable verbose logging and run in foreground")
+	rootCmd.Flags().Bool("foreground", false, "Run in foreground (don't daemonize)")
 
 	// Add subcommands
 	rootCmd.AddCommand(uninstallCommand())
@@ -85,6 +90,13 @@ func runServer(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	// Get verbose flag
+	verboseMode, _ = cmd.Flags().GetBool("verbose")
+	foregroundMode, _ := cmd.Flags().GetBool("foreground")
+
+	// Setup logging based on verbose mode
+	setupLogging(verboseMode)
+
 	// Get custom data directory if specified
 	if dataDir, _ := cmd.Flags().GetString("data-dir"); dataDir != "" {
 		os.Setenv("VILESQL_DATA_DIR", dataDir)
@@ -92,36 +104,13 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	// Ensure data directory exists and run migrations
 	if err := ensureDataDir(); err != nil {
-		log.Fatalf("Failed to create data directory: %v", err)
-	}
-
-	// Check for updates on startup (non-blocking)
-	go func() {
-		if hasUpdate, latestVersion := checkForUpdates(); hasUpdate {
-			log.Printf("📦 New version available: %s (current: %s)", latestVersion, version)
-			log.Printf("Run 'vilesql upgrade' to update")
+		if verboseMode {
+			log.Fatalf("Failed to create data directory: %v", err)
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: Failed to create data directory: %v\n", err)
+			os.Exit(1)
 		}
-	}()
-
-	r := mux.NewRouter()
-	r.Use(middleware.LoggingMiddleware)
-	r.HandleFunc("/", controlPanel).Methods("GET")
-	r.HandleFunc("/welcome", welcomePage).Methods("GET")
-	router.SetupRoutes(r)
-
-	staticSub, err := fs.Sub(staticFolder, "static")
-	if err != nil {
-		log.Fatal("Failed to create static sub-filesystem:", err)
 	}
-	staticFs := http.FileServer(http.FS(staticSub))
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFs))
-
-	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization", "Origin", "Accept"},
-		AllowCredentials: true,
-	}).Handler(r)
 
 	port, _ := cmd.Flags().GetString("port")
 	host, _ := cmd.Flags().GetString("host")
@@ -134,16 +123,129 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 
 	serverAddr := fmt.Sprintf("%s:%s", host, port)
-	log.Printf("VileSQL server starting on http://localhost:%s", port)
-	log.Printf("Data directory: %s", database.GetDataDir())
-	log.Fatal(http.ListenAndServe(serverAddr, corsHandler))
+
+	// Run in background unless verbose or foreground mode is enabled
+	if !verboseMode && !foregroundMode {
+		if err := daemonize(serverAddr); err != nil {
+			fmt.Fprintf(os.Stderr, "Error starting server: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	// Foreground mode - show startup messages
+	if verboseMode {
+		log.Printf("VileSQL server starting on http://localhost:%s", port)
+		log.Printf("Data directory: %s", database.GetDataDir())
+	} else {
+		fmt.Printf("VileSQL server starting on http://localhost:%s\n", port)
+	}
+
+	// Check for updates on startup (non-blocking)
+	if verboseMode {
+		go func() {
+			if hasUpdate, latestVersion := checkForUpdates(); hasUpdate {
+				log.Printf("📦 New version available: %s (current: %s)", latestVersion, version)
+				log.Printf("Run 'vilesql upgrade' to update")
+			}
+		}()
+	}
+
+	startServer(serverAddr)
+}
+
+func setupLogging(verbose bool) {
+	if !verbose {
+		// Disable default logging by setting output to discard
+		log.SetOutput(io.Discard)
+	} else {
+		// Keep default logging behavior for verbose mode
+		log.SetFlags(log.LstdFlags | log.Lshortfile)
+	}
+}
+
+func daemonize(serverAddr string) error {
+	// Check if already running as daemon
+	if os.Getenv("VILESQL_DAEMON") == "1" {
+		// We are the daemon process, start the server
+		startServer(serverAddr)
+		return nil
+	}
+
+	// Fork the process to run in background
+	cmd := exec.Command(os.Args[0], os.Args[1:]...)
+	cmd.Env = append(os.Environ(), "VILESQL_DAEMON=1")
+	
+	// Redirect stdout/stderr to /dev/null on Unix systems
+	if runtime.GOOS != "windows" {
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+		cmd.Stdin = nil
+	}
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start daemon: %w", err)
+	}
+
+	// Give the daemon a moment to start
+	time.Sleep(500 * time.Millisecond)
+
+	fmt.Printf("VileSQL server started in background (PID: %d)\n", cmd.Process.Pid)
+	fmt.Printf("Access the interface at: http://localhost:%s\n", strings.Split(serverAddr, ":")[1])
+	fmt.Println("Use --verbose flag to run in foreground with logging")
+	
+	return nil
+}
+
+func startServer(serverAddr string) {
+	r := mux.NewRouter()
+	
+	// Only add logging middleware in verbose mode
+	if verboseMode {
+		r.Use(middleware.LoggingMiddleware)
+	}
+	
+	r.HandleFunc("/", controlPanel).Methods("GET")
+	r.HandleFunc("/welcome", welcomePage).Methods("GET")
+	router.SetupRoutes(r)
+
+	staticSub, err := fs.Sub(staticFolder, "static")
+	if err != nil {
+		if verboseMode {
+			log.Fatal("Failed to create static sub-filesystem:", err)
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: Failed to create static sub-filesystem: %v\n", err)
+			os.Exit(1)
+		}
+	}
+	staticFs := http.FileServer(http.FS(staticSub))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFs))
+
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "Origin", "Accept"},
+		AllowCredentials: true,
+	}).Handler(r)
+
+	if verboseMode {
+		log.Fatal(http.ListenAndServe(serverAddr, corsHandler))
+	} else {
+		// Silent error handling for background mode
+		if err := http.ListenAndServe(serverAddr, corsHandler); err != nil {
+			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
+			os.Exit(1)
+		}
+	}
 }
 
 func welcomePage(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFS(templateFolder, "templates/cpanel2.html")
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
-		log.Printf("Template error: %v", err)
+		if verboseMode {
+			log.Printf("Template error: %v", err)
+		}
 		return
 	}
 	data := map[string]interface{}{
@@ -153,7 +255,9 @@ func welcomePage(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Template execution error: %v", err)
+		if verboseMode {
+			log.Printf("Template execution error: %v", err)
+		}
 	}
 }
 
@@ -161,7 +265,9 @@ func controlPanel(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFS(templateFolder, "templates/index.html")
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
-		log.Printf("Template error: %v", err)
+		if verboseMode {
+			log.Printf("Template error: %v", err)
+		}
 		return
 	}
 	data := map[string]interface{}{
@@ -170,7 +276,9 @@ func controlPanel(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Template execution error: %v", err)
+		if verboseMode {
+			log.Printf("Template execution error: %v", err)
+		}
 	}
 }
 
@@ -181,11 +289,15 @@ func ensureDataDir() error {
 		if err := os.MkdirAll(dataDir, 0755); err != nil {
 			return fmt.Errorf("failed to create data directory %s: %w", dataDir, err)
 		}
-		log.Printf("Created data directory: %s", dataDir)
+		if verboseMode {
+			log.Printf("Created data directory: %s", dataDir)
+		}
 		
 		// Write initial version file
 		if err := writeVersionFile(dataDir, version); err != nil {
-			log.Printf("Warning: Could not write version file: %v", err)
+			if verboseMode {
+				log.Printf("Warning: Could not write version file: %v", err)
+			}
 		}
 	}
 
@@ -444,7 +556,9 @@ func runMigrations(dataDir string) error {
 	currentVersion := getCurrentDataVersion(dataDir)
 	targetVersion := version
 
-	fmt.Printf("Data version: %s → %s\n", currentVersion, targetVersion)
+	if verboseMode {
+		fmt.Printf("Data version: %s → %s\n", currentVersion, targetVersion)
+	}
 
 	// Define migrations (version → migration function)
 	migrations := map[string]func(string) error{
@@ -456,7 +570,9 @@ func runMigrations(dataDir string) error {
 	// Run necessary migrations
 	for migrationVersion, migrationFunc := range migrations {
 		if shouldRunMigration(currentVersion, migrationVersion, targetVersion) {
-			fmt.Printf("Running migration: %s\n", migrationVersion)
+			if verboseMode {
+				fmt.Printf("Running migration: %s\n", migrationVersion)
+			}
 			if err := migrationFunc(dataDir); err != nil {
 				return fmt.Errorf("migration %s failed: %w", migrationVersion, err)
 			}
@@ -595,7 +711,7 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 
 	dataDirs := []string{database.GetDataDir()}
 	if runtime.GOOS == "linux" {
-		dataDirs = append(dataDirs, "/var/lib/vilesql", "/etc/vilesql")
+		dataDirs = append(dataDirs, "/var/lib/vilesql", "/etc/vilesql", )
 	}
 
 	fmt.Println("VileSQL Uninstall")
