@@ -173,29 +173,6 @@ brews:
         vilesql uninstall --remove-data --backup-data
         brew uninstall vilesql
 
-# Docker images for containerized upgrades
-dockers:
-  - image_templates: 
-      - "ghcr.io/imrany/vilesql:latest"
-      - "ghcr.io/imrany/vilesql:{{ .Tag }}"
-      - "ghcr.io/imrany/vilesql:v{{ .Major }}"
-      - "ghcr.io/imrany/vilesql:v{{ .Major }}.{{ .Minor }}"
-    dockerfile: Dockerfile
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--label=org.opencontainers.image.description=SQLite Database Management Tool"
-      - "--label=org.opencontainers.image.licenses=GPL-3.0-only"
-    extra_files:
-      - scripts/
-      - .env
-      - README.md
-      - LICENSE
-
 # Universal Binaries for macOS (Intel + Apple Silicon)
 universal_binaries:
   - replace: true
