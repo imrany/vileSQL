@@ -21,12 +21,13 @@ builds:
         goarch: arm64
     binary: vilesql
     ldflags:
-      - -s -w -X main.version={{.Version}}
+      - -s -w -X main.version={{.Version}} -X main.buildDate={{.Date}} -X main.gitCommit={{.FullCommit}}
 
 archives:
   - format: tar.gz
     name_template: >-
       {{ .ProjectName }}_
+      {{- .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
@@ -39,6 +40,7 @@ archives:
       - README.md
       - LICENSE
       - .env
+      - scripts/*
 
 nfpms:
   - id: packages
@@ -46,10 +48,11 @@ nfpms:
     file_name_template: "{{ .ConventionalFileName }}"
     vendor: VileSQL
     homepage: https://github.com/imrany/vilesql
-    maintainer: imrany imranmat254@gmail.com
+    maintainer: imrany <imranmat254@gmail.com>
     description: |-
       VileSQL - SQLite Database Management Tool
-      A powerful web-based SQLite database management interface.
+      A cloud-hosted SQLite database management solution with secure authentication,
+      intuitive control panel, automated backups, and cross-platform compatibility.
     license: GPL-3.0-only
     formats:
       - deb
@@ -64,6 +67,43 @@ nfpms:
       - src: .env
         dst: /etc/vilesql/.env
         type: config
+      - src: scripts/postinstall.sh
+        dst: /usr/share/vilesql/postinstall.sh
+        file_info:
+          mode: 0755
+      - src: scripts/postupgrade.sh
+        dst: /usr/share/vilesql/postupgrade.sh
+        file_info:
+          mode: 0755
+      - src: scripts/preremove.sh
+        dst: /usr/share/vilesql/preremove.sh
+        file_info:
+          mode: 0755
+      - src: scripts/postremove.sh
+        dst: /usr/share/vilesql/postremove.sh
+        file_info:
+          mode: 0755
+      # Systemd service file
+      - src: scripts/vilesql.service
+        dst: /etc/systemd/system/vilesql.service
+        file_info:
+          mode: 0644
+      # Systemd environment file
+      - src: scripts/vilesql.env
+        dst: /etc/default/vilesql
+        type: config
+        file_info:
+          mode: 0644
+      # logrotate configuration
+      - src: scripts/vilesql.logrotate
+        dst: /etc/logrotate.d/vilesql
+        file_info:
+          mode: 0644
+      # systemd tmpfiles configuration
+      - src: scripts/vilesql-tmpfiles.conf
+        dst: /usr/lib/tmpfiles.d/vilesql.conf
+        file_info:
+          mode: 0644
       # Pre-create system data directory
       - dst: /var/lib/vilesql
         type: dir
@@ -71,19 +111,41 @@ nfpms:
           mode: 0755
           owner: root
           group: root
+      # Create log directory
+      - dst: /var/log/vilesql
+        type: dir
+        file_info:
+          mode: 0755
+          owner: vilesql
+          group: vilesql
+      # Create config directory
+      - dst: /etc/vilesql
+        type: dir
+        file_info:
+          mode: 0755
+          owner: root
+          group: root
     scripts:
-      postinstall: "scripts/postinstall.sh"
-      preremove: "scripts/uninstall.sh"
+      postinstall: "scripts/postinstall.sh" 
+      preremove: "scripts/preremove.sh"
+      postremove: "scripts/postremove.sh"
 
-# Homebrew tap
+# Homebrew tap with upgrade support
 brews:
   - name: vilesql
     homepage: https://github.com/imrany/vilesql
-    description: SQLite Database Management Tool
+    description: SQLite Database Management Tool with cloud hosting and secure authentication
     license: GPL-3.0-only
     repository:
       owner: imrany
+      # name: homebrew-tap
       name: vilesql
+      branch: main
+    url_template: "https://github.com/imrany/vilesql/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_author:
+      name: imrany
+      email: imranmat254@gmail.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     caveats: |
       VileSQL will create a data directory at ~/.vilesql on first run.
       This directory contains your database files and configuration.
@@ -95,45 +157,125 @@ brews:
       To specify a custom data directory, use:
         vilesql --data-dir /path/to/your/data
       
+      Upgrade VileSQL:
+        brew upgrade vilesql
+        # or use the built-in upgrade command:
+        vilesql upgrade
+      
+      Check for updates:
+        vilesql upgrade --check-only
+      
       To completely uninstall VileSQL and remove all data:
-        brew uninstall vilesql
-        rm -rf ~/.vilesql
-        rm -rf ~/Library/Application\ Support/vilesql
-
-      Or use the built-in uninstall command before removing:
         vilesql uninstall --remove-data
         brew uninstall vilesql
 
+      Or backup before uninstalling:
+        vilesql uninstall --remove-data --backup-data
+        brew uninstall vilesql
+
+# Docker images for containerized upgrades
+dockers:
+  - image_templates: 
+      - "ghcr.io/imrany/vilesql:latest"
+      - "ghcr.io/imrany/vilesql:{{ .Tag }}"
+      - "ghcr.io/imrany/vilesql:v{{ .Major }}"
+      - "ghcr.io/imrany/vilesql:v{{ .Major }}.{{ .Minor }}"
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=org.opencontainers.image.description=SQLite Database Management Tool"
+      - "--label=org.opencontainers.image.licenses=GPL-3.0-only"
+    extra_files:
+      - scripts/
+      - .env
+      - README.md
+      - LICENSE
+
+# Universal Binaries for macOS (Intel + Apple Silicon)
+universal_binaries:
+  - replace: true
+    name_template: "{{ .ProjectName }}"
+    hooks:
+      pre:
+        - echo "Building universal binary for macOS"
+      post:
+        - echo "Universal binary created successfully"
+
 checksum:
   name_template: 'checksums.txt'
+  algorithm: sha256
 
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc
+  use: github
+  groups:
+    - title: 'New Features'
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug Fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: 'Security Updates'
+      regexp: "^.*sec[(\\w)]*:+.*$"
+      order: 2
+    - title: 'Performance Improvements'
+      regexp: "^.*perf[(\\w)]*:+.*$"
+      order: 3
+    - title: 'Upgrades & Maintenance'
+      regexp: "^.*(upgrade|update|maint)[(\\w)]*:+.*$"
+      order: 4
+    - title: 'Documentation'
+      regexp: "^.*docs[(\\w)]*:+.*$"
+      order: 5
+    - title: 'Other Changes'
+      order: 999
   filters:
     exclude:
-      - '^docs:'
       - '^test:'
       - '^chore:'
       - '^ci:'
+      - '^style:'
+      - '^refactor:'
+      - 'merge conflict'
+      - Merge pull request
+      - Merge branch
+      - go mod tidy
 
 release:
   github:
     owner: imrany
     name: vilesql
-  draft: true
+  draft: false
   prerelease: auto
-  name_template: "Release {{.Version}}"
+  mode: replace
+  name_template: "VileSQL {{.Version}}"
   header: |
     ## VileSQL {{.Version}}
+
+    ## **📌 Features**
+    ✔ **Cloud-hosted SQLite databases** – No need to install or configure SQLite manually.  
+    ✔ **Secure authentication with API tokens** – Ensure **safe and private** data access.  
+    ✔ **Intuitive Control Panel** – Manage users, queries, and settings with a **user-friendly dashboard**.  
+    ✔ **Automated Backups** – Never lose your data, even in critical operations.  
+    ✔ **Query Execution & Monitoring** – Track real-time database activity in the **control panel**.  
+    ✔ **Performance Optimization** – Indexing and caching mechanisms for **faster queries**.  
+    ✔ **Cross-Platform Compatibility** – Works seamlessly on **Linux, macOS, and Windows**.  
+    ✔ **Built-in Upgrade System** – Seamlessly upgrade to new versions with `vilesql upgrade`.
     
-    ### Installation
+    ### 🚀 Quick Start
     
-    **Homebrew (macOS):**
+    **Homebrew (macOS/Linux):**
     ```bash
     brew install imrany/tap/vilesql
+    vilesql --version
     ```
     
     **Debian/Ubuntu:**
@@ -142,13 +284,97 @@ release:
     sudo dpkg -i vilesql_{{.Version}}_linux_amd64.deb
     ```
     
-    **Manual Installation:**
-    Download the appropriate binary for your platform from the assets below.
-  footer: |
-    ### Support
+    **Red Hat/CentOS/Fedora:**
+    ```bash
+    wget https://github.com/imrany/vilesql/releases/download/{{.Tag}}/vilesql_{{.Version}}_linux_amd64.rpm
+    sudo rpm -i vilesql_{{.Version}}_linux_amd64.rpm
+    ```
     
-    - 📚 Documentation: https://github.com/imrany/vilesql#readme
-    - 🐛 Report Issues: https://github.com/imrany/vilesql/issues
-    - 💬 Discussions: https://github.com/imrany/vilesql/discussions
+    **Docker:**
+    ```bash
+    docker pull ghcr.io/imrany/vilesql:{{.Tag}}
+    docker run -p 5000:5000 ghcr.io/imrany/vilesql:{{.Tag}}
+    ```
+    
+    **Manual Installation:**
+    Download the appropriate binary for your platform from the assets below and add it to your PATH.
+    
+    ### 🔄 Upgrading from Previous Versions
+    
+    **Automatic Upgrade (Recommended):**
+    ```bash
+    vilesql upgrade
+    ```
+    
+    **Check for Updates:**
+    ```bash
+    vilesql upgrade --check-only
+    ```
+    
+    **Backup Before Upgrade:**
+    ```bash
+    vilesql upgrade --backup-data
+    ```
+    
+    **Package Manager Upgrade:**
+    ```bash
+    # Homebrew
+    brew upgrade vilesql
+    
+    # Debian/Ubuntu
+    sudo apt update && sudo apt upgrade vilesql
+    
+    # Red Hat/CentOS/Fedora
+    sudo dnf upgrade vilesql  # or sudo yum update vilesql
+    ```
+
+  footer: |
+    ### 📋 Upgrade Notes
+    
+    - **Data Migration**: This version includes automatic data migration. Your existing databases will be preserved.
+    - **Configuration**: Existing configuration files will be backed up automatically during upgrade.
+    - **Rollback**: If you encounter issues, you can rollback using the backup created during upgrade.
+    - **Service Management**: The systemd service will be automatically restarted after upgrade on Linux systems.
+    
+    ### ⚠️ Breaking Changes
+    
+    {{- if .PreviousTag }}
+    See [BREAKING_CHANGES.md](https://github.com/imrany/vilesql/blob/{{.Tag}}/BREAKING_CHANGES.md) for any breaking changes since {{.PreviousTag}}.
+    {{- else }}
+    No breaking changes in this release.
+    {{- end }}
+    
+    ### 🆘 Support & Resources
+    
+    - 📚 **Documentation**: https://github.com/imrany/vilesql#readme
+    - 🐛 **Report Issues**: https://github.com/imrany/vilesql/issues
+    - 💬 **Discussions**: https://github.com/imrany/vilesql/discussions
+    - 🔄 **Upgrade Guide**: https://github.com/imrany/vilesql/wiki/Upgrade-Guide
+    - 📖 **API Documentation**: https://github.com/imrany/vilesql/wiki/API-Reference
+    - 🛠️ **Configuration Guide**: https://github.com/imrany/vilesql/wiki/Configuration
+    
+    ### 📊 What's Changed
     
     **Full Changelog**: https://github.com/imrany/vilesql/compare/{{.PreviousTag}}...{{.Tag}}
+
+# Announce releases
+announce:
+  skip: '{{gt .Patch 0}}'  # Skip patch releases
+  
+# Signing configuration (uncomment if you want to sign releases)
+# signs:
+#   - artifacts: checksum
+#     args:
+#       - "--batch"
+#       - "--local-user"
+#       - "{{ .Env.GPG_FINGERPRINT }}"
+#       - "--output"
+#       - "${signature}"
+#       - "--detach-sign"
+#       - "${artifact}"
+
+# SBOMs (Software Bill of Materials) - uncomment if needed
+# sboms:
+#   - artifacts: archive
+#   - id: source
+#     artifacts: source
