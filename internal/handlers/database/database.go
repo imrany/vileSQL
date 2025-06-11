@@ -84,18 +84,17 @@ const (
 
 // Main SQLite database to store user information and database metadata
 var SystemDB *sql.DB
+var SESSION_KEY = config.GetValue("SESSION_KEY")
+var	COOKIE_STORE_KEY = config.GetValue("COOKIE_STORE_KEY")
 
 // getDataDir returns the appropriate data directory for the current OS
 func GetDataDir() string {
-	// Check for custom data directory first
 	if customDir := os.Getenv("VILESQL_DATA_DIR"); customDir != "" {
 		return customDir
 	}
 
-	// Use OS-specific default locations
 	switch runtime.GOOS {
 	case "linux":
-		// Try user config dir first, fallback to home
 		if configDir, err := os.UserConfigDir(); err == nil {
 			return filepath.Join(configDir, "vilesql")
 		}
@@ -199,16 +198,6 @@ func setupSystemDB() {
 
 // Database Management API
 func CreateDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -317,16 +306,6 @@ func CreateDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserDatabasesHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -389,16 +368,6 @@ func GetUserDatabasesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-	
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -460,16 +429,6 @@ func ShareDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DisableSharingHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -634,16 +593,6 @@ func GetSharedDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ShareDatabaseRenewShareTokenHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY == "" {
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == "" {
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -700,16 +649,6 @@ func ShareDatabaseRenewShareTokenHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func ShareDatabaseRenewShareTokenExpiryHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY == "" {
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == "" {
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -771,16 +710,6 @@ func ShareDatabaseRenewShareTokenExpiryHandler(w http.ResponseWriter, r *http.Re
 
 // Database Query API
 func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -939,16 +868,6 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY == "" {
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == "" {
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -1054,16 +973,6 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -1229,16 +1138,6 @@ func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTableHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -1315,16 +1214,6 @@ func DeleteTableHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -1388,15 +1277,6 @@ func DeleteDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 
 // BackupDatabaseHandler with support for "zip" and "tar" formats
 func BackupDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Server configuration error",
-		})
-		return
-	}
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -1748,16 +1628,6 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY ==""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-	
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, err := store.Get(r, SESSION_KEY)
 	if err != nil {
@@ -1957,15 +1827,6 @@ func GetDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTableHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Server configuration error",
-		})
-		return
-	}
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)
@@ -2342,16 +2203,6 @@ func GetTableDataHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func authenticateAndGetDB(w http.ResponseWriter, r *http.Request, dbID string) (*sql.DB, int, string, bool) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if SESSION_KEY == "" || COOKIE_STORE_KEY == "" {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Server configuration error",
-		})
-		return nil, 0, "", false
-	}
-
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	userID := session.Values["user_id"].(int)

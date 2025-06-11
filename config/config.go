@@ -8,10 +8,18 @@ import (
 )
 
 func GetValue(key string) string {
-	err := godotenv.Load(".env")
+	err := godotenv.Load()
 	if err != nil {
-		log.Printf("Failed to load env file %v", err.Error())
-		return ""
+		log.Print("⚠️ Warning: .env file not found, using default values.")
 	}
+	// Set default values if variables are missing
+    setDefaultEnv("SESSION_KEY", "default-session-key")
+    setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
 	return os.Getenv(key)
+}
+
+func setDefaultEnv(key, defaultValue string) {
+    if os.Getenv(key) == "" {
+        os.Setenv(key, defaultValue)
+    }
 }
