@@ -156,7 +156,7 @@ vilesql migrate
 
 ```bash
 # Pull latest image
-docker-compose pull vilesql
+docker-compose pull ghcr.io/imrany/vilesql:latest
 
 # Recreate container with new image
 docker-compose up -d vilesql
@@ -172,6 +172,9 @@ docker-compose up -d
 # Pull latest image
 docker pull ghcr.io/imrany/vilesql:latest
 
+# Pull specific version
+docker pull ghcr.io/imrany/vilesql:v0.5.3
+
 # Stop current container
 docker stop vilesql
 
@@ -179,11 +182,7 @@ docker stop vilesql
 docker rm vilesql
 
 # Start new container with same data volume
-docker run -d \
-  --name vilesql \
-  -p 5000:5000 \
-  -v vilesql_data:/var/lib/vilesql \
-  ghcr.io/imrany/vilesql:latest
+docker run -d -p 5000:5000 --name vilesql ghcr.io/imrany/vilesql:latest
 ```
 
 ### Kubernetes
