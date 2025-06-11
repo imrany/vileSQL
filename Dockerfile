@@ -38,21 +38,16 @@ RUN mkdir -p /var/lib/vilesql && \
 COPY --from=builder /app/vilesql /usr/local/bin/vilesql
 
 # Copy configuration files
-COPY --from=builder /app/.env /etc/vilesql/.env
 COPY --from=builder /app/scripts/ /usr/local/share/vilesql/scripts/
 
 # Set proper permissions
-RUN chmod +x /usr/local/bin/vilesql && \
-    chown vilesql:vilesql /etc/vilesql/.env
+RUN chmod +x /usr/local/bin/vilesql
 
 # Switch to non-root user
 USER vilesql
 
 # Set working directory
 WORKDIR /var/lib/vilesql
-
-# Copy .env file to working directory
-# COPY --from=builder /app/.env /var/lib/vilesql/.env
 
 # Environment variables
 ENV VILESQL_DATA_DIR=/var/lib/vilesql
