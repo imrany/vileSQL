@@ -32,6 +32,8 @@ type ApiResponse struct {
 }
 
 var dataDir = database.GetDataDir()
+var SESSION_KEY = config.GetValue("SESSION_KEY")
+var	COOKIE_STORE_KEY = config.GetValue("COOKIE_STORE_KEY")
 
 // User Authentication API
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -137,16 +139,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create session
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY == ""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-	
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	session.Values["authenticated"] = true
@@ -168,16 +160,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY == ""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-	
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
-
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	session.Values["authenticated"] = false
@@ -190,14 +172,6 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
-	SESSION_KEY := config.GetValue("SESSION_KEY")
-	if SESSION_KEY == ""{
-		log.Fatal("SESSION_KEY is empty")
-	}
-	COOKIE_STORE_KEY := config.GetValue("COOKIE_STORE_KEY")
-	if COOKIE_STORE_KEY == ""{
-		log.Fatal("COOKIE_STORE_KEY is empty")
-	}
 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
 	session, _ := store.Get(r, SESSION_KEY)
 	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
