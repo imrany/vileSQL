@@ -54,13 +54,6 @@ WORKDIR /var/lib/vilesql
 # Copy .env file to working directory
 COPY --from=builder /app/.env /var/lib/vilesql/.env
 
-# Environment variables
-# ENV VILESQL_DATA_DIR=/var/lib/vilesql
-# ENV PORT=5000
-# ENV HOST=0.0.0.0
-# ENV SESSION_KEY=your_session_key_here
-# ENV COOKIE_STORE_KEY=your-cookie-store-key
-
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1

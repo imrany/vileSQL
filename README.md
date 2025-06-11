@@ -42,9 +42,9 @@ docker build -t vilesql .
 ```bash
 docker run -d -p 5000:5000 vilesql
 ```
-or 
+### Using docker-compose
 ```bash
-docker run -p 5000:5000 --env SESSION_KEY="your-session-key" --env COOKIE_STORE_KEY="your-cookie-store-key" vilesql
+docker-compose up -d
 ```
 
 ## **Installation Guide**
