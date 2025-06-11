@@ -5,12 +5,12 @@
 class Vilesql < Formula
   desc "SQLite Database Management Tool with cloud hosting and secure authentication"
   homepage "https://github.com/imrany/vilesql"
-  version "0.6.1"
+  version "0.7.0"
   license "GPL-3.0-only"
 
   on_macos do
-    url "https://github.com/imrany/vilesql/releases/download/v0.6.1/vilesql_0.6.1_Darwin_all.tar.gz"
-    sha256 "e4f11dcf9c3f213c267930ade6abe23965ab508a680da4797ea34bf3d4e6bdf3"
+    url "https://github.com/imrany/vilesql/releases/download/v0.7.0/vilesql_0.7.0_Darwin_all.tar.gz"
+    sha256 "5420d101b594c4a7fb07e6ddc05be6306731562a59e96a0ac94498406b25e02c"
 
     def install
       bin.install "vilesql"
@@ -20,8 +20,8 @@ class Vilesql < Formula
   on_linux do
     on_intel do
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/imrany/vilesql/releases/download/v0.6.1/vilesql_0.6.1_Linux_x86_64.tar.gz"
-        sha256 "f521cf3f9fde47b1bf428f0ac4a83b583a9cc5b82a5668a7f0a244278ae8ab77"
+        url "https://github.com/imrany/vilesql/releases/download/v0.7.0/vilesql_0.7.0_Linux_x86_64.tar.gz"
+        sha256 "94420976bc9c7228ad522f5ab477342d277ea14bc9ce4a6fd5d14f4890523ecb"
 
         def install
           bin.install "vilesql"
@@ -30,8 +30,8 @@ class Vilesql < Formula
     end
     on_arm do
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/imrany/vilesql/releases/download/v0.6.1/vilesql_0.6.1_Linux_arm64.tar.gz"
-        sha256 "6bdbbd4472ccfea7953bcdf7a6e230eea8ebea87305bf92197b7c7d0195513f6"
+        url "https://github.com/imrany/vilesql/releases/download/v0.7.0/vilesql_0.7.0_Linux_arm64.tar.gz"
+        sha256 "e7b9b6ef126b252a5b6468e04c24db0f329206307ec201cd2484a016f32fe0ad"
 
         def install
           bin.install "vilesql"
