@@ -257,14 +257,14 @@ release:
     
     **Debian/Ubuntu:**
     ```bash
-    wget https://github.com/imrany/vilesql/releases/download/{{.Tag}}/vilesql_{{.Version}}_linux_amd64.deb
-    sudo dpkg -i vilesql_{{.Version}}_linux_amd64.deb
+    wget https://github.com/imrany/vilesql/releases/download/{{.Tag}}/vilesql_{{.Version}}_amd64.deb
+    sudo dpkg -i vilesql_{{.Version}}_amd64.deb
     ```
     
     **Red Hat/CentOS/Fedora:**
     ```bash
-    wget https://github.com/imrany/vilesql/releases/download/{{.Tag}}/vilesql_{{.Version}}_linux_amd64.rpm
-    sudo rpm -i vilesql_{{.Version}}_linux_amd64.rpm
+    wget https://github.com/imrany/vilesql/releases/download/{{.Tag}}/vilesql_{{.Version}}_amd64.rpm
+    sudo rpm -i vilesql_{{.Version}}_amd64.rpm
     ```
     
     **Docker:**
