@@ -198,7 +198,7 @@ spec:
     spec:
       containers:
       - name: vilesql
-        image: ghcr.io/imrany/vilesql:v1.2.0  # Update this
+        image: ghcr.io/imrany/vilesql:lastest  # Update this
 ```
 
 Apply the changes:
