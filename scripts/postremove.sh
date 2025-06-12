@@ -5,7 +5,7 @@ set -e
 
 SYSTEMD_SERVICE="/etc/systemd/system/vilesql.service"
 DATA_DIR="/var/lib/vilesql"
-CONFIG_DIR="/etc/vilesql"
+CONFIG_DIR="$DATA_DIR"
 USER="vilesql"
 GROUP="vilesql"
 

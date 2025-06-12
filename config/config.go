@@ -9,7 +9,7 @@ import (
 
 var ConfigFiles =[]string{
 	".env",
-	"/etc/vilesql/.env",
+	"/var/lib/vilesql/.env",
 }
 
 func GetValue(key string) string {

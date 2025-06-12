@@ -66,10 +66,10 @@ nfpms:
     contents:
       # Ensure environment file exists with correct ownership
       - src: .env
-        dst: /etc/vilesql/.env
+        dst: /var/lib/vilesql/.env
         type: config
         file_info:
-          mode: 600
+          mode: 0755
           owner: vilesql
           group: vilesql
 
@@ -94,14 +94,6 @@ nfpms:
         type: dir
         file_info:
           mode: 0755
-          owner: vilesql
-          group: vilesql
-
-      # Ensure config directory exists
-      - dst: /etc/vilesql
-        type: dir
-        file_info:
-          mode: 700
           owner: vilesql
           group: vilesql
     scripts:

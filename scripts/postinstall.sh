@@ -9,7 +9,7 @@ LOG_DIR="/var/log/vilesql"
 LOG_FILE="$LOG_DIR/vilesql.log"
 BIN_PATH="/usr/bin/vilesql"
 SERVICE_PATH="/etc/systemd/system/vilesql.service"
-ENV_FILE="/etc/vilesql/.env"
+ENV_FILE="/var/lib/vilesql/.env"
 USER="vilesql"
 GROUP="vilesql"
 
