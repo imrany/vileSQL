@@ -67,6 +67,11 @@ nfpms:
       - src: .env
         dst: /etc/vilesql/.env
         type: config
+      # Systemd service file
+      - src: scripts/vilesql.service
+        dst: /etc/systemd/system/vilesql.service
+        file_info:
+          mode: 0644
       - src: scripts/postinstall.sh
         dst: /usr/share/vilesql/postinstall.sh
         file_info:
@@ -83,11 +88,6 @@ nfpms:
         dst: /usr/share/vilesql/postremove.sh
         file_info:
           mode: 0755
-      # Systemd service file
-      - src: scripts/vilesql.service
-        dst: /etc/systemd/system/vilesql.service
-        file_info:
-          mode: 0644
       # Pre-create system data directory
       - dst: /var/lib/vilesql
         type: dir

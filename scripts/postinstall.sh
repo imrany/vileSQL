@@ -26,7 +26,7 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-# Create vilesql system user and group (if not exists)
+# Create VileSQL system user and group (if missing)
 if ! id "$USER" &>/dev/null; then
     log "📌 Creating system user: $USER"
     useradd -r -s /bin/false -d "$DATA_DIR" "$USER" || {
