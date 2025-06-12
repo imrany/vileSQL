@@ -102,6 +102,14 @@ nfpms:
           mode: 0755
           owner: root
           group: root
+      # Ensure log directory exists before installation
+      - dst: /var/log/vilesql
+        type: dir
+        file_info:
+          mode: 0755
+          owner: root
+          group: root
+
     scripts:
       postinstall: "scripts/postinstall.sh" 
       preremove: "scripts/preremove.sh"

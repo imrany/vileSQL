@@ -13,6 +13,8 @@ USER="vilesql"
 GROUP="vilesql"
 
 log() {
+    mkdir -p "$LOG_DIR"
+    touch "$LOG_FILE"
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
@@ -24,7 +26,7 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-# Create VileSQL system user and group (if missing)
+# Create vilesql system user and group (if not exists)
 if ! id "$USER" &>/dev/null; then
     log "📌 Creating system user: $USER"
     useradd -r -s /bin/false -d "$DATA_DIR" "$USER" || {
@@ -45,13 +47,10 @@ for dir in "$DATA_DIR" "$CONFIG_DIR" "$LOG_DIR"; do
     chown "$USER:$GROUP" "$dir"
 done
 
-# Ensure log directory and file exist
+# Ensure log file exists
 if [[ ! -f "$LOG_FILE" ]]; then
     log "📝 Creating log file: $LOG_FILE"
-    touch "$LOG_FILE" || {
-        log "❌ Failed to create log file: $LOG_FILE"
-        exit 1
-    }
+    touch "$LOG_FILE"
     chown "$USER:$GROUP" "$LOG_FILE"
     chmod 644 "$LOG_FILE"
 fi
@@ -83,9 +82,7 @@ fi
 
 # Enable service
 log "🔄 Enabling VileSQL service..."
-systemctl enable vilesql.service || {
-    log "⚠️ Warning: Failed to enable service."
-}
+systemctl enable vilesql.service || log "⚠️ Warning: Failed to enable service."
 
 # Prompt user to start service immediately
 read -p "▶️ Start VileSQL now? (y/n): " choice
