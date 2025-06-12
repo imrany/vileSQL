@@ -55,6 +55,15 @@ if [[ ! -f "$LOG_FILE" ]]; then
     chmod 644 "$LOG_FILE"
 fi
 
+# Ensure required environment file exists
+ENV_FILE="/etc/vilesql/.env"
+if [[ ! -f "$ENV_FILE" ]]; then
+    log "⚠️ Environment file missing! Creating default."
+    echo "HOST=0.0.0.0" | sudo tee "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+    chown "$USER:$GROUP" "$ENV_FILE"
+fi
+
 # Set secure permissions
 chmod 755 "$DATA_DIR"
 chmod 700 "$CONFIG_DIR"
@@ -84,6 +93,13 @@ fi
 log "🔄 Enabling VileSQL service..."
 systemctl enable vilesql.service || log "⚠️ Warning: Failed to enable service."
 
+# Check for missing dependencies
+log "🔍 Checking dependencies..."
+if ldd "$BIN_PATH" | grep -q "not found"; then
+    log "⚠️ Missing dependencies detected! Run: ldd $BIN_PATH"
+    exit 1
+fi
+
 # Prompt user to start service immediately
 read -p "▶️ Start VileSQL now? (y/n): " choice
 if [[ "$choice" == "y" ]]; then
@@ -92,6 +108,12 @@ if [[ "$choice" == "y" ]]; then
         exit 1
     }
     log "✅ VileSQL service started!"
+    
+    # Check if service stays running
+    sleep 2
+    if ! systemctl is-active --quiet vilesql; then
+        log "❌ VileSQL stopped unexpectedly! Run: journalctl -u vilesql --no-pager | tail -n 20"
+    fi
 else
     log "⚠️ You can start it manually using: sudo systemctl start vilesql"
 fi
