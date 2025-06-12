@@ -258,6 +258,22 @@ if [ -e "${LOG_FILES[0]}" ]; then
     fi
 fi
 
+SCRIPT_FOLDER=(/usr/share/vilesql)
+if [ -d "$SCRIPT_FOLDER" ]; then
+    echo ""
+    read -p "Remove script files? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [ "$EUID" -eq 0 ]; then
+           rm -f /usr/share/vilesql
+        else
+            sudo rm -f /usr/share/vilesql
+        fi
+        echo "Script files removed."
+    fi
+    
+fi
+
 # Final verification
 echo ""
 if command -v vilesql >/dev/null 2>&1; then

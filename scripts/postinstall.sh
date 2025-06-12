@@ -5,8 +5,6 @@ set -e
 
 DATA_DIR="/var/lib/vilesql"
 CONFIG_DIR="/etc/vilesql"
-LOG_DIR="/var/log/vilesql"
-LOG_FILE="/var/log/vilesql-install.log"
 
 # Logging function
 log() {
@@ -22,7 +20,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Create directories
-for dir in "$DATA_DIR" "$CONFIG_DIR" "$LOG_DIR"; do
+for dir in "$DATA_DIR" "$CONFIG_DIR"; do
     if [ ! -d "$dir" ]; then
         log "Creating directory: $dir"
         mkdir -p "$dir"
@@ -32,7 +30,6 @@ done
 # Set permissions (readable/writable by all users)
 chmod 755 "$DATA_DIR"
 chmod 755 "$CONFIG_DIR"
-chmod 755 "$LOG_DIR"
 
 # Create default config if it doesn't exist
 if [ ! -f "$CONFIG_DIR/.env" ] && [ -f "$CONFIG_DIR/.env.example" ]; then
@@ -60,7 +57,6 @@ echo "✅ VileSQL has been successfully installed!"
 echo ""
 echo "📁 Data directory: $DATA_DIR"
 echo "⚙️  Configuration: $CONFIG_DIR/.env"
-echo "📝 Logs: $LOG_DIR"
 echo ""
 echo "🚀 Next steps:"
 echo "   1. Edit configuration: sudo nano $CONFIG_DIR/.env"

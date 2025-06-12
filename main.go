@@ -61,6 +61,7 @@ func main() {
 
 	// Add flags for server command
 	rootCmd.Flags().StringP("port", "p", "5000", "Port to run the server on")
+	rootCmd.Flags().StringP("config", "c", ".env", "Custom configuration path")
 	rootCmd.Flags().StringP("host", "H", "0.0.0.0", "Host to bind the server to")
 	rootCmd.Flags().String("data-dir", "", "Custom data directory path")
 	rootCmd.Flags().BoolP("version", "v", false, "Show version information")
@@ -711,7 +712,7 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 
 	dataDirs := []string{database.GetDataDir()}
 	if runtime.GOOS == "linux" {
-		dataDirs = append(dataDirs, "/var/lib/vilesql", "/etc/vilesql", )
+		dataDirs = append(dataDirs, "/var/lib/vilesql", "/etc/vilesql", "/usr/share/vilesql")
 	}
 
 	fmt.Println("VileSQL Uninstall")

@@ -3,11 +3,8 @@
 
 set -e
 
-VILESQL_USER="vilesql"
-VILESQL_GROUP="vilesql"
 DATA_DIR="/var/lib/vilesql"
 CONFIG_DIR="/etc/vilesql"
-LOG_FILE="/var/log/vilesql-upgrade.log"
 
 # Logging function
 log() {
@@ -22,20 +19,6 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Create log file if it doesn't exist
-touch "$LOG_FILE"
-chmod 644 "$LOG_FILE"
-
-# Create vilesql user and group if they don't exist
-if ! getent group "$VILESQL_GROUP" > /dev/null 2>&1; then
-    log "Creating group: $VILESQL_GROUP"
-    groupadd -r "$VILESQL_GROUP"
-fi
-
-if ! getent passwd "$VILESQL_USER" > /dev/null 2>&1; then
-    log "Creating user: $VILESQL_USER"
-    useradd -r -g "$VILESQL_GROUP" -d "$DATA_DIR" -s /bin/false "$VILESQL_USER"
-fi
 
 # Create directories if they don't exist
 for dir in "$DATA_DIR" "$CONFIG_DIR"; do
@@ -46,8 +29,6 @@ for dir in "$DATA_DIR" "$CONFIG_DIR"; do
 done
 
 # Set proper ownership and permissions
-chown -R "$VILESQL_USER:$VILESQL_GROUP" "$DATA_DIR"
-chown -R "$VILESQL_USER:$VILESQL_GROUP" "$CONFIG_DIR"
 chmod 755 "$DATA_DIR"
 chmod 755 "$CONFIG_DIR"
 
@@ -78,24 +59,51 @@ if [ ! -f "$SYSTEMD_SERVICE" ]; then
     cat > "$SYSTEMD_SERVICE" << 'EOF'
 [Unit]
 Description=VileSQL Database Management Service
-After=network.target
+Documentation=https://github.com/imrany/vilesql
+After=network.target network-online.target
+Wants=network-online.target
+RequiresMountsFor=/var/lib/vilesql
 
 [Service]
 Type=simple
-User=vilesql
-Group=vilesql
 WorkingDirectory=/var/lib/vilesql
-ExecStart=/usr/bin/vilesql --host=127.0.0.1 --port=5000
+ExecStart=/usr/bin/vilesql --host=0.0.0.0 --port=5000 --config=/etc/vilesql/.env
+ExecReload=/bin/kill -USR2 $MAINPID
 Restart=always
-RestartSec=10
+RestartSec=5
+TimeoutStartSec=30
+TimeoutStopSec=30
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Environment
 Environment=VILESQL_DATA_DIR=/var/lib/vilesql
+Environment=VILESQL_CONFIG_DIR=/etc/vilesql
 
 # Security settings
-NoNewPrivileges=true
-PrivateTmp=true
+NoNewPrivileges=yes
+PrivateTmp=yes
 ProtectSystem=strict
-ProtectHome=true
+ProtectHome=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+
+# File system permissions
 ReadWritePaths=/var/lib/vilesql
+ReadOnlyPaths=/etc/vilesql
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+LimitMEMLOCK=51200
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vilesql
 
 [Install]
 WantedBy=multi-user.target
@@ -105,29 +113,9 @@ EOF
     systemctl enable vilesql
 fi
 
-# Set up log rotation
-LOGROTATE_CONFIG="/etc/logrotate.d/vilesql"
-if [ ! -f "$LOGROTATE_CONFIG" ]; then
-    log "Setting up log rotation"
-    cat > "$LOGROTATE_CONFIG" << 'EOF'
-/var/log/vilesql*.log {
-    daily
-    missingok
-    rotate 52
-    compress
-    delaycompress
-    notifempty
-    create 644 vilesql vilesql
-    postrotate
-        systemctl reload vilesql > /dev/null 2>&1 || true
-    endscript
-}
-EOF
-fi
 
 log "Post-upgrade script completed successfully"
 
 echo "VileSQL has been successfully upgraded!"
 echo "You can start using it with: systemctl start vilesql"
 echo "Or check the status with: systemctl status vilesql"
-echo "Logs are available at: $LOG_FILE"

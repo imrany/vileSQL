@@ -88,22 +88,6 @@ nfpms:
         dst: /etc/systemd/system/vilesql.service
         file_info:
           mode: 0644
-      # Systemd environment file
-      - src: scripts/vilesql.env
-        dst: /etc/default/vilesql
-        type: config
-        file_info:
-          mode: 0644
-      # logrotate configuration
-      - src: scripts/vilesql.logrotate
-        dst: /etc/logrotate.d/vilesql
-        file_info:
-          mode: 0644
-      # systemd tmpfiles configuration
-      - src: scripts/vilesql-tmpfiles.conf
-        dst: /usr/lib/tmpfiles.d/vilesql.conf
-        file_info:
-          mode: 0644
       # Pre-create system data directory
       - dst: /var/lib/vilesql
         type: dir
@@ -111,13 +95,6 @@ nfpms:
           mode: 0755
           owner: root
           group: root
-      # Create log directory
-      - dst: /var/log/vilesql
-        type: dir
-        file_info:
-          mode: 0755
-          owner: vilesql
-          group: vilesql
       # Create config directory
       - dst: /etc/vilesql
         type: dir

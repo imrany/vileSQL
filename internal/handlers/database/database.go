@@ -1459,19 +1459,22 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 	var queryRequest struct {
 		SQL string `json:"sql"`
 	}
+	type ErrorResponse struct {
+		Error string `json:"error"` 
+		Details string `json:"details,omitempty"`
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&queryRequest); err != nil {
 		log.Printf("Error decoding request body: %v", err)
-		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-			Success: false,
-			Message: "Invalid request format",
+		helper.RespondWithJSON(w, http.StatusBadRequest, ErrorResponse{
+			Error: err.Error(),
 		})
 		return
 	}
 
 	if queryRequest.SQL == "" {
-		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-			Success: false,
-			Message: "SQL query is required",
+		helper.RespondWithJSON(w, http.StatusBadRequest, ErrorResponse{
+			Error: "SQL query is required",
 		})
 		return
 	}
@@ -1485,18 +1488,17 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 	).Scan(&filePath, &tokenExpiry)
 
 	if err != nil {
-		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-			Success: false,
-			Message: "Shared database not found",
+		helper.RespondWithJSON(w, http.StatusNotFound, ErrorResponse{
+			Error: err.Error(),
+			Details: "Shared database not found",
 		})
 		return
 	}
 
 	// Check if the token has expired
 	if time.Now().After(tokenExpiry) {
-		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-			Success: false,
-			Message: "Share link has expired",
+		helper.RespondWithJSON(w, http.StatusForbidden, ErrorResponse{
+			Error: "Share link has expired",
 		})
 		return
 	}
@@ -1504,35 +1506,34 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 	// Open the user's database in read-only mode
 	userDB, err := sql.Open("sqlite", filePath+"?mode=ro")
 	if err != nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Failed to open database",
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ErrorResponse{
+			Error: err.Error(),
+			Details: "Failed to open database",
 		})
 		return
 	}
 	defer userDB.Close()
 
 	// Block any write operations for shared databases
-	lowercaseSQL := strings.ToLower(strings.TrimSpace(queryRequest.SQL))
-	if strings.HasPrefix(lowercaseSQL, "insert") ||
-		strings.HasPrefix(lowercaseSQL, "update") ||
-		strings.HasPrefix(lowercaseSQL, "delete") ||
-		strings.HasPrefix(lowercaseSQL, "drop") ||
-		strings.HasPrefix(lowercaseSQL, "alter") ||
-		strings.HasPrefix(lowercaseSQL, "create") {
-		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-			Success: false,
-			Message: "Write operations are not allowed for shared databases",
-		})
-		return
-	}
+	// lowercaseSQL := strings.ToLower(strings.TrimSpace(queryRequest.SQL))
+	// if strings.HasPrefix(lowercaseSQL, "insert") ||
+	// 	strings.HasPrefix(lowercaseSQL, "update") ||
+	// 	strings.HasPrefix(lowercaseSQL, "delete") ||
+	// 	strings.HasPrefix(lowercaseSQL, "drop") ||
+	// 	strings.HasPrefix(lowercaseSQL, "alter") ||
+	// 	strings.HasPrefix(lowercaseSQL, "create") {
+	// 	helper.RespondWithJSON(w, http.StatusForbidden,ErrorResponse{
+	// 		Error: "Write operations are not allowed for shared databases",
+	// 	})
+	// 	return
+	// }
 
 	// Execute the query
 	rows, err := userDB.Query(queryRequest.SQL)
 	if err != nil {
-		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-			Success: false,
-			Message: fmt.Sprintf("Query execution failed: %v", err),
+		helper.RespondWithJSON(w, http.StatusBadRequest, ErrorResponse{
+			Error: err.Error(),
+			Details: fmt.Sprintf("Query execution failed: %v", err.Error()),
 		})
 		return
 	}
@@ -1541,9 +1542,9 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 	// Get column names
 	columns, err := rows.Columns()
 	if err != nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Failed to get column information",
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ErrorResponse{
+			Error: err.Error(),
+			Details: "Failed to get column information",
 		})
 		return
 	}
@@ -1593,9 +1594,9 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check for errors from iterating over rows
 	if err := rows.Err(); err != nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: fmt.Sprintf("Error processing results: %v", err),
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ErrorResponse{
+			Error: err.Error(),
+			Details: fmt.Sprintf("Error processing results: %v", err),
 		})
 		return
 	}
@@ -1621,9 +1622,8 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 		queryResult.Types[i] = ct.DatabaseTypeName()
 	}
 
-	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
-		Success: true,
-		Data:    queryResult,
+	helper.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"results":queryResult,
 	})
 }
 

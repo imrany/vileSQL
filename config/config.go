@@ -7,14 +7,28 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var ConfigFiles =[]string{
+	".env",
+	"/etc/vilesql/.env",
+}
+
 func GetValue(key string) string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Print("⚠️ Warning: .env file not found, using default values.")
+	var configFile string
+	for _, file := range ConfigFiles {
+		if _, err := os.Stat(file); err == nil {
+			configFile = file
+			break		
+		} else {
+			log.Printf("Error accessing configuration file %s: %v", file, err)
+		}
 	}
-	// Set default values if variables are missing
-    setDefaultEnv("SESSION_KEY", "default-session-key")
-    setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
+	err := godotenv.Load(configFile)
+	if err != nil {
+		log.Printf("⚠️ Warning: %s, using default variables", err.Error())
+		// Set default values if variables are missing
+		setDefaultEnv("SESSION_KEY", "default-session-key")
+		setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
+	}
 	return os.Getenv(key)
 }
 

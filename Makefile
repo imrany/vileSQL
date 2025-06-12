@@ -19,7 +19,7 @@ publish:
 	goreleaser release
 
 dev: 
-	CompileDaemon -build="go build -o vilesql main.go" -command="./vilesql"
+	CompileDaemon -build="go build -o vilesql main.go" -command="./vilesql --verbose"
 
 ensure-compile-daemon:
 	@which go > /dev/null || (echo "Error: Go is not installed or not in PATH" && exit 1)
