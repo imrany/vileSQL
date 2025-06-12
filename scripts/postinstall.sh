@@ -9,6 +9,7 @@ LOG_DIR="/var/log/vilesql"
 LOG_FILE="$LOG_DIR/vilesql.log"
 BIN_PATH="/usr/bin/vilesql"
 SERVICE_PATH="/etc/systemd/system/vilesql.service"
+ENV_FILE="/etc/vilesql/.env"
 USER="vilesql"
 GROUP="vilesql"
 
@@ -55,16 +56,18 @@ if [[ ! -f "$LOG_FILE" ]]; then
     chmod 644 "$LOG_FILE"
 fi
 
-# Ensure required environment file exists
-ENV_FILE="/etc/vilesql/.env"
+# Ensure required environment file exists with proper permissions
 if [[ ! -f "$ENV_FILE" ]]; then
     log "⚠️ Environment file missing! Creating default."
     echo "HOST=0.0.0.0" | sudo tee "$ENV_FILE"
-    chmod 600 "$ENV_FILE"
-    chown "$USER:$GROUP" "$ENV_FILE"
 fi
 
-# Set secure permissions
+# Fix permissions to allow VileSQL access
+log "🔧 Setting correct permissions for environment file"
+chown "$USER:$GROUP" "$ENV_FILE"
+chmod 600 "$ENV_FILE"
+
+# Set secure permissions for other directories
 chmod 755 "$DATA_DIR"
 chmod 700 "$CONFIG_DIR"
 chmod 755 "$LOG_DIR"
@@ -122,11 +125,11 @@ log "✅ VileSQL installation completed successfully!"
 
 echo ""
 echo "📁 Data directory: $DATA_DIR"
-echo "⚙️ Configuration file: $CONFIG_DIR/.env"
+echo "⚙️ Configuration file: $ENV_FILE"
 echo "📄 Log file: $LOG_FILE"
 echo ""
 echo "🚀 Next steps:"
-echo "   1️⃣ Edit config: sudo nano $CONFIG_DIR/.env"
+echo "   1️⃣ Edit config: sudo nano $ENV_FILE"
 echo "   2️⃣ Check status: sudo systemctl status vilesql"
 echo "   3️⃣ View logs: sudo tail -f $LOG_FILE"
 echo "   4️⃣ Run manually: vilesql --help"
