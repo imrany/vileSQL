@@ -1,288 +1,87 @@
 #!/bin/bash
 
-# scripts/uninstall.sh - Smart uninstaller for VileSQL
+# Smart Uninstaller for VileSQL
 set -e
 
-echo "VileSQL Uninstaller"
+echo "🚀 VileSQL Uninstaller"
 echo "==================="
 
-# Detect installation method
-detect_installation() {
-    local method="unknown"
-    local binary_path=""
-    local system_install=false
-    
-    if command -v vilesql >/dev/null 2>&1; then
-        binary_path=$(which vilesql)
-        
-        # Check installation location to determine method
-        case "$binary_path" in
-            /usr/bin/vilesql|/usr/local/bin/vilesql|/opt/*/bin/vilesql)
-                system_install=true
-                ;;
-        esac
-        
-        # Check package managers
-        if command -v dpkg >/dev/null 2>&1 && dpkg -l vilesql >/dev/null 2>&1; then
-            method="deb"
-        elif command -v rpm >/dev/null 2>&1 && rpm -q vilesql >/dev/null 2>&1; then
-            method="rpm"
-        elif command -v brew >/dev/null 2>&1 && brew list vilesql >/dev/null 2>&1; then
-            method="homebrew"
-        elif [ -n "$binary_path" ]; then
-            method="manual"
-        fi
-    fi
-    
-    echo "$method|$binary_path|$system_install"
+USER="vilesql"
+GROUP="vilesql"
+SERVICE_PATH="/etc/systemd/system/vilesql.service"
+DATA_DIR="/var/lib/vilesql"
+CONFIG_DIR="/etc/vilesql"
+
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
-DETECTION=$(detect_installation)
-INSTALL_METHOD=$(echo "$DETECTION" | cut -d'|' -f1)
-BINARY_PATH=$(echo "$DETECTION" | cut -d'|' -f2)
-SYSTEM_INSTALL=$(echo "$DETECTION" | cut -d'|' -f3)
-
-if [ "$INSTALL_METHOD" = "unknown" ]; then
-    echo "VileSQL not found or not installed."
-    exit 0
+log "🛠️ Detecting installation method..."
+INSTALL_METHOD="unknown"
+if command -v dpkg &>/dev/null && dpkg -l vilesql &>/dev/null; then
+    INSTALL_METHOD="deb"
+elif command -v rpm &>/dev/null && rpm -q vilesql &>/dev/null; then
+    INSTALL_METHOD="rpm"
+elif command -v brew &>/dev/null && brew list vilesql &>/dev/null; then
+    INSTALL_METHOD="homebrew"
+elif command -v vilesql &>/dev/null; then
+    INSTALL_METHOD="manual"
 fi
 
-echo "Installation method: $INSTALL_METHOD"
-echo "Binary location: $BINARY_PATH"
-echo "System installation: $SYSTEM_INSTALL"
+log "Detected installation method: $INSTALL_METHOD"
 
-# Check if service is running
-check_service() {
-    if command -v systemctl >/dev/null 2>&1; then
-        if systemctl is-active --quiet vilesql 2>/dev/null; then
-            echo "⚠️  VileSQL service is currently running"
-            read -p "Stop service before uninstalling? (Y/n): " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-                echo "Stopping vilesql service..."
-                sudo systemctl stop vilesql
-                sudo systemctl disable vilesql 2>/dev/null || true
-            fi
-        fi
-    fi
-}
+# Stop service if running
+if systemctl is-active --quiet vilesql; then
+    log "🔴 Stopping VileSQL service..."
+    systemctl stop vilesql
+fi
 
-# Check for running processes
-check_processes() {
-    if pgrep -f vilesql >/dev/null 2>&1; then
-        echo "⚠️  VileSQL processes are still running"
-        echo "Running processes:"
-        pgrep -f vilesql | xargs ps -p
-        read -p "Kill all vilesql processes? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            echo "Killing vilesql processes..."
-            pkill -f vilesql || true
-            sleep 2
-        fi
-    fi
-}
+if systemctl is-enabled --quiet vilesql; then
+    log "⚙️ Disabling VileSQL service..."
+    systemctl disable vilesql
+fi
 
-# Remove based on installation method
-remove_installation() {
-    case $INSTALL_METHOD in
-        "deb")
-            echo "Removing via apt..."
-            if [ "$EUID" -ne 0 ]; then
-                sudo apt remove -y vilesql
-            else
-                apt remove -y vilesql
-            fi
-            ;;
-        "rpm")
-            echo "Removing via rpm/yum/dnf..."
-            if command -v dnf >/dev/null 2>&1; then
-                if [ "$EUID" -ne 0 ]; then
-                    sudo dnf remove -y vilesql
-                else
-                    dnf remove -y vilesql
-                fi
-            elif command -v yum >/dev/null 2>&1; then
-                if [ "$EUID" -ne 0 ]; then
-                    sudo yum remove -y vilesql
-                else
-                    yum remove -y vilesql
-                fi
-            else
-                if [ "$EUID" -ne 0 ]; then
-                    sudo rpm -e vilesql
-                else
-                    rpm -e vilesql
-                fi
-            fi
-            ;;
-        "homebrew")
-            echo "Removing via Homebrew..."
-            brew uninstall vilesql
-            ;;
-        "manual")
-            echo "Removing manually installed binary..."
-            if [ "$SYSTEM_INSTALL" = "true" ]; then
-                if [ "$EUID" -ne 0 ]; then
-                    sudo rm -f "$BINARY_PATH"
-                else
-                    rm -f "$BINARY_PATH"
-                fi
-            else
-                rm -f "$BINARY_PATH"
-            fi
-            
-            # Remove system files if system installation
-            if [ "$SYSTEM_INSTALL" = "true" ] && [ "$EUID" -eq 0 ]; then
-                echo "Removing system files..."
-                rm -f /etc/systemd/system/vilesql.service
-                rm -f /etc/logrotate.d/vilesql
-                systemctl daemon-reload 2>/dev/null || true
-                
-                # Remove user (only if no files owned)
-                if getent passwd vilesql >/dev/null 2>&1; then
-                    if [ -z "$(find / -user vilesql -not -path "/proc/*" -not -path "/sys/*" 2>/dev/null)" ]; then
-                        echo "Removing vilesql user..."
-                        userdel vilesql 2>/dev/null || true
-                    else
-                        echo "vilesql user still owns files, not removing"
-                    fi
-                fi
-            fi
-            ;;
-        *)
-            echo "Could not detect installation method."
-            echo "Please remove vilesql manually."
-            return 1
-            ;;
-    esac
-}
+log "🗑️ Removing systemd service file..."
+rm -f "$SERVICE_PATH"
+systemctl daemon-reload || true
 
-# Detect system type for data directories
-detect_system() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        echo "linux"
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "macos"
-    else
-        echo "unknown"
-    fi
-}
-
-SYSTEM=$(detect_system)
-
-# Main uninstallation process
-echo ""
-check_service
-check_processes
-
-echo ""
-echo "Removing VileSQL installation..."
-remove_installation
-
-# Handle data directories
-echo ""
-echo "Data directory cleanup:"
-
-# Define possible data locations
-DATA_DIRS=()
-case $SYSTEM in
-    "linux")
-        DATA_DIRS+=("/var/lib/vilesql")
-        DATA_DIRS+=("/etc/vilesql")
-        DATA_DIRS+=("$HOME/.vilesql")
-        DATA_DIRS+=("$HOME/.config/vilesql")
-        ;;
-    "macos")
-        DATA_DIRS+=("$HOME/.vilesql")
-        DATA_DIRS+=("$HOME/.config/vilesql")
-        DATA_DIRS+=("$HOME/Library/Application Support/vilesql")
-        ;;
+# Remove installation method-specific files
+log "🧹 Removing VileSQL installation..."
+case $INSTALL_METHOD in
+    "deb") sudo apt remove -y vilesql ;;
+    "rpm") sudo dnf remove -y vilesql || sudo yum remove -y vilesql || sudo rpm -e vilesql ;;
+    "homebrew") brew uninstall vilesql ;;
+    "manual") sudo rm -f "$(which vilesql)" ;;
+    *) log "⚠️ Unknown installation method! Please remove manually."; exit 1 ;;
 esac
 
-# Check which directories exist
-EXISTING_DIRS=()
-for dir in "${DATA_DIRS[@]}"; do
-    if [ -d "$dir" ]; then
-        EXISTING_DIRS+=("$dir")
-    fi
-done
-
-if [ ${#EXISTING_DIRS[@]} -gt 0 ]; then
-    echo "Found data directories:"
-    for dir in "${EXISTING_DIRS[@]}"; do
-        echo "  - $dir"
-    done
-    echo ""
-    read -p "Remove all VileSQL data directories? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "Removing data directories..."
-        for dir in "${EXISTING_DIRS[@]}"; do
-            echo "  Removing: $dir"
-            if [[ "$dir" == "/var/lib/vilesql" ]] || [[ "$dir" == "/etc/vilesql" ]]; then
-                # System directories need root
-                if [ "$EUID" -eq 0 ]; then
-                    rm -rf "$dir"
-                else
-                    sudo rm -rf "$dir"
-                fi
-            else
-                rm -rf "$dir"
-            fi
-        done
-        echo "✅ Data directories removed."
+# Remove VileSQL user/group if no files are owned
+if id "$USER" &>/dev/null; then
+    if [[ -z "$(find / -user $USER -not -path "/proc/*" -not -path "/sys/*" 2>/dev/null)" ]]; then
+        log "👤 Removing VileSQL user..."
+        userdel -r "$USER" || true
     else
-        echo "📁 Data directories preserved:"
-        for dir in "${EXISTING_DIRS[@]}"; do
-            echo "  - $dir"
-        done
+        log "🛑 VileSQL user owns files, not removing."
     fi
+fi
+
+# Offer to remove data directories
+echo "📂 Data directories found:"
+echo "  - $DATA_DIR"
+echo "  - $CONFIG_DIR"
+read -p "Remove all data directories? (y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    log "🗑️ Removing data directories..."
+    sudo rm -rf "$DATA_DIR" "$CONFIG_DIR"
+    log "✅ Data directories removed."
 else
-    echo "No data directories found."
+    log "📂 Data directories preserved."
 fi
 
-# Remove log files
-LOG_FILES=(/var/log/vilesql*.log)
-if [ -e "${LOG_FILES[0]}" ]; then
-    echo ""
-    read -p "Remove log files? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        if [ "$EUID" -eq 0 ]; then
-            rm -f /var/log/vilesql*.log
-        else
-            sudo rm -f /var/log/vilesql*.log
-        fi
-        echo "Log files removed."
-    fi
-fi
-
-SCRIPT_FOLDER=(/usr/share/vilesql)
-if [ -d "$SCRIPT_FOLDER" ]; then
-    echo ""
-    read -p "Remove script files? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        if [ "$EUID" -eq 0 ]; then
-           rm -f /usr/share/vilesql
-        else
-            sudo rm -f /usr/share/vilesql
-        fi
-        echo "Script files removed."
-    fi
-    
-fi
-
-# Final verification
-echo ""
-if command -v vilesql >/dev/null 2>&1; then
-    echo "⚠️  Warning: vilesql command still found in PATH"
-    echo "Location: $(which vilesql)"
-    echo "You may need to restart your shell or manually remove it."
-else
-    echo "✅ VileSQL uninstall complete!"
-fi
+log "✅ VileSQL uninstallation completed successfully!"
 
 echo ""
-echo "Uninstallation finished."
+echo "🚀 VileSQL has been successfully removed."
+echo "⚠️ If any commands still exist, restart your shell or manually clean up PATH."
+echo ""

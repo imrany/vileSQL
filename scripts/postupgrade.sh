@@ -1,61 +1,62 @@
 #!/bin/bash
-# scripts/postupgrade.sh - Post-upgrade script for package managers
+# VileSQL Post-Upgrade Script for Package Managers
 
 set -e
 
 DATA_DIR="/var/lib/vilesql"
 CONFIG_DIR="/etc/vilesql"
+SYSTEMD_SERVICE="/etc/systemd/system/vilesql.service"
+USER="vilesql"
+GROUP="vilesql"
 
 # Logging function
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
-log "Starting VileSQL post-upgrade script"
+log "🚀 Starting VileSQL post-upgrade script"
 
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-    echo "This script must be run as root"
+# Ensure running as root
+if [[ "$EUID" -ne 0 ]]; then
+    echo "❌ This script must be run as root!"
     exit 1
 fi
 
-
-# Create directories if they don't exist
+# Create directories if missing
 for dir in "$DATA_DIR" "$CONFIG_DIR"; do
-    if [ ! -d "$dir" ]; then
-        log "Creating directory: $dir"
+    if [[ ! -d "$dir" ]]; then
+        log "📁 Creating directory: $dir"
         mkdir -p "$dir"
     fi
+    chown "$USER:$GROUP" "$dir"
 done
 
-# Set proper ownership and permissions
+# Set secure permissions
 chmod 755 "$DATA_DIR"
-chmod 755 "$CONFIG_DIR"
+chmod 700 "$CONFIG_DIR"
 
-# Run migrations if vilesql is installed
-if command -v vilesql > /dev/null 2>&1; then
-    log "Running data migrations"
-    # Run as vilesql user
-    su - "$VILESQL_USER" -s /bin/bash -c "vilesql migrate" || {
-        log "Migration failed, but continuing with upgrade"
+# Run database migrations if vilesql is installed
+if command -v vilesql &>/dev/null; then
+    log "⚙️ Running database migrations..."
+    sudo -u "$USER" vilesql migrate || {
+        log "⚠️ Migration failed, continuing upgrade..."
     }
 else
-    log "vilesql command not found, skipping migrations"
+    log "🔍 vilesql command not found, skipping migrations."
 fi
 
-# Restart service if it exists and is running
+# Restart service if active
 if systemctl is-active --quiet vilesql; then
-    log "Restarting vilesql service"
+    log "🔄 Restarting VileSQL service..."
     systemctl restart vilesql
 elif systemctl is-enabled --quiet vilesql; then
-    log "Starting vilesql service"
+    log "⚙️ Starting VileSQL service..."
     systemctl start vilesql
 fi
 
-# Create systemd service file if it doesn't exist
-SYSTEMD_SERVICE="/etc/systemd/system/vilesql.service"
-if [ ! -f "$SYSTEMD_SERVICE" ]; then
-    log "Creating systemd service file"
+# Ensure systemd service file exists
+if [[ ! -f "$SYSTEMD_SERVICE" ]]; then
+    log "⚙️ Creating missing systemd service file..."
     cat > "$SYSTEMD_SERVICE" << 'EOF'
 [Unit]
 Description=VileSQL Database Management Service
@@ -66,8 +67,10 @@ RequiresMountsFor=/var/lib/vilesql
 
 [Service]
 Type=simple
+User=vilesql
+Group=vilesql
 WorkingDirectory=/var/lib/vilesql
-ExecStart=/usr/bin/vilesql --host=0.0.0.0 --port=5000 --config=/etc/vilesql/.env
+ExecStart=/usr/bin/vilesql --host=0.0.0.0 --port=5000
 ExecReload=/bin/kill -USR2 $MAINPID
 Restart=always
 RestartSec=5
@@ -75,10 +78,6 @@ TimeoutStartSec=30
 TimeoutStopSec=30
 KillMode=mixed
 KillSignal=SIGTERM
-
-# Environment
-Environment=VILESQL_DATA_DIR=/var/lib/vilesql
-Environment=VILESQL_CONFIG_DIR=/etc/vilesql
 
 # Security settings
 NoNewPrivileges=yes
@@ -98,7 +97,7 @@ ReadOnlyPaths=/etc/vilesql
 # Resource limits
 LimitNOFILE=65536
 LimitNPROC=4096
-LimitMEMLOCK=51200
+LimitMEMLOCK=64M
 
 # Logging
 StandardOutput=journal
@@ -113,9 +112,13 @@ EOF
     systemctl enable vilesql
 fi
 
+log "✅ Post-upgrade script completed successfully!"
 
-log "Post-upgrade script completed successfully"
-
-echo "VileSQL has been successfully upgraded!"
-echo "You can start using it with: systemctl start vilesql"
-echo "Or check the status with: systemctl status vilesql"
+echo ""
+echo "🚀 VileSQL has been successfully upgraded!"
+echo "📁 Data directory: $DATA_DIR"
+echo "⚙️ Configuration file: $CONFIG_DIR/.env"
+echo ""
+echo "🔄 To start the service: sudo systemctl start vilesql"
+echo "📌 To check status: sudo systemctl status vilesql"
+echo ""
