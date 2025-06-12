@@ -24,34 +24,43 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-# Create vilesql system user and group (if not exists)
+# Create VileSQL system user and group (if missing)
 if ! id "$USER" &>/dev/null; then
     log "📌 Creating system user: $USER"
-    useradd -r -s /bin/false -d "$DATA_DIR" "$USER"
+    useradd -r -s /bin/false -d "$DATA_DIR" "$USER" || {
+        log "❌ Failed to create system user: $USER"
+        exit 1
+    }
 fi
 
 # Create necessary directories with correct ownership
 for dir in "$DATA_DIR" "$CONFIG_DIR" "$LOG_DIR"; do
     if [[ ! -d "$dir" ]]; then
         log "📁 Creating directory: $dir"
-        mkdir -p "$dir"
+        mkdir -p "$dir" || {
+            log "❌ Failed to create $dir"
+            exit 1
+        }
     fi
     chown "$USER:$GROUP" "$dir"
 done
 
-# Ensure log file exists
+# Ensure log directory and file exist
 if [[ ! -f "$LOG_FILE" ]]; then
     log "📝 Creating log file: $LOG_FILE"
-    touch "$LOG_FILE"
+    touch "$LOG_FILE" || {
+        log "❌ Failed to create log file: $LOG_FILE"
+        exit 1
+    }
     chown "$USER:$GROUP" "$LOG_FILE"
     chmod 644 "$LOG_FILE"
 fi
 
 # Set secure permissions
 chmod 755 "$DATA_DIR"
-chmod 700 "$CONFIG_DIR" # Restrict config access
-chmod 755 "$LOG_DIR" # Ensure log directory is accessible
-chmod 644 "$LOG_FILE" # Ensure log file is readable
+chmod 700 "$CONFIG_DIR"
+chmod 755 "$LOG_DIR"
+chmod 644 "$LOG_FILE"
 
 # Ensure binary exists
 if [[ ! -x "$BIN_PATH" ]]; then
@@ -62,19 +71,29 @@ fi
 # Install systemd service file (if missing)
 if [[ ! -f "$SERVICE_PATH" ]]; then
     log "⚙️ Installing systemd service file"
-    cp scripts/vilesql.service "$SERVICE_PATH"
-    chmod 644 "$SERVICE_PATH"
-    systemctl daemon-reload
+    if [[ -f "scripts/vilesql.service" ]]; then
+        cp scripts/vilesql.service "$SERVICE_PATH"
+        chmod 644 "$SERVICE_PATH"
+        systemctl daemon-reload
+    else
+        log "❌ Service file missing: scripts/vilesql.service"
+        exit 1
+    fi
 fi
 
 # Enable service
 log "🔄 Enabling VileSQL service..."
-systemctl enable vilesql.service || log "⚠️ Warning: Failed to enable service."
+systemctl enable vilesql.service || {
+    log "⚠️ Warning: Failed to enable service."
+}
 
 # Prompt user to start service immediately
 read -p "▶️ Start VileSQL now? (y/n): " choice
 if [[ "$choice" == "y" ]]; then
-    systemctl start vilesql
+    systemctl start vilesql || {
+        log "❌ Failed to start VileSQL service."
+        exit 1
+    }
     log "✅ VileSQL service started!"
 else
     log "⚠️ You can start it manually using: sudo systemctl start vilesql"
@@ -84,7 +103,7 @@ log "✅ VileSQL installation completed successfully!"
 
 echo ""
 echo "📁 Data directory: $DATA_DIR"
-echo "⚙️ Configuration: $CONFIG_DIR/.env"
+echo "⚙️ Configuration file: $CONFIG_DIR/.env"
 echo "📄 Log file: $LOG_FILE"
 echo ""
 echo "🚀 Next steps:"
