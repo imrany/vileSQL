@@ -10,7 +10,7 @@ USER="vilesql"
 GROUP="vilesql"
 SERVICE_PATH="/etc/systemd/system/vilesql.service"
 DATA_DIR="/var/lib/vilesql"
-CONFIG_DIR="/etc/vilesql"
+CONFIG_DIR="$DATA_DIR"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
