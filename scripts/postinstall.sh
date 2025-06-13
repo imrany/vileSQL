@@ -9,7 +9,7 @@ LOG_DIR="/var/log/vilesql"
 LOG_FILE="$LOG_DIR/vilesql.log"
 BIN_PATH="/usr/bin/vilesql"
 SERVICE_PATH="/etc/systemd/system/vilesql.service"
-ENV_FILE="/var/lib/vilesql/.env"
+ENV_FILE="/etc/vilesql/.env"
 USER="vilesql"
 GROUP="vilesql"
 
@@ -35,6 +35,11 @@ if ! id "$USER" &>/dev/null; then
         exit 1
     }
 fi
+
+# Ensure correct ownership for binary
+log "🔧 Fixing ownership for VileSQL binary"
+chown "$USER:$GROUP" "$BIN_PATH"
+chmod 755 "$BIN_PATH"
 
 # Create necessary directories with correct ownership
 for dir in "$DATA_DIR" "$CONFIG_DIR" "$LOG_DIR"; do
@@ -62,7 +67,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
     echo "HOST=0.0.0.0" | sudo tee "$ENV_FILE"
 fi
 
-# Fix permissions to allow VileSQL access
+# Fix permissions for environment file
 log "🔧 Setting correct permissions for environment file"
 chown "$USER:$GROUP" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
@@ -71,13 +76,6 @@ chmod 600 "$ENV_FILE"
 chmod 755 "$DATA_DIR"
 chmod 700 "$CONFIG_DIR"
 chmod 755 "$LOG_DIR"
-chmod 644 "$LOG_FILE"
-
-# Ensure binary exists
-if [[ ! -x "$BIN_PATH" ]]; then
-    log "❌ VileSQL binary not found at $BIN_PATH"
-    exit 1
-fi
 
 # Install systemd service file (if missing)
 if [[ ! -f "$SERVICE_PATH" ]]; then
@@ -103,22 +101,17 @@ if ldd "$BIN_PATH" | grep -q "not found"; then
     exit 1
 fi
 
-# Prompt user to start service immediately
-read -p "▶️ Start VileSQL now? (y/n): " choice
-if [[ "$choice" == "y" ]]; then
-    systemctl start vilesql || {
-        log "❌ Failed to start VileSQL service."
-        exit 1
-    }
-    log "✅ VileSQL service started!"
-    
-    # Check if service stays running
-    sleep 2
-    if ! systemctl is-active --quiet vilesql; then
-        log "❌ VileSQL stopped unexpectedly! Run: journalctl -u vilesql --no-pager | tail -n 20"
-    fi
-else
-    log "⚠️ You can start it manually using: sudo systemctl start vilesql"
+# Start the service
+log "▶️ Starting VileSQL service as user: $USER"
+systemctl start vilesql || {
+    log "❌ Failed to start VileSQL service."
+    exit 1
+}
+
+# Check if service stays running
+sleep 2
+if ! systemctl is-active --quiet vilesql; then
+    log "❌ VileSQL stopped unexpectedly! Run: journalctl -u vilesql --no-pager | tail -n 20"
 fi
 
 log "✅ VileSQL installation completed successfully!"
@@ -132,5 +125,5 @@ echo "🚀 Next steps:"
 echo "   1️⃣ Edit config: sudo nano $ENV_FILE"
 echo "   2️⃣ Check status: sudo systemctl status vilesql"
 echo "   3️⃣ View logs: sudo tail -f $LOG_FILE"
-echo "   4️⃣ Run manually: vilesql --help"
+echo "   4️⃣ Run manually: sudo -u vilesql /usr/bin/vilesql --help"
 echo ""
