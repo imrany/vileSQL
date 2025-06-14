@@ -70,11 +70,11 @@ fi
 # Fix permissions for environment file
 log "🔧 Setting correct permissions for environment file"
 chown "$USER:$GROUP" "$ENV_FILE"
-chmod 600 "$ENV_FILE"
+chmod 755 "$ENV_FILE"
 
 # Set secure permissions for other directories
 chmod 755 "$DATA_DIR"
-chmod 700 "$CONFIG_DIR"
+chmod 755 "$CONFIG_DIR"
 chmod 755 "$LOG_DIR"
 
 # Install systemd service file (if missing)
