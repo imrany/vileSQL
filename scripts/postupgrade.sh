@@ -70,20 +70,17 @@ Type=simple
 User=vilesql
 Group=vilesql
 WorkingDirectory=/var/lib/vilesql
-
-# Ensure binary exists before starting
-ExecStartPre=/usr/bin/test -x /usr/bin/vilesql || exit 1
-
-# Load environment variables before executing VileSQL
-EnvironmentFile=/var/lib/vilesql/.env
-ExecStart=/bin/bash -c 'source /var/lib/vilesql/.env && exec /usr/bin/vilesql --host=$HOST --port=$PORT'
+ExecStart=/usr/bin/vilesql --host=0.0.0.0 --port=5000
 ExecReload=/bin/kill -USR2 $MAINPID
-
-Restart=always
+Restart=on-failure
 RestartSec=5
 TimeoutStartSec=30
 TimeoutStopSec=30
-KillMode=process
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Load environment variables from file
+EnvironmentFile=-/var/lib/vilesql/.env
 
 # Security settings
 NoNewPrivileges=yes
@@ -91,10 +88,12 @@ PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
 RestrictRealtime=yes
+RemoveIPC=yes
 SystemCallArchitectures=native
 
-# Allow VileSQL write access to its working directory
+# File system permissions
 ReadWritePaths=/var/lib/vilesql
 
 # Resource limits
@@ -102,12 +101,9 @@ LimitNOFILE=65536
 LimitNPROC=4096
 LimitMEMLOCK=64M
 
-# Logging (Use journal for better debugging)
+# Logging (redirect to file)
 StandardOutput=append:/var/log/vilesql.log
 StandardError=append:/var/log/vilesql.log
-SyslogIdentifier=vilesql
-# StandardOutput=journal
-# StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
