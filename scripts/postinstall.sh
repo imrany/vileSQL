@@ -64,7 +64,12 @@ fi
 # Ensure required environment file exists with proper permissions
 if [[ ! -f "$ENV_FILE" ]]; then
     log "⚠️ Environment file missing! Creating default."
-    echo "HOST=0.0.0.0" | sudo tee "$ENV_FILE"
+    cat <<EOF | sudo tee "$ENV_FILE" > /dev/null
+PORT=5000
+SESSION_KEY=default-session-key
+COOKIE_STORE_KEY=default-session-key
+HOST=0.0.0.0
+EOF
 fi
 
 # Fix permissions for environment file
