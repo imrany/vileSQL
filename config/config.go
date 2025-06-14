@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -8,27 +9,36 @@ import (
 )
 
 var ConfigFiles =[]string{
-	".env",
 	"/var/lib/vilesql/.env",
+	".env",
+}
+
+func getConfigFile() (string, error){
+	var count = 0
+	for count < len(ConfigFiles) {
+		file := ConfigFiles[count]
+		if _, err := os.Stat(file); err == nil {
+			return file, nil
+		}
+		count++
+	}
+	return "", fmt.Errorf("⚠️ Warning: using default variables")
 }
 
 func GetValue(key string) string {
-	var configFile string
-	for _, file := range ConfigFiles {
-		if _, err := os.Stat(file); err == nil {
-			configFile = file
-			break		
-		} else {
-			log.Printf("Error accessing configuration file %s: %v", file, err)
-		}
-	}
-	err := godotenv.Load(configFile)
+	var configFile, err = getConfigFile()
 	if err != nil {
-		log.Printf("⚠️ Warning: %s, using default variables", err.Error())
+		log.Printf("%s", err.Error())
+		godotenv.Load()
+
+		// Set default values if variables are missing
+		setDefaultEnv("SESSION_KEY", "default-session-key")
+		setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
+		log.Printf("key: %s value: %s, Config File: %s", key, os.Getenv(key), configFile)
+		return os.Getenv(key)
 	}
-	// Set default values if variables are missing
-	setDefaultEnv("SESSION_KEY", "default-session-key")
-	setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
+	godotenv.Load(configFile)
+	log.Printf("key: %s value: %s, Config File: %s", key, os.Getenv(key), configFile)
 	return os.Getenv(key)
 }
 

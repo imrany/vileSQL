@@ -4,7 +4,7 @@
 set -e
 
 DATA_DIR="/var/lib/vilesql"
-CONFIG_DIR="$DATA_DIR"
+CONFIG_FILE="$DATA_DIR/.env"
 SYSTEMD_SERVICE="/etc/systemd/system/vilesql.service"
 USER="vilesql"
 GROUP="vilesql"
@@ -23,7 +23,7 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 # Create directories if missing
-for dir in "$DATA_DIR" "$CONFIG_DIR"; do
+for dir in "$DATA_DIR"; do
     if [[ ! -d "$dir" ]]; then
         log "📁 Creating directory: $dir"
         mkdir -p "$dir"
@@ -33,7 +33,7 @@ done
 
 # Set secure permissions
 chmod 755 "$DATA_DIR"
-chmod 700 "$CONFIG_DIR"
+chmod 755 "$CONFIG_FILE"
 
 # Run database migrations if vilesql is installed
 if command -v vilesql &>/dev/null; then
@@ -116,7 +116,7 @@ log "✅ Post-upgrade script completed successfully!"
 echo ""
 echo "🚀 VileSQL has been successfully upgraded!"
 echo "📁 Data directory: $DATA_DIR"
-echo "⚙️ Configuration file: $CONFIG_DIR/.env"
+echo "⚙️ Configuration file: $CONFIG_FILE"
 echo ""
 echo "🔄 To start the service: sudo systemctl start vilesql"
 echo "📌 To check status: sudo systemctl status vilesql"
