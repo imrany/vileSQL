@@ -72,12 +72,15 @@ Group=vilesql
 WorkingDirectory=/var/lib/vilesql
 ExecStart=/usr/bin/vilesql --host=0.0.0.0 --port=5000
 ExecReload=/bin/kill -USR2 $MAINPID
-Restart=always
+Restart=on-failure
 RestartSec=5
 TimeoutStartSec=30
 TimeoutStopSec=30
 KillMode=mixed
 KillSignal=SIGTERM
+
+# Load environment variables from file
+EnvironmentFile=-/var/lib/vilesql/.env
 
 # Security settings
 NoNewPrivileges=yes
@@ -92,17 +95,15 @@ SystemCallArchitectures=native
 
 # File system permissions
 ReadWritePaths=/var/lib/vilesql
-ReadOnlyPaths=/etc/vilesql
 
 # Resource limits
 LimitNOFILE=65536
 LimitNPROC=4096
 LimitMEMLOCK=64M
 
-# Logging
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=vilesql
+# Logging (redirect to file)
+StandardOutput=append:/var/log/vilesql.log
+StandardError=append:/var/log/vilesql.log
 
 [Install]
 WantedBy=multi-user.target
