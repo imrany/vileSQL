@@ -29,6 +29,7 @@ func GetValue(key string) string {
 		setDefaultEnv("SESSION_KEY", "default-session-key")
 		setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
 	}
+	log.Printf("using key: %s, value: %s", key, os.Getenv(key))
 	return os.Getenv(key)
 }
 
