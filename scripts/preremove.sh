@@ -33,10 +33,21 @@ if systemctl is-enabled --quiet vilesql; then
     systemctl disable vilesql
 fi
 
+# Kill all running VileSQL processes
+log "🛑 Stopping all active VileSQL instances..."
+pkill -u "$USER" || log "⚠️ No active processes found for $USER"
+
+# Ensure processes are fully terminated
+sleep 2
+if pgrep -u "$USER" > /dev/null; then
+    log "❌ Failed to terminate all VileSQL processes! Retrying..."
+    pkill -9 -u "$USER"
+fi
+
 # Remove vilesql user if it exists
 if id "$USER" &>/dev/null; then
     log "👤 Removing VileSQL system user..."
-    userdel -r "$USER"
+    userdel -r "$USER" || log "⚠️ User removal failed—check active processes!"
 fi
 
 log "✅ Pre-removal script completed!"
