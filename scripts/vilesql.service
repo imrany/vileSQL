@@ -20,7 +20,7 @@ KillMode=mixed
 KillSignal=SIGTERM
 
 # Load environment variables from file
-EnvironmentFile=-/etc/vilesql/.env
+EnvironmentFile=-/var/lib/vilesql/.env
 
 # Security settings
 NoNewPrivileges=yes
@@ -35,7 +35,6 @@ SystemCallArchitectures=native
 
 # File system permissions
 ReadWritePaths=/var/lib/vilesql
-ReadOnlyPaths=/etc/vilesql
 
 # Resource limits
 LimitNOFILE=65536

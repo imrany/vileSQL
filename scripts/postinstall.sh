@@ -4,12 +4,12 @@
 set -e
 
 DATA_DIR="/var/lib/vilesql"
-CONFIG_DIR="/etc/vilesql"
+CONFIG_DIR="$DATA_DIR"
 LOG_DIR="/var/log/vilesql"
 LOG_FILE="$LOG_DIR/vilesql.log"
 BIN_PATH="/usr/bin/vilesql"
 SERVICE_PATH="/etc/systemd/system/vilesql.service"
-ENV_FILE="/etc/vilesql/.env"
+ENV_FILE="$DATA_DIR/.env"
 USER="vilesql"
 GROUP="vilesql"
 
