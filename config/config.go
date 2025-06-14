@@ -25,11 +25,10 @@ func GetValue(key string) string {
 	err := godotenv.Load(configFile)
 	if err != nil {
 		log.Printf("⚠️ Warning: %s, using default variables", err.Error())
-		// Set default values if variables are missing
-		setDefaultEnv("SESSION_KEY", "default-session-key")
-		setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
 	}
-	log.Printf("using key: %s, value: %s", key, os.Getenv(key))
+	// Set default values if variables are missing
+	setDefaultEnv("SESSION_KEY", "default-session-key")
+	setDefaultEnv("COOKIE_STORE_KEY", "default-cookie-key")
 	return os.Getenv(key)
 }
 
