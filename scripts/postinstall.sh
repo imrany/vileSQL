@@ -4,9 +4,9 @@
 set -e
 
 DATA_DIR="/var/lib/vilesql"
-CONFIG_DIR="$DATA_DIR"
 LOG_DIR="/var/log/vilesql"
 LOG_FILE="$LOG_DIR/vilesql.log"
+RUNTIME_LOG_FILE="/var/log/vilesql.log"
 BIN_PATH="/usr/bin/vilesql"
 SERVICE_PATH="/etc/systemd/system/vilesql.service"
 ENV_FILE="$DATA_DIR/.env"
@@ -42,7 +42,7 @@ chown "$USER:$GROUP" "$BIN_PATH"
 chmod 755 "$BIN_PATH"
 
 # Create necessary directories with correct ownership
-for dir in "$DATA_DIR" "$CONFIG_DIR" "$LOG_DIR"; do
+for dir in "$DATA_DIR" "$LOG_DIR"; do
     if [[ ! -d "$dir" ]]; then
         log "📁 Creating directory: $dir"
         mkdir -p "$dir" || {
@@ -79,7 +79,6 @@ chmod 755 "$ENV_FILE"
 
 # Set secure permissions for other directories
 chmod 755 "$DATA_DIR"
-chmod 755 "$CONFIG_DIR"
 chmod 755 "$LOG_DIR"
 
 # Install systemd service file (if missing)
@@ -130,5 +129,6 @@ echo "🚀 Next steps:"
 echo "   1️⃣ Edit config: sudo nano $ENV_FILE"
 echo "   2️⃣ Check status: sudo systemctl status vilesql"
 echo "   3️⃣ View logs: sudo tail -f $LOG_FILE"
+echo "   3️⃣ View runtime logs: sudo tail -f $LOG_FILE"
 echo "   4️⃣ Run manually: sudo -u vilesql /usr/bin/vilesql --help"
 echo ""

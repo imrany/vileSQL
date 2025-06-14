@@ -10,7 +10,9 @@ USER="vilesql"
 GROUP="vilesql"
 SERVICE_PATH="/etc/systemd/system/vilesql.service"
 DATA_DIR="/var/lib/vilesql"
-CONFIG_DIR="$DATA_DIR"
+CONFIG_FILE="$DATA_DIR/.env"
+LOG_DIR="/var/log/vilesql"
+LOG_FILE="/var/log/vilesql.log"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
@@ -68,12 +70,14 @@ fi
 # Offer to remove data directories
 echo "📂 Data directories found:"
 echo "  - $DATA_DIR"
-echo "  - $CONFIG_DIR"
+echo "  - $CONFIG_FILE"
+echo "  - $LOG_DIR"
+echo "  - $LOG_FILE"
 read -p "Remove all data directories? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     log "🗑️ Removing data directories..."
-    sudo rm -rf "$DATA_DIR" "$CONFIG_DIR"
+    sudo rm -rf "$DATA_DIR" "$CONFIG_FILE" "$LOG_DIR" "$LOG_FILE"
     log "✅ Data directories removed."
 else
     log "📂 Data directories preserved."

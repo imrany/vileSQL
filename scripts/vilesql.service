@@ -13,7 +13,7 @@ WorkingDirectory=/var/lib/vilesql
 
 # Load environment variables before executing VileSQL
 EnvironmentFile=/var/lib/vilesql/.env
-ExecStart=/bin/bash -c 'source /var/lib/vilesql/.env && exec /usr/bin/vilesql --host=$HOST --port=5000'
+ExecStart=/bin/bash -c 'source /var/lib/vilesql/.env && exec /usr/bin/vilesql --host=$HOST --port=5000 --verbose'
 ExecReload=/bin/kill -USR2 $MAINPID
 
 Restart=always

@@ -5,9 +5,12 @@ set -e
 
 SYSTEMD_SERVICE="/etc/systemd/system/vilesql.service"
 DATA_DIR="/var/lib/vilesql"
-CONFIG_DIR="$DATA_DIR"
+CONFIG_FILE="$DATA_DIR/.env"
 USER="vilesql"
 GROUP="vilesql"
+LOG_DIR="/var/log/vilesql"
+LOG_FILE="$LOG_DIR/vilesql.log"
+RUNTIME_LOG_FILE="/var/log/vilesql.log"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
@@ -45,5 +48,5 @@ echo ""
 echo "🚀 VileSQL has been removed!"
 echo "📌 Note: Data directories were preserved."
 echo "To **completely remove** all data, run:"
-echo "  sudo rm -rf $DATA_DIR $CONFIG_DIR"
+echo "  sudo rm -rf $DATA_DIR $CONFIG_FILE $LOG_DIR $RUNTIME_LOG_FILE"
 echo ""
