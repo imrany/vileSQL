@@ -77,7 +77,7 @@ read -p "Remove all data directories? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     log "🗑️ Removing data directories..."
-    sudo rm -rf "$DATA_DIR" "$CONFIG_FILE" "$LOG_DIR" "$LOG_FILE"
+    sudo rm -rf "$DATA_DIR" "$LOG_DIR" "$LOG_FILE"
     log "✅ Data directories removed."
 else
     log "📂 Data directories preserved."
