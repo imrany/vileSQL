@@ -1,718 +1,690 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }}</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=7">
-    <meta name="description" content="Host and manage your SQLite databases in the cloud with unparalleled speed and simplicity">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="keywords" content="SQLite, SQL, databases, cloud, hosting, edge computing">
-    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="apple-touch-icon" href="/static/favicon.png">
-   
+    <title>VileSQL - Cloud Database Management Platform</title>
+    <style>
+        @font-face {
+            font-family: MozillaText;
+            src: url(/static/fonts/MozillaText-Medium.woff);
+            font-weight: 100 900;
+        }
+
+        @font-face {
+            font-family: MozillaHeadline;
+            src: url(/static/fonts/MozillaHeadline-Regular.woff);
+            font-weight: 100 900;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* CSS Variables for Theme System */
+        :root {
+            --color-bg: #1a1a1a;
+            --color-card: #2d2d2d;
+            --color-header: #333;
+            --color-sidebar: #2d2d2d;
+            --color-content: #1a1a1a;
+            --color-table: #2d2d2d;
+            --color-table-alt: #252525;
+            --color-table-header: #404040;
+            --color-table-border: #444;
+            --color-primary: #0078d4;
+            --color-secondary: #5a5a5a;
+            --color-danger: #d83b01;
+            --color-success: #107c10;
+            --color-text: #e5e5e5;
+            --color-muted: #888;
+            --color-input-bg: #404040;
+            --color-input-border: #555;
+            --color-alert-success-bg: #dff6dd;
+            --color-alert-success-text: #0f5132;
+            --color-alert-success-border: #badbcc;
+            --color-alert-error-bg: #f8d7da;
+            --color-alert-error-text: #721c24;
+            --color-alert-error-border: #f5c2c7;
+            --color-overlay: rgba(0, 0, 0, 0.7);
+            --color-overlay-secondary: var(--color-bg);
+            --MozillaText: MozillaText;
+            --MozillaHeadline: MozillaHeadline;
+            --font-size-base: 15px;
+        }
+
+        [data-theme="light"] {
+            --color-bg: #f8fafc;
+            --color-card: #fff;
+            --color-header: #f1f5f9;
+            --color-sidebar: #f3f4f6;
+            --color-content: #f8fafc;
+            --color-table: #fff;
+            --color-table-alt: #f3f4f6;
+            --color-table-header: #f1f5f9;
+            --color-table-border: #e5e7eb;
+            --color-primary: #2563eb;
+            --color-secondary: #64748b;
+            --color-danger: #ef4444;
+            --color-success: #22c55e;
+            --color-text: #222;
+            --color-muted: #64748b;
+            --color-input-bg: #f3f4f6;
+            --color-input-border: #cbd5e1;
+            --color-alert-success-bg: #d1fae5;
+            --color-alert-success-text: #065f46;
+            --color-alert-success-border: #6ee7b7;
+            --color-alert-error-bg: #fee2e2;
+            --color-alert-error-text: #991b1b;
+            --color-alert-error-border: #fca5a5;
+            --color-overlay: rgba(0, 0, 0, 0.5);
+            --color-overlay-secondary: var(--color-bg);
+            --MozillaText: MozillaText;
+            --MozillaHeadline: MozillaHeadline;
+            --font-size-base: 15px;
+        }
+
+        body {
+            background: var(--color-bg);
+            min-height: 100vh;
+            color: var(--color-text);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-family: var(--MozillaText);
+            font-size: var(--font-size-base);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: var(--MozillaHeadline);
+        }
+
+        .no-scrollbar {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar-thumb {
+            background-color: transparent;
+        }
+
+        .no-scrollbar::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        .no-scrollbar::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--color-header, rgba(15, 15, 35, 0.95));
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--color-primary, rgba(99, 102, 241, 0.2));
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: "🗄️";
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--color-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-primary);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px var(--color-primary, rgba(99, 102, 241, 0.3));
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 0 6rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--color-primary), #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 10px var(--color-primary, rgba(99, 102, 241, 0.3)));
+            }
+
+            to {
+                filter: drop-shadow(0 0 20px var(--color-primary, rgba(99, 102, 241, 0.6)));
+            }
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--color-muted);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 15px var(--color-primary, rgba(99, 102, 241, 0.3));
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px var(--color-primary, rgba(99, 102, 241, 0.4));
+        }
+
+        .btn-secondary {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary, rgba(99, 102, 241, 0.3));
+        }
+
+        .btn-secondary:hover {
+            background: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+            background: var(--color-card, rgba(15, 15, 35, 0.5));
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: var(--color-text);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .feature-card {
+            background: var(--color-card, rgba(30, 41, 59, 0.5));
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--color-primary, rgba(99, 102, 241, 0.2));
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-primary, rgba(99, 102, 241, 0.5));
+            box-shadow: 0 10px 30px var(--color-primary, rgba(99, 102, 241, 0.2));
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-text);
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 6rem 0;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .pricing-card {
+            background: var(--color-card, rgba(30, 41, 59, 0.5));
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            border: 1px solid var(--color-primary, rgba(99, 102, 241, 0.2));
+            position: relative;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px var(--color-primary, rgba(99, 102, 241, 0.2));
+        }
+
+        .pricing-card.popular {
+            border-color: var(--color-primary);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--color-text);
+        }
+
+        .plan-description {
+            color: var(--color-muted);
+            margin-bottom: 2rem;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price .currency {
+            font-size: 1.5rem;
+        }
+
+        .plan-period {
+            color: var(--color-muted);
+            margin-bottom: 2rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .plan-features li::before {
+            content: "✓";
+            color: var(--color-success);
+            font-weight: bold;
+        }
+
+        .plan-btn {
+            width: 100%;
+            text-align: center;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .plan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px var(--color-primary, rgba(99, 102, 241, 0.3));
+        }
+
+        .secondary-btn {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary, rgba(99, 102, 241, 0.3));
+        }
+
+        .secondary-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--color-header, rgba(15, 15, 35, 0.8));
+            padding: 3rem 0;
+            text-align: center;
+            border-top: 1px solid var(--color-primary, rgba(99, 102, 241, 0.2));
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
 </head>
-<body class="antialiased text-secondary bg-gray-50">
-    <header class="sticky top-0 bg-white shadow-sm z-50" x-data="{ mobileMenuOpen: false }">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center">
-                        <h1 class="text-primary text-2xl font-bold">VileSQL</h1>
-                    </div>
-                    <nav class="hidden md:ml-8 md:flex md:space-x-8">
-                        <a href="#features" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-dark hover:text-primary border-b-2 border-transparent hover:border-primary">Features</a>
-                        <a href="#how-it-works" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-dark hover:text-primary border-b-2 border-transparent hover:border-primary">How It Works</a>
-                        <a href="#pricing" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-dark hover:text-primary border-b-2 border-transparent hover:border-primary">Pricing</a>
-                        <a href="#manifesto" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-dark hover:text-primary border-b-2 border-transparent hover:border-primary">Manifesto</a>
-                        <a href="#docs" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-dark hover:text-primary border-b-2 border-transparent hover:border-primary">Documentation</a>
-                    </nav>
-                </div>
-                <div class="hidden md:flex md:items-center md:space-x-4">
-                    <a href="#login" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        Log in
-                    </a>
-                    <a href="#signup" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        Sign up
-                    </a>
-                </div>
-                <div class="-mr-2 flex items-center md:hidden">
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-secondary-dark hover:text-primary hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary">
-                        <span class="sr-only">Open main menu</span>
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="/" class="logo">VileSQL</a>
+                <div class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#pricing">Pricing</a>
+                    <a href="#contact">Contact</a>
+                    <a href="/vpanel" class="login-btn">Login</a>
                 </div>
             </div>
         </div>
+    </nav>
 
-        <div x-show="mobileMenuOpen" @click.away="mobileMenuOpen = false" class="md:hidden">
-            <div class="pt-2 pb-3 space-y-1">
-                <a href="#features" class="block pl-3 pr-4 py-2 border-l-4 border-transparent hover:bg-gray-50 hover:border-primary text-base font-medium text-secondary-dark">Features</a>
-                <a href="#how-it-works" class="block pl-3 pr-4 py-2 border-l-4 border-transparent hover:bg-gray-50 hover:border-primary text-base font-medium text-secondary-dark">How It Works</a>
-                <a href="#pricing" class="block pl-3 pr-4 py-2 border-l-4 border-transparent hover:bg-gray-50 hover:border-primary text-base font-medium text-secondary-dark">Pricing</a>
-                <a href="#manifesto" class="block pl-3 pr-4 py-2 border-l-4 border-transparent hover:bg-gray-50 hover:border-primary text-base font-medium text-secondary-dark">Manifesto</a>
-                <a href="#docs" class="block pl-3 pr-4 py-2 border-l-4 border-transparent hover:bg-gray-50 hover:border-primary text-base font-medium text-secondary-dark">Documentation</a>
-            </div>
-            <div class="pt-4 pb-3 border-t border-gray-200">
-                <div class="mt-3 space-y-1">
-                    <a href="#login" class="block px-4 py-2 text-base font-medium text-secondary-dark hover:text-primary hover:bg-gray-100">
-                        Log in
-                    </a>
-                    <a href="#signup" class="block px-4 py-2 text-base font-medium text-white bg-primary hover:bg-primary-dark">
-                        Sign up
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main>
-        <!-- Hero Section -->
-        <div class="relative bg-black overflow-hidden">
-            <div class="max-w-7xl mx-auto">
-                <div class="relative text-white z-10 pb-8 sm:pb-16 md:pb-20 lg:w-full lg:pb-28 xl:pb-32">
-                    <div class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-                        <div class="sm:text-center lg:text-left">
-                            <h1 class="text-4xl tracking-tight flex flex-col font-extrabold text-secondary sm:text-6xl md:text-7xl">
-                                <span class="block xl:inline">SQLite databases</span>
-                                <span class="block text-primary xl:inline"> for the modern web</span>
-                            </h1>
-                            <p class="mt-3 text-base text-gray-100 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                                Powerful, edge-ready SQLite databases that scale with your application. Deploy globally in seconds with unmatched performance and simplicity.
-                            </p>
-                            <div class="mt-5 sm:mt-8 sm:flex justify-start">
-                                <a href="#signup" class="w-full underline flex items-center text-base font-bold text-white md:text-3xl">
-                                    Get started
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="lg:absolute lg:pl-8 lg:inset-y-0 lg:right-0 lg:w-1/2 bg-black hidden lg:block">
-                <div class="code-block mx-8 my-12 text-sm">
-                    <pre class="text-green-500">
--- VileSQL: SQLite made simple
-CREATE TABLE users (
-  id INTEGER PRIMARY KEY,
-  username TEXT UNIQUE,
-  email TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-SELECT * FROM users;
-
--- Blazing fast queries at the edge
-SELECT
-  COUNT(*) as total_users,
-  strftime('%Y-%m', created_at) as month
-FROM users
-GROUP BY month
-ORDER BY month DESC;
-                    </pre>
-                </div>
-            </div>
-        </div>
-
-        <!-- Features Section -->
-        <div id="features" class="py-12 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="lg:text-center">
-                    <h2 class="text-base text-primary font-semibold tracking-wide uppercase">Features</h2>
-                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-secondary sm:text-4xl">
-                        Everything you need for modern database development
-                    </p>
-                    <p class="mt-4 max-w-2xl text-xl text-gray-700 lg:mx-auto">
-                        VileSQL combines the simplicity of SQLite with powerful cloud infrastructure to deliver an unmatched developer experience.
-                    </p>
-                </div>
-
-                <div class="mt-10">
-                    <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-                        <div class="relative">
-                            <dt>
-                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                </div>
-                                <p class="ml-16 text-lg leading-6 font-medium text-secondary-dark">Global Edge Network</p>
-                            </dt>
-                            <dd class="mt-2 ml-16 text-base text-gray-600">
-                                Deploy your SQLite databases to our global edge network for unmatched performance and reliability. Data is served from the closest location to your users.
-                            </dd>
-                        </div>
-
-                        <div class="relative">
-                            <dt>
-                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                                    </svg>
-                                </div>
-                                <p class="ml-16 text-lg leading-6 font-medium text-secondary-dark">Seamless Replication</p>
-                            </dt>
-                            <dd class="mt-2 ml-16 text-base text-gray-600">
-                                Automatic replication across regions with consistent data sync. Create read replicas with zero configuration for high availability.
-                            </dd>
-                        </div>
-
-                        <div class="relative">
-                            <dt>
-                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                </div>
-                                <p class="ml-16 text-lg leading-6 font-medium text-secondary-dark">Enterprise-Grade Security</p>
-                            </dt>
-                            <dd class="mt-2 ml-16 text-base text-gray-600">
-                                Data encrypted at rest and in transit. Fine-grained access controls, audit logs, and automatic backups to keep your data safe.
-                            </dd>
-                        </div>
-
-                        <div class="relative">
-                            <dt>
-                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                    </svg>
-                                </div>
-                                <p class="ml-16 text-lg leading-6 font-medium text-secondary-dark">Developer-Friendly API</p>
-                            </dt>
-                            <dd class="mt-2 ml-16 text-base text-gray-500">
-                                RESTful API and client libraries for popular languages. Use SQL you already know with no proprietary query language to learn.
-                            </dd>
-                        </div>
-                    </dl>
-                </div>
-            </div>
-        </div>
-
-         <!-- Pricing Section -->
-        <div id="pricing" class="bg-black py-16" x-data="{ plan: 'monthly' }">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="lg:text-center">
-                    <h2 class="text-base text-white font-semibold tracking-wide uppercase">Pricing</h2>
-                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-100 sm:text-4xl">
-                        Simple, transparent pricing
-                    </p>
-                    <p class="mt-4 max-w-2xl text-xl text-gray-100 lg:mx-auto">
-                        Only pay for what you use. No hidden fees, no surprises.
-                    </p>
-                </div>
-
-                <div class="mt-8 flex justify-center">
-                    <div class="relative bg-black text-white p-0.5 rounded-lg inline-flex">
-                        <button @click="plan = 'monthly'" :class="plan === 'monthly' ? 'bg-white text-black' : ''" class="relative py-2 px-6 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary">
-                            Monthly
-                        </button>
-                        <button @click="plan = 'annual'" :class="plan === 'annual' ? 'bg-white text-black' : ''" class="relative py-2 px-6 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary">
-                            Annual (Save 20%)
-                        </button>
-                    </div>
-                </div>
-
-                <div class="mt-12 space-y-12 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-x-8">
-                    <!-- Starter Plan -->
-                    <div class="relative bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col">
-                        <div class="bg-purple-500 text-white my-2 mx-2 rounded-lg p-2">
-                            <h1 class="font-bold">Recommended</h1>
-                        </div>
-                        <div class="flex-1 px-8">
-                            <h3 class="text-xl font-semibold text-secondary-dark">Starter</h3>
-                            <p class="mt-4 flex items-baseline text-secondary">
-                                <span class="text-4xl font-extrabold tracking-tight" x-text="plan === 'monthly' ? 'KES 100' : 'KES 800'"></span>
-                                <span class="ml-1 text-xl font-semibold" x-text="plan === 'monthly' ? '/month' : '/year'"></span>
-                            </p>
-                            <p class="mt-2 text-gray-500">Perfect for personal projects and small applications.</p>
-
-                            <ul class="mt-6 space-y-4">
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">Up to 3 databases</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">150MB storage per database</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">100K queries/month</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">1 edge locations</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">Monthly backups</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <a href="#signup" class="m-8 mt-8 block bg-black py-3 px-6 border border-transparent rounded-md text-center font-medium text-white hover:bg-black">Get started</a>
-                    </div>
-
-                    <!-- Pro Plan -->
-                    <div class="relative p-8 bg-white border border-primary rounded-2xl shadow-sm flex flex-col">
-                        <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-secondary-dark">Pro</h3>
-                            <p class="mt-4 flex items-baseline text-secondary">
-                                <span class="text-4xl font-extrabold tracking-tight" x-text="plan === 'monthly' ? 'KES 1000' : 'KES 8000'"></span>
-                                <span class="ml-1 text-xl font-semibold" x-text="plan === 'monthly' ? '/month' : '/year'"></span>
-                            </p>
-                            <p class="mt-2 text-gray-500">Everything you need for growing applications.</p>
-
-                            <ul class="mt-6 space-y-4">
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">Up to 10 databases</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">2GB storage per database</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">1M queries/month</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">5 edge locations</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">Daily backups</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <a href="#signup" class="mt-8 block bg-black py-3 px-6 border border-transparent rounded-md text-center font-medium text-white hover:bg-black">Get started</a>
-                    </div>
-
-                    <!-- Enterprise Plan -->
-                    <div class="relative p-8 bg-white border border-primary rounded-2xl shadow-sm flex flex-col">
-                        <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-secondary-dark">Enterprise</h3>
-                            <p class="mt-4 flex items-baseline text-secondary">
-                                <span class="text-4xl font-extrabold tracking-tight" x-text="plan === 'monthly' ? 'KES 3000' : 'KES 28000'"></span>
-                                <span class="ml-1 text-xl font-semibold" x-text="plan === 'monthly' ? '/month' : '/year'"></span>
-                            </p>
-                            <p class="mt-2 text-gray-500">Everything you need to grow your business.</p>
-
-                            <ul class="mt-6 space-y-4">
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">Up to 20000 databases</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">20GB storage per database</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">10M queries/month</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">All edge locations</span>
-                                </li>
-                                <li class="flex">
-                                    <svg class="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-3 text-gray-500">Hourly backups</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <a href="#signup" class="mt-8 block bg-black py-3 px-6 border border-transparent rounded-md text-center font-medium text-white hover:bg-black">Get started</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- How It Works Section -->
-        <div id="how-it-works" class="py-16 bg-pink-50 overflow-hidden">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="lg:text-center">
-                    <h2 class="text-base text-primary font-semibold tracking-wide uppercase">How It Works</h2>
-                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-secondary sm:text-4xl">
-                        Simple to start, powerful to scale
-                    </p>
-                    <p class="mt-4 max-w-2xl text-xl text-gray-600 lg:mx-auto">
-                        Deploy SQLite databases to the edge in three simple steps, no complex setup required.
-                    </p>
-                </div>
-
-                <div class="mt-16">
-                    <div class="lg:grid lg:grid-cols-3 lg:gap-8">
-                        <div>
-                            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
-                                <span class="text-lg font-bold">1</span>
-                            </div>
-                            <div class="mt-5">
-                                <h3 class="text-lg leading-6 font-medium text-secondary-dark">Create your database</h3>
-                                <p class="mt-2 text-base text-gray-600">
-                                    Use our dashboard or API to create a new SQLite database. Import existing schema or start fresh.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="mt-10 lg:mt-0">
-                            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
-                                <span class="text-lg font-bold">2</span>
-                            </div>
-                            <div class="mt-5">
-                                <h3 class="text-lg leading-6 font-medium text-secondary-dark">Connect your application</h3>
-                                <p class="mt-2 text-base text-gray-600">
-                                    Get your connection string and API key. Use our client libraries or connect via standard SQL.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="mt-10 lg:mt-0">
-                            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
-                                <span class="text-lg font-bold">3</span>
-                            </div>
-                            <div class="mt-5">
-                                <h3 class="text-lg leading-6 font-medium text-secondary-dark">Deploy globally</h3>
-                                <p class="mt-2 text-base text-gray-600">
-                                    Automatically deploy to our global edge network. Scale without changing your code.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Manifesto Section -->
-        <div id="manifesto" class="bg-black py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="lg:text-center">
-                    <h2 class="text-base text-primary-light font-semibold tracking-wide uppercase">Our Manifesto</h2>
-                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-white sm:text-4xl">
-                        Databases for people, not profit
-                    </p>
-                    <p class="mt-4 max-w-2xl text-xl text-gray-300 lg:mx-auto">
-                        We believe in putting the power of data back in the hands of developers.
-                    </p>
-                </div>
-
-                <div class="mt-10">
-                    <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-                        <div class="relative">
-                            <h3 class="text-lg leading-6 font-medium text-white">Simplicity Over Complexity</h3>
-                            <p class="mt-2 text-base text-gray-300">
-                                We believe that databases should be simple to set up, use, and maintain. SQLite embodies this philosophy, and we've built SQLWave to preserve this simplicity while adding cloud-scale capabilities.
-                            </p>
-                        </div>
-
-                        <div class="relative">
-                            <h3 class="text-lg leading-6 font-medium text-white">Data Sovereignty</h3>
-                            <p class="mt-2 text-base text-gray-300">
-                                Your data belongs to you, not us. We provide the tools to manage, store, and access your data efficiently, but you maintain complete ownership and control at all times.
-                            </p>
-                        </div>
-
-                        <div class="relative">
-                            <h3 class="text-lg leading-6 font-medium text-white">Transparent and Predictable Pricing</h3>
-                            <p class="mt-2 text-base text-gray-300">
-                                No surprise bills, no hidden fees. We believe in transparent pricing that scales with your usage, so you can build with confidence knowing your costs will remain predictable.
-                            </p>
-                        </div>
-
-                        <div class="relative">
-                            <h3 class="text-lg leading-6 font-medium text-white">Open Standards and Interoperability</h3>
-                            <p class="mt-2 text-base text-gray-300">
-                                We embrace open standards and ensure your databases remain portable. No vendor lock-in means you can always export your data and schema in standard formats.
-                            </p>
-                        </div>
-
-                        <div class="relative">
-                            <h3 class="text-lg leading-6 font-medium text-white">Speed as a Feature</h3>
-                            <p class="mt-2 text-base text-gray-300">
-                                We believe that database performance directly impacts user experience. Our edge network ensures your queries are executed as close to your users as possible, minimizing latency.
-                            </p>
-                        </div>
-
-                        <div class="relative">
-                            <h3 class="text-lg leading-6 font-medium text-white">Developer Experience First</h3>
-                            <p class="mt-2 text-base text-gray-300">
-                                Every feature, API, and tool we build starts with the developer experience. We optimize for joy, productivity, and intuitive interfaces at every step.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-         <!-- Why vileSQL Section -->
-        <div id="why-vilesql" class="bg-white py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="lg:text-center">
-                    <h2 class="text-base text-primary font-semibold tracking-wide uppercase">Why VileSQL</h2>
-                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-secondary sm:text-4xl">
-                        The right database for modern applications
-                    </p>
-                </div>
-
-                <div class="mt-12" x-data="{ openTab: 1 }">
-                    <div class="border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
-                            <button @click="openTab = 1" :class="openTab === 1 ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                                For Startups
-                            </button>
-                            <button @click="openTab = 2" :class="openTab === 2 ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                                For Enterprise
-                            </button>
-                            <button @click="openTab = 3" :class="openTab === 3 ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                                For Developers
-                            </button>
-                        </nav>
-                    </div>
-
-                    <div class="mt-8">
-                        <!-- For Startups -->
-                        <div x-show="openTab === 1" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 class="text-lg font-medium text-secondary-dark">Move fast without breaking things</h3>
-                                <p class="mt-2 text-gray-500">
-                                    SQLWave gives you the database reliability you need with the speed and flexibility startups require. No database administration overhead means your small team can focus on building features, not maintaining infrastructure.
-                                </p>
-                                <ul class="mt-4 space-y-2">
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">Low upfront costs with predictable scaling</span>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">Quick setup, instant deployment</span>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">Scales with your growth without migration pain</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="bg-gray-50 p-6 rounded-lg">
-                                <blockquote class="text-gray-500 italic">
-                                    "SQLWave helped us launch our MVP in days instead of weeks. As we've grown to thousands of users, it's scaled seamlessly without requiring any database expertise on our team."
-                                </blockquote>
-                                <div class="mt-4 flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-gray-300"></div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-secondary-dark">Sarah Chen</p>
-                                        <p class="text-sm text-gray-500">CTO, FutureApp</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- For Enterprise -->
-                        <div x-show="openTab === 2" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 class="text-lg font-medium text-secondary-dark">Enterprise-grade without enterprise complexity</h3>
-                                <p class="mt-2 text-gray-500">
-                                    SQLWave delivers the security, compliance, and reliability your enterprise demands, without the complexity of traditional database solutions. Deploy globally with consistent performance and governance.
-                                </p>
-                                <ul class="mt-4 space-y-2">
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">SOC 2, GDPR, and HIPAA compliance</span>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">Detailed audit logs and access controls</span>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">Dedicated infrastructure and custom SLAs</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="bg-gray-50 p-6 rounded-lg">
-                                <blockquote class="text-gray-500 italic">
-                                    "We migrated 200+ legacy databases to SQLWave and reduced our operational overhead by 70% while improving global performance for our customers."
-                                </blockquote>
-                                <div class="mt-4 flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-gray-300"></div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-secondary-dark">Michael Rodriguez</p>
-                                        <p class="text-sm text-gray-500">VP of Engineering, Global Corp</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- For Developers -->
-                        <div x-show="openTab === 3" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 class="text-lg font-medium text-secondary-dark">The database that works with you, not against you</h3>
-                                <p class="mt-2 text-gray-500">
-                                    SQLWave embraces the tools and workflows developers love. Use familiar SQL syntax, integrate with your existing stack, and deploy with modern CI/CD pipelines.
-                                </p>
-                                <ul class="mt-4 space-y-2">
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">RESTful API and SDKs for popular languages</span>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">Seamless GitHub and GitLab integration</span>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span class="ml-2 text-gray-500">Local development to production parity</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="bg-gray-50 p-6 rounded-lg">
-                                <blockquote class="text-gray-500 italic">
-                                    "SQLWave feels like it was designed by developers who actually understand our workflow. It's the first database service I've used that doesn't get in the way of shipping code."
-                                </blockquote>
-                                <div class="mt-4 flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-gray-300"></div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-secondary-dark">Alex Kowalski</p>
-                                        <p class="text-sm text-gray-500">Senior Developer, TechStartup</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CTA Section -->
-        <div class="bg-pink-50">
-            <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-                <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                    <span class="block">Ready to simplify your database?</span>
-                    <span class="block opacity-80">Start your free trial today.</span>
-                </h2>
-                <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-                    <div class="inline-flex rounded-md shadow">
-                        <a href="#signup" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md bg-white hover:bg-gray-50">
-                            Get started
-                        </a>
-                    </div>
-                    <div class="ml-3 inline-flex rounded-md shadow">
-                        <a href="#docs" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-black hover:bg-black">
-                            Learn more
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-    <footer class="bg-black">
-        <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
-            <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
-                <div class="px-5 py-2">
-                    <a href="#features" class="text-base text-gray-500 hover:text-primary">
-                        Features
-                    </a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#pricing" class="text-base text-gray-500 hover:text-primary">
-                        Pricing
-                    </a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#docs" class="text-base text-gray-500 hover:text-primary">
-                        Documentation
-                    </a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#blog" class="text-base text-gray-500 hover:text-primary">
-                        Blog
-                    </a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#about" class="text-base text-gray-500 hover:text-primary">
-                        About Us
-                    </a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#contact" class="text-base text-gray-500 hover:text-primary">
-                        Contact
-                    </a>
-                </div>
-            </nav>
-            <div class="mt-8 flex justify-center space-x-6">
-                <a href="#" class="text-gray-400 hover:text-primary">
-                    <span class="sr-only">Twitter</span>
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                    </svg>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>The Future of Database Management</h1>
+            <p>Powerful, scalable, and intuitive cloud database platform designed for developers, hobbyists, and
+                enterprises. Build faster, scale smarter.</p>
+            <div class="cta-buttons">
+                <a href="#pricing" class="btn btn-primary">
+                    🚀 Get Started Free
                 </a>
-                <a href="#" class="text-gray-400 hover:text-primary">
-                    <span class="sr-only">GitHub</span>
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
-                    </svg>
-                </a>
-                <a href="#" class="text-gray-400 hover:text-primary">
-                    <span class="sr-only">LinkedIn</span>
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd" />
-                    </svg>
+                <a href="#features" class="btn btn-secondary">
+                    📖 Learn More
                 </a>
             </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose VileSQL?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Optimized query engine delivers results in milliseconds. Built for performance at scale.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Enterprise Security</h3>
+                    <p>Bank-grade encryption, role-based access control, and comprehensive audit logs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Global Scale</h3>
+                    <p>Deploy across multiple regions with automatic failover and data replication.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <h3>Developer Friendly</h3>
+                    <p>REST API, SDKs for popular languages, and comprehensive documentation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Smart Analytics</h3>
+                    <p>Built-in analytics dashboard with real-time monitoring and insights.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Auto Backup</h3>
+                    <p>Automated backups with point-in-time recovery. Never lose your data.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2 class="section-title">Choose Your Plan</h2>
+            <div class="pricing-grid">
+                <!-- Hobbyist Plan -->
+                <div class="pricing-card">
+                    <h3 class="plan-name">Hobbyist</h3>
+                    <p class="plan-description">Perfect for personal projects and learning</p>
+                    <div class="plan-price">
+                        <span class="currency">KSh</span> 0
+                    </div>
+                    <p class="plan-period">Forever free</p>
+                    <ul class="plan-features">
+                        <li>1 Database</li>
+                        <li>100MB Storage</li>
+                        <li>1,000 API calls/month</li>
+                        <li>Community support</li>
+                        <li>Basic analytics</li>
+                    </ul>
+                    <a href="#" class="plan-btn secondary-btn">Start Free</a>
+                </div>
+
+                <!-- Developer Plan -->
+                <div class="pricing-card popular">
+                    <h3 class="plan-name">Developer</h3>
+                    <p class="plan-description">Ideal for growing applications and startups</p>
+                    <div class="plan-price">
+                        <span class="currency">KSh</span> 2,500
+                    </div>
+                    <p class="plan-period">per month</p>
+                    <ul class="plan-features">
+                        <li>5 Databases</li>
+                        <li>10GB Storage</li>
+                        <li>100,000 API calls/month</li>
+                        <li>Email support</li>
+                        <li>Advanced analytics</li>
+                        <li>Daily backups</li>
+                        <li>99.9% SLA</li>
+                    </ul>
+                    <a href="#" class="plan-btn">Choose Developer</a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="pricing-card">
+                    <h3 class="plan-name">Enterprise</h3>
+                    <p class="plan-description">For large-scale applications and teams</p>
+                    <div class="plan-price">
+                        <span class="currency">KSh</span> 15,000
+                    </div>
+                    <p class="plan-period">per month</p>
+                    <ul class="plan-features">
+                        <li>Unlimited Databases</li>
+                        <li>500GB Storage</li>
+                        <li>Unlimited API calls</li>
+                        <li>24/7 Priority support</li>
+                        <li>Custom analytics</li>
+                        <li>Real-time backups</li>
+                        <li>99.99% SLA</li>
+                        <li>Dedicated account manager</li>
+                        <li>Custom integrations</li>
+                    </ul>
+                    <a href="#" class="plan-btn">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <div class="logo" style="justify-content: center; margin-bottom: 1rem;">VileSQL</div>
+            <p>&copy; 2025 VileSQL. Built with ❤️ for developers worldwide.</p>
+            <p style="margin-top: 1rem; color: #64748b;">
+                Contact us: hello@vilesql.com | +254 700 123 456
+            </p>
         </div>
     </footer>
-    <script src="/static/tailwindcss.js"></script>
-    <script src="/static/alpine.js"></script>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to navigation
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.style.background = 'rgba(15, 15, 35, 0.98)';
+            } else {
+                nav.style.background = 'rgba(15, 15, 35, 0.95)';
+            }
+        });
+
+        // Animate pricing cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards
+        document.querySelectorAll('.feature-card, .pricing-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
 </body>
+
 </html>
-                                    

@@ -205,7 +205,7 @@ func startServer(serverAddr string) {
 		r.Use(middleware.LoggingMiddleware)
 	}
 	
-	r.HandleFunc("/", controlPanel).Methods("GET")
+	r.HandleFunc("/", vilesqlPanel).Methods("GET")
 	r.HandleFunc("/welcome", welcomePage).Methods("GET")
 	router.SetupRoutes(r)
 
@@ -240,7 +240,7 @@ func startServer(serverAddr string) {
 }
 
 func welcomePage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFS(templateFolder, "templates/cpanel2.html")
+	tmpl, err := template.ParseFS(templateFolder, "templates/welcome.html")
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 		if verboseMode {
@@ -261,7 +261,7 @@ func welcomePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func controlPanel(w http.ResponseWriter, r *http.Request) {
+func vilesqlPanel(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFS(templateFolder, "templates/index.html")
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)

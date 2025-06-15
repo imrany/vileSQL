@@ -611,20 +611,26 @@
                         <div x-show="tab==='editType'">
                             <h4 style="margin-bottom: 8px;">Add New Column</h4>
                             <form
-                                @submit.prevent="addColumn(newColumnName, newColumnType); newColumnName=''; newColumnType=''; showColumnInfo=false;">
+                                @submit.prevent="addColumn(newColumnName.replace(/\s+/g, '_'), newColumnType, newColumnConstraint); newColumnName=''; newColumnType=''; newColumnConstraint = ''; showColumnInfo=false;">
                                 <div class="form-group flex items-center gap-2">
-                                    <input type="text" class="form-control w-1/2" placeholder="Column Name"
+                                    <input type="text" class="form-control w-1/4" placeholder="Column Name"
                                         x-model="newColumnName" required />
-                                    <select class="form-control w-1/2" x-model="newColumnType" required>
-                                        <option value="" disabled selected>Select Type</option>
-                                        <option value="INTEGER NOT NULL DEFAULT 0">INTEGER</option>
-                                        <option value="TEXT NOT NULL DEFAULT ''">TEXT</option>
-                                        <option value="REAL NOT NULL DEFAULT 0.0">REAL</option>
-                                        <option value="BLOB NOT NULL">BLOB</option>
-                                        <option value="NUMERIC NOT NULL DEFAULT 0">NUMERIC</option>
-                                        <option value="BOOLEAN NOT NULL DEFAULT 0">BOOLEAN</option>
-                                        <option value="DATE NOT NULL DEFAULT '1970-01-01'">DATE</option>
-                                        <option value="DATETIME NOT NULL DEFAULT '1970-01-01 00:00:00'">DATETIME</option>
+                                    <select class="form-control w-1/4" x-model="newColumnType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="INTEGER DEFAULT 0">INTEGER</option>
+                                        <option value="TEXT DEFAULT ''">TEXT</option>
+                                        <option value="REAL DEFAULT 0.0">REAL</option>
+                                        <option value="BLOB">BLOB</option>
+                                        <option value="NUMERIC">NUMERIC</option>
+                                        <option value="BOOLEAN">BOOLEAN</option>
+                                        <option value="DATE">DATE</option>
+                                        <option value="DATETIME">DATETIME</option>
+                                    </select>
+                                    <select class="form-control w-1/4" x-model="newColumnConstraint">
+                                        <option value="">No Constraint</option>
+                                        <option value="PRIMARY KEY">PRIMARY KEY</option>
+                                        <option value="UNIQUE">UNIQUE</option>
+                                        <option value="NOT NULL">NOT NULL</option>
                                     </select>
                                     <button type="submit" class="btn btn-primary btn-sm"
                                         :disabled="!newColumnName || !newColumnType">Add</button>
@@ -1054,13 +1060,83 @@
                                 placeholder="Enter table name">
                         </div>
                         <div class="form-group">
-                            <label>Columns (SQL format)</label>
-                            <textarea class="form-control" x-model="newTableForm.columns" required
+                            <!-- <label>Columns (SQL format)</label> -->
+                            <!-- <textarea class="form-control" x-model="newTableForm.columns" required
                                 placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE"
-                                rows="4"></textarea>
-                            <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT NOT
+                                rows="4"></textarea> -->
+
+                            <div class="form-group flex flex-col gap-2">
+                                <div class="flex gap-2">
+                                    <input type="text" class="form-control w-1/3" placeholder="Column Name"
+                                        x-model="newColumnName"/>
+                                    <select class="form-control w-1/3" x-model="newColumnType">
+                                        <option value="">Select Type</option>
+                                        <option value="INTEGER">INTEGER</option>
+                                        <option value="TEXT">TEXT</option>
+                                        <option value="REAL">REAL</option>
+                                        <option value="BLOB">BLOB</option>
+                                        <option value="NUMERIC">NUMERIC</option>
+                                        <option value="BOOLEAN">BOOLEAN</option>
+                                        <option value="DATE">DATE</option>
+                                        <option value="DATETIME">DATETIME</option>
+                                    </select>
+                                    <select class="form-control w-1/3" x-model="newColumnConstraint">
+                                        <option value="">No Constraint</option>
+                                        <option value="PRIMARY KEY">PRIMARY KEY</option>
+                                        <option value="UNIQUE">UNIQUE</option>
+                                        <option value="NOT NULL">NOT NULL</option>
+                                        <option value="DEFAULT 0">DEFAULT 0</option>
+                                        <option value="DEFAULT ''">DEFAULT ''</option>
+                                    </select>
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                        :disabled="!newColumnName || !newColumnType"
+                                        @click="
+                                            if (!newTableForm.columnsArr) newTableForm.columnsArr = [];
+                                            newTableForm.columnsArr.push({
+                                                name: newColumnName.replace(/\s+/g, '_'),
+                                                type: newColumnType,
+                                                constraint: newColumnConstraint || ''
+                                            });
+                                            newTableForm.columns = newTableForm.columnsArr.map(col => 
+                                                `${col.name} ${col.type}${col.constraint ? ' ' + col.constraint : ''}`
+                                            ).join(', ');
+                                            newColumnName = '';
+                                            newColumnType = '';
+                                            newColumnConstraint = '';
+                                        ">
+                                        Add
+                                    </button>
+                                </div>
+                                <div class="mt-2">
+                                    <label>Columns (SQL format)</label>
+                                    <textarea class="form-control" rows="3" readonly x-model="newTableForm.columns" 
+                                        placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE"
+                                    ></textarea>
+                                </div>
+                                <template x-if="newTableForm.columnsArr && newTableForm.columnsArr.length">
+                                    <div class="mt-2">
+                                        <ul class="gap-2 flex flex-col">
+                                            <template x-for="(col, idx) in newTableForm.columnsArr" :key="idx">
+                                                <li class="flex justify-between w-full items-center gap-2">
+                                                    <span x-text="`${col.name} ${col.type}${col.constraint ? ' ' + col.constraint : ''}`"></span>
+                                                    <button type="button" class="btn btn-danger btn-xs"
+                                                        @click="
+                                                            newTableForm.columnsArr.splice(idx, 1);
+                                                            newTableForm.columns = newTableForm.columnsArr.map(col => 
+                                                                `${col.name} ${col.type}${col.constraint ? ' ' + col.constraint : ''}`
+                                                            ).join(', ');
+                                                        ">
+                                                        Remove
+                                                    </button>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+                                <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT NOT
                                 NULL,
                                 email TEXT</small>
+                            </div>
                         </div>
                         <div class="flex gap-2">
                             <button type="submit" class="btn btn-primary"
@@ -1155,7 +1231,7 @@
                 screenLoading: false,
                 message: { text: '', type: '' },
                 tab: null,
-                newColumnName: null, newColumnType: null,
+                newColumnName: null, newColumnType: null, newColumnConstraint: null,
                 showTick: null,
 
                 // Database state
@@ -1752,12 +1828,12 @@
                     return 'text';
                 },
 
-                async addColumn(columnName, columnType) {
+                async addColumn(columnName, columnType, newColumnConstraint) {
                     if (!this.selectedDb || !this.selectedTable) return;
 
                     this.loading = true;
                     try {
-                        const sql = `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()}`;
+                        const sql = newColumnConstraint? `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()} ${newColumnConstraint}` : `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()}`;
                         await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
                             method: 'POST',
                             body: JSON.stringify({ sql })
