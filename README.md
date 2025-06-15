@@ -119,6 +119,10 @@ sudo apt remove vilesql
 sudo apt purge vilesql
 rm -rf ~/.vilesql
 ```
+or 
+```bash
+sudo dpkg --remove vilesql
+```
 
 **CentOS/RHEL/Fedora**
 ```bash
