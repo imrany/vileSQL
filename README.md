@@ -12,7 +12,7 @@ VileSQL offers **server-mode SQLite database hosting, powerful, cloud-hosted SQL
 
 ## **🔗 Getting Started**
 ### **1️⃣ Create Your Account**
-Sign up at **[VileSQL.com](#)**
+Sign up at **[https://vilesql.villebiz.com](https://vilesql.villebiz.com)**
 
 ### **2️⃣ Access Your Control Panel**
 Once registered, log in to the **VileSQL Control Panel** to:
