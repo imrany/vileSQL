@@ -745,13 +745,15 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the database file path
+	// Get the database file path , also handle share_token option
+	shareToken := r.URL.Query().Get("share_token")
+	var storedShareToken sql.NullString
 	var filePath string
 	var dbUserID int
 	err = SystemDB.QueryRow(
-		"SELECT file_path, user_id FROM databases WHERE id = ?",
+		"SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
 		dbID,
-	).Scan(&filePath, &dbUserID)
+	).Scan(&filePath, &dbUserID, &storedShareToken)
 
 	if err != nil {
 		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
@@ -761,14 +763,26 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the database belongs to the user
-	if dbUserID != userID {
-		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-			Success: false,
-			Message: "You don't have permission to query this database",
-		})
-		return
-	}
+	// Access control logic
+    if shareToken != "" {
+        // Validate share token
+        if !storedShareToken.Valid || storedShareToken.String != shareToken {
+            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+                Success: false,
+                Message: "Invalid share token",
+            })
+            return
+        }
+    } else {
+        // Default authentication fallback
+        if dbUserID != userID {
+            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+                Success: false,
+                Message: "You don't have permission to modify this database",
+            })
+            return
+        }
+    }
 
 	// Open the user's database
 	userDB, err := sql.Open("sqlite", filePath)
@@ -914,30 +928,45 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the database file path
-	var filePath string
-	var dbUserID int
-	err = SystemDB.QueryRow(
-		"SELECT file_path, user_id FROM databases WHERE id = ?",
-		dbID,
-	).Scan(&filePath, &dbUserID)
+	// Handle optional `share_token`
+    shareToken := r.URL.Query().Get("share_token")
+    var filePath string
+    var dbUserID int
+    var storedShareToken sql.NullString // Use NullString to handle possible NULL values
 
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-			Success: false,
-			Message: "Database not found",
-		})
-		return
-	}
+    err = SystemDB.QueryRow(
+        "SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
+        dbID,
+    ).Scan(&filePath, &dbUserID, &storedShareToken)
 
-	// Check if the database belongs to the user
-	if dbUserID != userID {
-		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-			Success: false,
-			Message: "You don't have permission to modify this database",
-		})
-		return
-	}
+    if err != nil {
+        helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+            Success: false,
+            Message: "Database not found",
+        })
+        return
+    }
+	
+    // Access control logic
+    if shareToken != "" {
+        // Validate share token
+        if !storedShareToken.Valid || storedShareToken.String != shareToken {
+            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+                Success: false,
+                Message: "Invalid share token",
+            })
+            return
+        }
+    } else {
+        // Default authentication fallback
+        if dbUserID != userID {
+            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+                Success: false,
+                Message: "You don't have permission to modify this database",
+            })
+            return
+        }
+    }
 
 	// Open the user's database
 	userDB, err := sql.Open("sqlite", filePath)
@@ -971,172 +1000,6 @@ func CreateTableHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 }
-
-// func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
-// 	store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
-// 	session, _ := store.Get(r, SESSION_KEY)
-// 	userID := session.Values["user_id"].(int)
-
-// 	vars := mux.Vars(r)
-// 	dbID, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: "Invalid database ID",
-// 		})
-// 		return
-// 	}
-
-// 	// Parse the data insertion request
-// 	var insertRequest struct {
-// 		Table  string       				`json:"table"`
-// 		Columns string      				`json:"columns,omitempty"` // Optional, can be used to specify columns
-// 		Values string `json:"values"`
-// 	}
-// 	if err := json.NewDecoder(r.Body).Decode(&insertRequest); err != nil {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: "Invalid request format",
-// 		})
-// 		return
-// 	}
-
-// 	// Validate the request
-// 	if insertRequest.Table == "" {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: "Table name is required",
-// 		})
-// 		return
-// 	}
-
-// 	if len(insertRequest.Values) == 0 {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: "At least one row of values is required",
-// 		})
-// 		return
-// 	}
-
-// 	if len(insertRequest.Columns) == 0 {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: "Columns are required for data insertion",
-// 		})
-// 		return
-// 	}
-	
-// 	// Get the database file path
-// 	var filePath string
-// 	var dbUserID int
-// 	err = SystemDB.QueryRow(
-// 		"SELECT file_path, user_id FROM databases WHERE id = ?",
-// 		dbID,
-// 	).Scan(&filePath, &dbUserID)
-
-// 	if err != nil {
-// 		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-// 			Success: false,
-// 			Message: "Database not found",
-// 		})
-// 		return
-// 	}
-
-// 	// Check if the database belongs to the user
-// 	if dbUserID != userID {
-// 		helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-// 			Success: false,
-// 			Message: "You don't have permission to modify this database",
-// 		})
-// 		return
-// 	}
-
-// 	// Open the user's database
-// 	userDB, err := sql.Open("sqlite", filePath)
-// 	if err != nil {
-// 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-// 			Success: false,
-// 			Message: "Failed to open database",
-// 		})
-// 		return
-// 	}
-// 	defer userDB.Close()
-
-// 	// Start a transaction
-// 	tx, err := userDB.Begin()
-// 	if err != nil {
-// 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-// 			Success: false,
-// 			Message: "Failed to start transaction",
-// 		})
-// 		return
-// 	}
-// 	defer tx.Rollback()
-
-// 	// Insert each row of data
-// 	// columns and values are comma-separated strings
-// 	columns := strings.Split(insertRequest.Columns, ",")
-// 	valuesList := strings.Split(insertRequest.Values, ",") // assume rows are separated by semicolons
-
-// 	if len(columns) == 0 || len(valuesList) == 0 {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: "Columns and values cannot be empty",
-// 		})
-// 		return
-// 	}
-
-// 	if len(columns) != len(valuesList) {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: "Number of columns and values must match",
-// 		})
-// 		return
-// 	}
-
-// 	insertSQL := fmt.Sprintf(
-// 		"INSERT INTO %s (%s) VALUES (%s)",
-// 		insertRequest.Table,
-// 		insertRequest.Columns,
-// 		insertRequest.Values,
-// 	)
-
-// 	result, err := tx.Exec(insertSQL)
-// 	if err != nil {
-// 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
-// 			Success: false,
-// 			Message: fmt.Sprintf("Failed to insert data: %v", err),
-// 		})
-// 		return
-// 	}
-// 	// Get the number of rows affected
-// 	rowsAffected, err := result.RowsAffected()
-// 	if err != nil {
-// 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-// 			Success: false,
-// 			Message: "Failed to get number of affected rows",
-// 		})
-// 		return
-// 	}
-
-// 	// Commit the transaction
-// 	if err := tx.Commit(); err != nil {
-// 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-// 			Success: false,
-// 			Message: "Failed to commit transaction",
-// 		})
-// 		return
-// 	}
-
-// 	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
-// 		Success: true,
-// 		Message: fmt.Sprintf("Successfully inserted %d rows", rowsAffected),
-// 		Data: map[string]interface{}{
-// 			"rows_affected": rowsAffected,
-// 		},
-// 	})
-// }
-
 
 func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
     store := sessions.NewCookieStore([]byte(COOKIE_STORE_KEY))
@@ -1172,7 +1035,7 @@ func InsertDataHandler(w http.ResponseWriter, r *http.Request) {
         })
         return
     }
-
+	
     // Access control logic
     if shareToken != "" {
         // Validate share token
@@ -2407,6 +2270,37 @@ func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Handle optional `share_token`
+    shareToken := r.URL.Query().Get("share_token")
+    var filePath string
+    var dbUserID int
+    var storedShareToken sql.NullString // Use NullString to handle possible NULL values
+
+    err := SystemDB.QueryRow(
+        "SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
+        dbID,
+    ).Scan(&filePath, &dbUserID, &storedShareToken)
+
+    if err != nil {
+        helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+            Success: false,
+            Message: "Database not found",
+        })
+        return
+    }
+
+	// Access control logic
+    if shareToken != "" {
+        // Validate share token
+        if !storedShareToken.Valid || storedShareToken.String != shareToken {
+            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+                Success: false,
+                Message: "Invalid share token",
+            })
+            return
+        }
+    }
+
 	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
 	if !ok {
 		return
@@ -2493,6 +2387,36 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Handle optional `share_token`
+    shareToken := r.URL.Query().Get("share_token")
+    var filePath string
+    var dbUserID int
+    var storedShareToken sql.NullString // Use NullString to handle possible NULL values
+
+    err := SystemDB.QueryRow(
+        "SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
+        dbID,
+    ).Scan(&filePath, &dbUserID, &storedShareToken)
+
+    if err != nil {
+        helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+            Success: false,
+            Message: "Database not found",
+        })
+        return
+    }
+
+	// Access control logic
+    if shareToken != "" {
+        // Validate share token
+        if !storedShareToken.Valid || storedShareToken.String != shareToken {
+            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+                Success: false,
+                Message: "Invalid share token",
+            })
+            return
+        }
+    }
 	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
 	if !ok {
 		return

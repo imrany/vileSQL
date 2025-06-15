@@ -173,7 +173,7 @@
                                 </div>
                                 <div class="section-body">
                                     <template x-if="sharedDb">
-                                        <div x-show="selectedDb?selectedDb.name===sharedDb.name:true"
+                                        <div x-show="selectedDb&&sharedDb?selectedDb.name===sharedDb.name:true"
                                             class="database-item active" @click="selectDatabase(sharedDb)">
                                             <div style="font-weight: 500;" x-text="sharedDb.name"></div>
                                             <div style="font-size: 10px; color: #888;">Shared Database</div>
@@ -370,7 +370,7 @@
                                         </button>
                                     </template>
 
-                                    <template x-if="isAuthenticated && selectedTable">
+                                    <template x-if="isAuthenticated && selectedTable && !sharedToken">
                                         <button class="btn btn-danger" style="margin-left: auto;"
                                             @click="showDeleteTableModal=true">
                                             <!-- trash icon -->
@@ -394,7 +394,7 @@
                                         </button>
                                     </template>
 
-                                    <template x-if="isAuthenticated && selectedDb && !selectedTable">
+                                    <template x-if="isAuthenticated && selectedDb && !selectedTable && !sharedToken">
                                         <button class="btn btn-danger" style="margin-left: auto;"
                                             @click="showDeleteModal = true">
                                             <!-- trash icon -->
@@ -567,7 +567,7 @@
                         </div>
 
                         <!-- Query Panel -->
-                        <div x-show="selectedDb && !sharedToken && showQueryPanel" class="query-panel">
+                        <div x-show="selectedDb && showQueryPanel" class="query-panel">
                             <div class="form-group">
                                 <label>SQL Query</label>
                                 <textarea class="query-editor" x-model="queryText" :placeholder="selectedTable && tableColumns.length > 0
@@ -1060,11 +1060,6 @@
                                 placeholder="Enter table name">
                         </div>
                         <div class="form-group">
-                            <!-- <label>Columns (SQL format)</label> -->
-                            <!-- <textarea class="form-control" x-model="newTableForm.columns" required
-                                placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE"
-                                rows="4"></textarea> -->
-
                             <div class="form-group flex flex-col gap-2">
                                 <div class="flex gap-2">
                                     <input type="text" class="form-control w-1/3" placeholder="Column Name"
@@ -1560,7 +1555,11 @@
                     this.loading = true;
 
                     try {
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/data`, {
+                        let url = `/api/databases/${this.selectedDb.id}/data`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
+                        await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({
                                 table: this.selectedTable,
@@ -1589,7 +1588,11 @@
 
                     this.loading = true;
                     try {
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${this.selectedTable}/data`, {
+                        let url = `/api/databases/${this.selectedDb.id}/tables/${this.selectedTable}/data`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
+                        await this.apiCall(url, {
                             method: 'DELETE',
                             body: JSON.stringify({ condition })
                         });
@@ -1609,21 +1612,31 @@
 
                     this.loading = true;
                     try {
-                        const result = await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                        let url = `/api/databases/${this.selectedDb.id}/query`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
+                        const result = await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({ sql: this.queryText })
                         });
-                        console.log(result)
                         // Optionally handle query results here
                         this.setMessage('Query executed successfully!', 'success');
 
                         // Reload tables after creation
-                        const results = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables`);
+                        url = `/api/databases/${this.selectedDb.id}/tables`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
+                        const results = await this.apiCall(url);
                         this.tables = results.data || [];
 
                         // Optionally reload table data if needed
-                        if (this.selectedTable) {
-                            await this.selectTable(this.selectedTable);
+                        const firstQuery= this.queryText.trim().split(" ")
+                        const table=firstQuery[0].toUpperCase()!=="DROP" ? this.selectedTable: this.tables[0]
+                        if (table) {
+                            this.queryText = ""
+                            await this.selectTable(table);
                         }
                     } catch (error) {
                         this.setMessage(error.message, 'error');
@@ -1637,7 +1650,11 @@
 
                     this.loading = true;
                     try {
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables`, {
+                        let url = `/api/databases/${this.selectedDb.id}/tables`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
+                        await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({
                                 name: this.newTableForm.name,
@@ -1648,7 +1665,7 @@
                         this.showTableModal = false;
                         this.resetTableForm();
                         // Reload tables after creation
-                        const result = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables`);
+                        const result = await this.apiCall(url);
                         this.tables = result.data || [];
                         this.setMessage('Table created successfully!', 'success');
                     } catch (error) {
@@ -1692,7 +1709,11 @@
 
                     this.loading = true;
                     try {
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/data`, {
+                        let url = `/api/databases/${this.selectedDb.id}/data`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
+                        await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({
                                 table: this.selectedTable ? this.selectedTable : this.insertForm.table,
@@ -1801,7 +1822,11 @@
 
                     this.loading = true;
                     try {
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${this.selectedTable}/data`, {
+                        let url = `/api/databases/${this.selectedDb.id}/tables/${this.selectedTable}/data`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
+                        await this.apiCall(url, {
                             method: 'PUT',
                             body: JSON.stringify({
                                 condition,
@@ -1833,8 +1858,12 @@
 
                     this.loading = true;
                     try {
+                        let url = `/api/databases/${this.selectedDb.id}/query`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
                         const sql = newColumnConstraint? `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()} ${newColumnConstraint}` : `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()}`;
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                        await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({ sql })
                         });
@@ -1855,9 +1884,13 @@
                     }
                     this.loading = true;
                     try {
+                        let url = `/api/databases/${this.selectedDb.id}/query`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
                         // Use SQL query to drop the column
                         const sql = `ALTER TABLE "${this.selectedTable}" DROP COLUMN "${columnName}"`;
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                        await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({ sql })
                         });
@@ -1880,8 +1913,12 @@
                     }
                     this.loading = true;
                     try {
+                        let url = `/api/databases/${this.selectedDb.id}/query`;
+                        if (this.sharedToken) {
+                            url += `?share_token=${this.sharedToken}`;
+                        }
                         const sql = `ALTER TABLE "${this.selectedTable}" RENAME ${columnName.trim()} TO ${newColumnName.trim()}`;
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/query`, {
+                        await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({ sql })
                         });
