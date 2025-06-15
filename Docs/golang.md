@@ -36,7 +36,7 @@ Set up credentials and establish a connection:
 func main() {
     db := vilesql.Driver{
         Credentials: vilesql.Credentials{
-            Host:  "https://example.com", // VileSQL host
+            Host:  "https://vilesql.villebiz.com", // VileSQL host
             Token: "your-api-token",
         },
     }
