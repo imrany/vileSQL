@@ -50,6 +50,12 @@ type Column struct {
 	DefaultValue interface{} `json:"default_value"`
 }
 
+// ZipWriter wraps a zip.Writer for streaming
+type ZipWriter struct {
+	zw *zip.Writer
+}
+
+
 // Helper to convert columns array to SQL string
 func ColumnsToSQL(columns []Column) string {
 	defs := make([]string, len(columns))
@@ -1396,11 +1402,6 @@ func BackupDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ZipWriter wraps a zip.Writer for streaming
-type ZipWriter struct {
-	zw *zip.Writer
-}
-
 func NewZipWriter(w io.Writer) *ZipWriter {
 	return &ZipWriter{zw: zip.NewWriter(w)}
 }
@@ -2289,6 +2290,7 @@ func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
 	// Access control logic
     if shareToken != "" {
         // Validate share token
@@ -2299,10 +2301,7 @@ func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
             })
             return
         }
-    }
-
-	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
-	if !ok {
+	}else if !ok {
 		return
 	}
 	defer userDB.Close()
@@ -2406,6 +2405,7 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
 	// Access control logic
     if shareToken != "" {
         // Validate share token
@@ -2416,11 +2416,10 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
             })
             return
         }
-    }
-	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
-	if !ok {
+    }else if !ok {
 		return
 	}
+	
 	defer userDB.Close()
 
 	var req struct {
