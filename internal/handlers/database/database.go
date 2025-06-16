@@ -2272,36 +2272,60 @@ func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle optional `share_token`
-    shareToken := r.URL.Query().Get("share_token")
-    var filePath string
-    var dbUserID int
-    var storedShareToken sql.NullString // Use NullString to handle possible NULL values
+	shareToken := r.URL.Query().Get("share_token")
+	var filePath string
+	var dbUserID int
+	var storedShareToken sql.NullString
 
-    err := SystemDB.QueryRow(
-        "SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
-        dbID,
-    ).Scan(&filePath, &dbUserID, &storedShareToken)
+	err := SystemDB.QueryRow(
+		"SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
+		dbID,
+	).Scan(&filePath, &dbUserID, &storedShareToken)
 
-    if err != nil {
-        helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-            Success: false,
-            Message: "Database not found",
-        })
-        return
-    }
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "Database not found",
+		})
+		return
+	}
 
-	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
+	var userDB *sql.DB
+	
 	// Access control logic
-    if shareToken != "" {
-        // Validate share token
-        if !storedShareToken.Valid || storedShareToken.String != shareToken {
-            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-                Success: false,
-                Message: "Invalid share token",
-            })
-            return
-        }
-	}else if !ok {
+	if shareToken != "" {
+		// Validate share token
+		if !storedShareToken.Valid || storedShareToken.String != shareToken {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Invalid share token",
+			})
+			return
+		}
+		// For share token access, open the database directly
+		userDB, err = sql.Open("sqlite3", filePath)
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+				Success: false,
+				Message: "Failed to open database",
+			})
+			return
+		}
+	} else {
+		// Use regular authentication
+		var ok bool
+		userDB, _, _, ok = authenticateAndGetDB(w, r, dbID)
+		if !ok {
+			return
+		}
+	}
+
+	// Ensure userDB is not nil and defer close
+	if userDB == nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to obtain database connection",
+		})
 		return
 	}
 	defer userDB.Close()
@@ -2387,39 +2411,62 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle optional `share_token`
-    shareToken := r.URL.Query().Get("share_token")
-    var filePath string
-    var dbUserID int
-    var storedShareToken sql.NullString // Use NullString to handle possible NULL values
+	shareToken := r.URL.Query().Get("share_token")
+	var filePath string
+	var dbUserID int
+	var storedShareToken sql.NullString
 
-    err := SystemDB.QueryRow(
-        "SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
-        dbID,
-    ).Scan(&filePath, &dbUserID, &storedShareToken)
+	err := SystemDB.QueryRow(
+		"SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
+		dbID,
+	).Scan(&filePath, &dbUserID, &storedShareToken)
 
-    if err != nil {
-        helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-            Success: false,
-            Message: "Database not found",
-        })
-        return
-    }
-
-	userDB, _, _, ok := authenticateAndGetDB(w, r, dbID)
-	// Access control logic
-    if shareToken != "" {
-        // Validate share token
-        if !storedShareToken.Valid || storedShareToken.String != shareToken {
-            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-                Success: false,
-                Message: "Invalid share token",
-            })
-            return
-        }
-    }else if !ok {
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "Database not found",
+		})
 		return
 	}
+
+	var userDB *sql.DB
 	
+	// Access control logic
+	if shareToken != "" {
+		// Validate share token
+		if !storedShareToken.Valid || storedShareToken.String != shareToken {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Invalid share token",
+			})
+			return
+		}
+		// For share token access, open the database directly
+		userDB, err = sql.Open("sqlite3", filePath)
+		if err != nil {
+			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+				Success: false,
+				Message: "Failed to open database",
+			})
+			return
+		}
+	} else {
+		// Use regular authentication
+		var ok bool
+		userDB, _, _, ok = authenticateAndGetDB(w, r, dbID)
+		if !ok {
+			return
+		}
+	}
+
+	// Ensure userDB is not nil and defer close
+	if userDB == nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to obtain database connection",
+		})
+		return
+	}
 	defer userDB.Close()
 
 	var req struct {
