@@ -2273,52 +2273,47 @@ func UpdateTableDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Handle optional `share_token`
 	shareToken := r.URL.Query().Get("share_token")
-	var filePath string
-	var dbUserID int
-	var storedShareToken sql.NullString
-
-	err := SystemDB.QueryRow(
-		"SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
-		dbID,
-	).Scan(&filePath, &dbUserID, &storedShareToken)
-
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-			Success: false,
-			Message: "Database not found",
-		})
-		return
-	}
-
 	var userDB *sql.DB
-	
-	// Access control logic
+	var ok bool
+
 	if shareToken != "" {
-		// Validate share token
-		if !storedShareToken.Valid || storedShareToken.String != shareToken {
+		// Validate share token and open DB in read-only mode
+		var filePath string
+		var tokenExpiry time.Time
+		err := SystemDB.QueryRow(
+			"SELECT file_path, token_expiry FROM databases WHERE share_token = ?",
+			shareToken,
+		).Scan(&filePath, &tokenExpiry)
+		if err != nil {
 			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
 				Success: false,
-				Message: "Invalid share token",
+				Message: "Invalid or expired share token",
 			})
 			return
 		}
-		// For share token access, open the database directly
-		userDB, err = sql.Open("sqlite3", filePath)
+		if time.Now().After(tokenExpiry) {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Share link has expired",
+			})
+			return
+		}
+		userDB, err = sql.Open("sqlite", filePath+"?mode=ro")
 		if err != nil {
 			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 				Success: false,
-				Message: "Failed to open database",
+				Message: "Failed to open shared database",
 			})
 			return
 		}
+		ok = true
 	} else {
-		// Use regular authentication
-		var ok bool
 		userDB, _, _, ok = authenticateAndGetDB(w, r, dbID)
-		if !ok {
-			return
-		}
 	}
+	if !ok {
+		return
+	}
+	defer userDB.Close()
 
 	// Ensure userDB is not nil and defer close
 	if userDB == nil {
@@ -2412,59 +2407,44 @@ func DeleteTableDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Handle optional `share_token`
 	shareToken := r.URL.Query().Get("share_token")
-	var filePath string
-	var dbUserID int
-	var storedShareToken sql.NullString
-
-	err := SystemDB.QueryRow(
-		"SELECT file_path, user_id, share_token FROM databases WHERE id = ?",
-		dbID,
-	).Scan(&filePath, &dbUserID, &storedShareToken)
-
-	if err != nil {
-		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
-			Success: false,
-			Message: "Database not found",
-		})
-		return
-	}
-
 	var userDB *sql.DB
-	
-	// Access control logic
+	var ok bool
+
 	if shareToken != "" {
-		// Validate share token
-		if !storedShareToken.Valid || storedShareToken.String != shareToken {
+		// Validate share token and open DB in read-only mode
+		var filePath string
+		var tokenExpiry time.Time
+		err := SystemDB.QueryRow(
+			"SELECT file_path, token_expiry FROM databases WHERE share_token = ?",
+			shareToken,
+		).Scan(&filePath, &tokenExpiry)
+		if err != nil {
 			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
 				Success: false,
-				Message: "Invalid share token",
+				Message: "Invalid or expired share token",
 			})
 			return
 		}
-		// For share token access, open the database directly
-		userDB, err = sql.Open("sqlite3", filePath)
+		if time.Now().After(tokenExpiry) {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Share link has expired",
+			})
+			return
+		}
+		userDB, err = sql.Open("sqlite", filePath+"?mode=ro")
 		if err != nil {
 			helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 				Success: false,
-				Message: "Failed to open database",
+				Message: "Failed to open shared database",
 			})
 			return
 		}
+		ok = true
 	} else {
-		// Use regular authentication
-		var ok bool
 		userDB, _, _, ok = authenticateAndGetDB(w, r, dbID)
-		if !ok {
-			return
-		}
 	}
-
-	// Ensure userDB is not nil and defer close
-	if userDB == nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
-			Success: false,
-			Message: "Failed to obtain database connection",
-		})
+	if !ok {
 		return
 	}
 	defer userDB.Close()
