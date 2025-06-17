@@ -121,12 +121,14 @@
                                 placeholder="Enter share token">
                             <button class="btn btn-secondary" :disabled="!sharedToken">
                                 <!-- share svg -->
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align: middle; margin-right: 4px;" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="4" r="2" fill="#ffff"/>
-                                    <circle cx="4" cy="8" r="2" fill="#ffff"/>
-                                    <circle cx="12" cy="12" r="2" fill="#ffff"/>
-                                    <line x1="5.7" y1="8.7" x2="10.3" y2="11.3" stroke="#ffff" stroke-width="1.2"/>
-                                    <line x1="10.3" y1="4.7" x2="5.7" y2="7.3" stroke="#ffff" stroke-width="1.2"/>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                    style="vertical-align: middle; margin-right: 4px;"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="4" r="2" fill="#ffff" />
+                                    <circle cx="4" cy="8" r="2" fill="#ffff" />
+                                    <circle cx="12" cy="12" r="2" fill="#ffff" />
+                                    <line x1="5.7" y1="8.7" x2="10.3" y2="11.3" stroke="#ffff" stroke-width="1.2" />
+                                    <line x1="10.3" y1="4.7" x2="5.7" y2="7.3" stroke="#ffff" stroke-width="1.2" />
                                 </svg>
                                 Access
                             </button>
@@ -240,7 +242,8 @@
 
                         <div x-show="isAuthenticated" class="user-info">
                             <div class="flex flex-col gap-2 w-full">
-                                <button x-show="!sharedToken" class="btn btn-primary" style="width: 100%;" @click="showCreateModal = true">
+                                <button x-show="!sharedToken" class="btn btn-primary" style="width: 100%;"
+                                    @click="showCreateModal = true">
                                     <!-- plus icon -->
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                         style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
@@ -335,21 +338,24 @@
                                         <button type="button" class="btn btn-secondary"
                                             @click="showQueryPanel? showQueryPanel = false: showQueryPanel = true">
                                             <!-- show icon -->
-                                            <svg x-show="!showQueryPanel" width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                                style="vertical-align: middle; margin-right: 4px;"
+                                            <svg x-show="!showQueryPanel" width="16" height="16" viewBox="0 0 16 16"
+                                                fill="none" style="vertical-align: middle; margin-right: 4px;"
                                                 xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2" fill="none"/>
-                                                <rect x="7" y="4" width="2" height="8" rx="1" fill="#ffff"/>
-                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff"/>
+                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2"
+                                                    fill="none" />
+                                                <rect x="7" y="4" width="2" height="8" rx="1" fill="#ffff" />
+                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff" />
                                             </svg>
                                             <!-- hide icon -->
-                                            <svg x-show="showQueryPanel" width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                                style="vertical-align: middle; margin-right: 4px;"
+                                            <svg x-show="showQueryPanel" width="16" height="16" viewBox="0 0 16 16"
+                                                fill="none" style="vertical-align: middle; margin-right: 4px;"
                                                 xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2" fill="none"/>
-                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff"/>
+                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2"
+                                                    fill="none" />
+                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff" />
                                             </svg>
-                                            <span x-text="showQueryPanel===false?'Show Query Panel':'Hide Query Panel'"></span>
+                                            <span
+                                                x-text="showQueryPanel===false?'Show Query Panel':'Hide Query Panel'"></span>
                                         </button>
                                     </template>
 
@@ -527,16 +533,12 @@
                                                             <input
                                                                 :type="getInputType(column.constraint ? column.constraint.type : '')"
                                                                 class="form-control text-[11px]"
-                                                                x-model="editingCell.value"
-                                                                @keydown.enter.stop.prevent="
+                                                                x-model="editingCell.value" @keydown.enter.stop.prevent="
                                                                     updateCell(index, column.name, editingCell.value, row[colIndex]);
                                                                     editingCell = null;
-                                                                "
-                                                                @keydown.esc="editingCell = null"
+                                                                " @keydown.esc="editingCell = null"
                                                                 @blur="editingCell = null"
-                                                                style="padding:2px 6px; min-width: 60px;"
-                                                                autofocus
-                                                            >
+                                                                style="padding:2px 6px; min-width: 60px;" autofocus>
                                                         </template>
                                                         <template
                                                             x-if="!editingCell || editingCell.row !== index || editingCell.col !== column.name">
@@ -553,10 +555,10 @@
                                             <td class="row-number">+</td>
                                             <template x-for="(column, colIndex) in tableColumns" :key="column.name">
                                                 <td style="min-width: 300px;">
-                                                    <input 
+                                                    <input
                                                         :type="getInputType(column.constraint ? column.constraint.type : '')"
-                                                        class="form-control text-[11px]"
-                                                        :placeholder="column.name" x-model="insertRow[column.name]"
+                                                        class="form-control text-[11px]" :placeholder="column.name"
+                                                        x-model="insertRow[column.name]"
                                                         @keydown.enter.stop.prevent="addRow()" style="padding:2px 6px;">
                                                 </td>
                                             </template>
@@ -716,7 +718,7 @@
                                                         setTimeout(() => { showTick = null; }, 2000);">
                                                     <!-- Tick SVG icon -->
                                                     <div x-show="showTick==='copied_token'">
-                                                        ✅ 
+                                                        ✅
                                                     </div>
 
                                                     <!-- Copy SVG icon -->
@@ -756,7 +758,7 @@
                                                     ">
                                                     <!-- Tick SVG icon -->
                                                     <div x-show="showTick==='copied_share_link'">
-                                                        ✅ 
+                                                        ✅
                                                     </div>
 
                                                     <!-- Copy SVG icon -->
@@ -852,20 +854,15 @@
                                             navigator.clipboard.writeText(window.location.origin);
                                             showTick='copied_connection_link';
                                             setTimeout(() => { showTick = null; }, 2000);
-                                        "
-                                        class="flex items-center gap-2 form-control"
-                                        >
-                                        <input type="text" class="flex-grow"
-                                            :value="window.location.origin"
-                                            readonly>
-                                        <button type="button" class="cursor-pointer" title="Copy link"
-                                            @click="navigator.clipboard.writeText(window.location.origin);
+                                        " class="flex items-center gap-2 form-control">
+                                        <input type="text" class="flex-grow" :value="window.location.origin" readonly>
+                                        <button type="button" class="cursor-pointer" title="Copy link" @click="navigator.clipboard.writeText(window.location.origin);
                                             showTick='copied_connection_link';
                                             setTimeout(() => { showTick = null; }, 2000);
                                         ">
                                             <!-- Tick SVG icon -->
                                             <div x-show="showTick==='copied_connection_link'">
-                                                ✅ 
+                                                ✅
                                             </div>
 
                                             <!-- Copy SVG icon -->
@@ -889,20 +886,15 @@
                                             navigator.clipboard.writeText(selectedDb.share_token);
                                             showTick='copied_token';
                                             setTimeout(() => { showTick = null; }, 2000);
-                                        "
-                                        class="flex items-center gap-2 form-control"
-                                        >
-                                        <input type="text" class="flex-grow"
-                                            :value="selectedDb.share_token"
-                                            readonly>
-                                        <button type="button" class="cursor-pointer" title="Copy token"
-                                            @click="navigator.clipboard.writeText(selectedDb.share_token);
+                                        " class="flex items-center gap-2 form-control">
+                                        <input type="text" class="flex-grow" :value="selectedDb.share_token" readonly>
+                                        <button type="button" class="cursor-pointer" title="Copy token" @click="navigator.clipboard.writeText(selectedDb.share_token);
                                             showTick='copied_token';
                                             setTimeout(() => { showTick = null; }, 2000);
                                         ">
                                             <!-- Tick SVG icon -->
                                             <div x-show="showTick==='copied_token'">
-                                                ✅ 
+                                                ✅
                                             </div>
 
                                             <!-- Copy SVG icon -->
@@ -947,7 +939,8 @@
                             <div x-show="tab==='backup'">
                                 <div class="form-group">
                                     <label>Filename</label>
-                                    <input type="text" :placeholder="selectedDb.name" :placeholder="selectedDB.name" class="form-control" x-model="backup_filename">
+                                    <input type="text" :placeholder="selectedDb.name" :placeholder="selectedDB.name"
+                                        class="form-control" x-model="backup_filename">
                                 </div>
                                 <div class="form-group">
                                     <label>Format</label>
@@ -1033,7 +1026,7 @@
                             <input type="text" class="form-control" x-model="newDbName" required
                                 placeholder="Enter database name">
                         </div>
-                         <div class="form-group">
+                        <div class="form-group">
                             <label>Description</label>
                             <textarea type="text" class="form-control" x-model="newDbDescription"
                                 placeholder="Enter database description"></textarea>
@@ -1063,7 +1056,7 @@
                             <div class="form-group flex flex-col gap-2">
                                 <div class="flex gap-2">
                                     <input type="text" class="form-control w-1/3" placeholder="Column Name"
-                                        x-model="newColumnName"/>
+                                        x-model="newColumnName" />
                                     <select class="form-control w-1/3" x-model="newColumnType">
                                         <option value="">Select Type</option>
                                         <option value="INTEGER">INTEGER</option>
@@ -1084,8 +1077,7 @@
                                         <option value="DEFAULT ''">DEFAULT ''</option>
                                     </select>
                                     <button type="button" class="btn btn-primary btn-sm"
-                                        :disabled="!newColumnName || !newColumnType"
-                                        @click="
+                                        :disabled="!newColumnName || !newColumnType" @click="
                                             if (!newTableForm.columnsArr) newTableForm.columnsArr = [];
                                             newTableForm.columnsArr.push({
                                                 name: newColumnName.replace(/\s+/g, '_'),
@@ -1104,18 +1096,17 @@
                                 </div>
                                 <div class="mt-2">
                                     <label>Columns (SQL format)</label>
-                                    <textarea class="form-control" rows="3" readonly x-model="newTableForm.columns" 
-                                        placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE"
-                                    ></textarea>
+                                    <textarea class="form-control" rows="3" readonly x-model="newTableForm.columns"
+                                        placeholder="id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE"></textarea>
                                 </div>
                                 <template x-if="newTableForm.columnsArr && newTableForm.columnsArr.length">
                                     <div class="mt-2">
                                         <ul class="gap-2 flex flex-col">
                                             <template x-for="(col, idx) in newTableForm.columnsArr" :key="idx">
                                                 <li class="flex justify-between w-full items-center gap-2">
-                                                    <span x-text="`${col.name} ${col.type}${col.constraint ? ' ' + col.constraint : ''}`"></span>
-                                                    <button type="button" class="btn btn-danger btn-xs"
-                                                        @click="
+                                                    <span
+                                                        x-text="`${col.name} ${col.type}${col.constraint ? ' ' + col.constraint : ''}`"></span>
+                                                    <button type="button" class="btn btn-danger btn-xs" @click="
                                                             newTableForm.columnsArr.splice(idx, 1);
                                                             newTableForm.columns = newTableForm.columnsArr.map(col => 
                                                                 `${col.name} ${col.type}${col.constraint ? ' ' + col.constraint : ''}`
@@ -1128,9 +1119,10 @@
                                         </ul>
                                     </div>
                                 </template>
-                                <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT NOT
-                                NULL,
-                                email TEXT</small>
+                                <small style="color: #888; font-size: 11px;">Example: id INTEGER PRIMARY KEY, name TEXT
+                                    NOT
+                                    NULL,
+                                    email TEXT</small>
                             </div>
                         </div>
                         <div class="flex gap-2">
@@ -1144,49 +1136,32 @@
                     </form>
                 </div>
             </div>
-
-            <!-- Insert Data Modal -->
+            
+            <!-- Insert Data Modal -->           
             <div x-show="showInsertModal && selectedTable && selectedDb" class="modal"
                 @click.self="showInsertModal = false">
                 <div class="modal-content">
-                    <h3 style="margin-bottom: 16px;">Insert Data</h3>
+                    <h3 style="margin-bottom: 16px;">Insert Data into <span class="text-blue-500" x-text="selectedTable"></span></h3>
                     <form @submit.prevent="insertData()">
-                        <div class="form-group">
-                            <label>Table Name</label>
-                            <template x-if="!selectedTable">
-                                <input type="text" class="form-control" x-model="insertForm.table"
-                                    placeholder="Enter table name" required />
-                            </template>
-                            <template x-if="selectedTable">
-                                <input type="text" class="form-control" :value="selectedTable"
-                                    :placeholder="selectedTable" readonly />
-                            </template>
-                        </div>
-                        <div class="form-group">
-                            <label>Columns (comma-separated)</label>
-                            <template x-if="!selectedTable">
-                                <input type="text" required class="form-control" x-model="insertForm.columns"
-                                    placeholder="'name', 'email', age" />
-                            </template>
-                            <template x-if="selectedTable">
-                                <input type="text" class="form-control"
-                                    :value="tableColumns.length > 0 ? tableColumns.map(col => col.name).join(', ') : ''"
-                                    :placeholder="tableColumns.length > 0 ? tableColumns.map(col => col.name).join(', ') : 'name, email, age'"
-                                    readonly />
-                            </template>
-                        </div>
-                        <div class="form-group">
-                            <label>Values (comma-separated)</label>
-                            <input type="text" class="form-control" x-model="insertForm.values" required
-                                :placeholder="`'John Doe', 'john@example.com', 30`">
-                        </div>
+                        <template x-for="(column, index) in tableColumns" :key="column.name">
+                            <div class="form-group">
+                                <label x-text="column.name + (column.constraint.not_null ? ' *' : '')"></label>
+                                <input class="form-control" x-model="insertForm.data[column.name]"
+                                    :type="getInputType(column.constraint ? column.constraint.type : '')"
+                                    :placeholder="`Enter ${column.name}`"
+                                    :required="column.constraint.not_null && column.constraint.default !== null" 
+                                />
+                            </div>
+                        </template>
+
                         <div class="flex gap-2">
-                            <button type="submit" class="btn btn-success"
-                                :disabled="!insertForm.values.trim() || loading">
+                            <button type="submit" class="btn btn-success" :disabled="loading">
                                 <span x-text="loading ? 'Inserting...' : 'Insert Data'"></span>
                             </button>
                             <button type="button" class="btn btn-secondary"
-                                @click="showInsertModal = false; resetInsertForm()">Cancel</button>
+                                @click="showInsertModal = false; resetInsertForm()">
+                                Cancel
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -1259,9 +1234,9 @@
 
                 // Forms
                 newDbName: '',
-                newDbDescription:'',
+                newDbDescription: '',
                 newTableForm: { name: '', columns: '' },
-                insertForm: { table: '', columns: '', values: '' },
+                insertForm: { data: {} },
                 backup_filename: '',
                 backup_format: '',
 
@@ -1317,9 +1292,9 @@
                 async checkAuth() {
                     this.screenLoading = true
                     try {
-                        if(this.sharedToken){
+                        if (this.sharedToken) {
                             this.isAuthenticated = true
-                        }else{
+                        } else {
                             const result = await this.apiCall('/api/authenticate');
                             this.user = result?.data.user.username || null;
                             this.isAuthenticated = result?.data.authenticated || false;
@@ -1375,7 +1350,7 @@
 
                 async logout() {
                     try {
-                        this.sharedToken ? localStorage.removeItem("sharedToken"): await this.apiCall('/api/logout', { method: 'POST' });
+                        this.sharedToken ? localStorage.removeItem("sharedToken") : await this.apiCall('/api/logout', { method: 'POST' });
                         this.isAuthenticated = false;
                         this.user = null;
                         this.sharedToken = '';
@@ -1392,7 +1367,7 @@
                 // Database management methods
                 async loadDatabases() {
                     try {
-                        if(this.sharedToken){
+                        if (this.sharedToken) {
                             // Load shared database if token is set
                             const result = await this.apiCall(`/api/shared/${this.sharedToken}`);
                             this.sharedDb = result.data.database;
@@ -1401,7 +1376,7 @@
                             this.selectedTable = null;
                             this.tableData = [];
                             this.tableColumns = [];
-                        
+
                             if (this.sharedDb) {
                                 this.selectedDb = this.sharedDb;;
                                 const tablesResult = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables?share_token=${this.sharedToken}`);
@@ -1410,7 +1385,7 @@
                                 this.setMessage('Invalid or expired share token', 'error');
                             }
                             return;
-                        }else{
+                        } else {
                             const result = await this.apiCall('/api/databases');
                             this.databases = result.data || [];
                         }
@@ -1539,7 +1514,7 @@
                     this.queryText = '';
                     this.loading = true;
                     try {
-                        const result =  !this.sharedToken ? await this.apiCall(`/api/databases/${database.id}/tables`) : await this.apiCall(`/api/databases/${database.id}/tables?share_token=${this.sharedToken}`);
+                        const result = !this.sharedToken ? await this.apiCall(`/api/databases/${database.id}/tables`) : await this.apiCall(`/api/databases/${database.id}/tables?share_token=${this.sharedToken}`);
                         this.tables = result.data || [];
                     } catch (error) {
                         this.setMessage('Failed to load tables', 'error');
@@ -1632,8 +1607,8 @@
                         this.tables = results.data || [];
 
                         // Optionally reload table data if needed
-                        const firstQuery= this.queryText.trim().split(" ")
-                        const table=firstQuery[0].toUpperCase()!=="DROP" ? this.selectedTable: this.tables[0]
+                        const firstQuery = this.queryText.trim().split(" ")
+                        const table = firstQuery[0].toUpperCase() !== "DROP" ? this.selectedTable : this.tables[0]
                         if (table) {
                             this.queryText = ""
                             await this.selectTable(table);
@@ -1697,16 +1672,17 @@
 
                 // Data insertion methods
                 async insertData() {
-                    if (
-                        !this.selectedTable.trim() ||
-                        !this.insertForm.values.trim() ||
-                        !this.selectedDb
-                    ) {
-                        console.log(this.insertForm)
+                    if (!this.selectedTable || !this.selectedDb || !this.tableColumns.length) {
                         this.setMessage('Please fill all fields before inserting data.', 'error');
                         return;
-                    }
+                    };
 
+                    const values = this.tableColumns.map(col => this.insertForm.data[col.name]);
+                    if (values.some(v => v === undefined || v === null || v === "")) {
+                        this.setMessage('Please fill before inserting data.', 'error');
+                        return;
+                    };
+                   
                     this.loading = true;
                     try {
                         let url = `/api/databases/${this.selectedDb.id}/data`;
@@ -1716,9 +1692,9 @@
                         await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({
-                                table: this.selectedTable ? this.selectedTable : this.insertForm.table,
-                                columns: this.selectedTable ? this.tableColumns.map(col => col.name).join(", ") : this.insertForm.columns,
-                                values: this.insertForm.values
+                                table: this.selectedTable.trim(),
+                                columns: this.tableColumns.map(col => col.name).join(", "),
+                                values: values.map(v => typeof v === 'string' ? `'${v}'` : v).join(', ')
                             })
                         });
 
@@ -1751,9 +1727,9 @@
                             this.setMessage('Invalid or expired share token', 'error');
                             this.sharedToken = '';
                             localStorage.removeItem('sharedToken');
-                            this.isAuthenticated= false
+                            this.isAuthenticated = false
                             return;
-                        }else{
+                        } else {
                             // Load tables for shared database
                             const tablesResult = await this.apiCall(`/api/databases/${this.selectedDb.id}/tables?share_token=${this.sharedToken}`);
                             this.tables = tablesResult.data || [];
@@ -1774,9 +1750,9 @@
                     this.tableColumns = [];
                     this.loading = true;
                     try {
-                        const result = this.sharedToken ? 
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data?share_token=${this.sharedToken}`) : 
-                        await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data`);
+                        const result = this.sharedToken ?
+                            await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data?share_token=${this.sharedToken}`) :
+                            await this.apiCall(`/api/databases/${this.selectedDb.id}/tables/${table}/data`);
                         this.tableData = result.data.values || [];
                         this.tableColumns = result.data.columns || [];
                     } catch (error) {
@@ -1862,7 +1838,7 @@
                         if (this.sharedToken) {
                             url += `?share_token=${this.sharedToken}`;
                         }
-                        const sql = newColumnConstraint? `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()} ${newColumnConstraint}` : `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()}`;
+                        const sql = newColumnConstraint ? `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()} ${newColumnConstraint}` : `ALTER TABLE "${this.selectedTable}" ADD COLUMN "${columnName.trim()}" ${columnType.trim()}`;
                         await this.apiCall(url, {
                             method: 'POST',
                             body: JSON.stringify({ sql })
