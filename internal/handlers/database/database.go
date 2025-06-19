@@ -1562,6 +1562,7 @@ func (t *TarWriter) Close() error {
 	return t.tw.Close()
 }
 
+// Execute operations on a shared database
 func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"]
@@ -1614,30 +1615,78 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Open the user's database in read-only mode
-	userDB, err := sql.Open("sqlite", filePath+"?mode=ro")
+	// Open the user's database with connection options
+	connectionString := fmt.Sprintf("%s?_journal_mode=WAL&_sync=NORMAL&_cache_size=1000&_foreign_keys=on", filePath)
+	userDB, err := sql.Open("sqlite", connectionString)
 	if err != nil {
-		helper.RespondWithJSON(w, http.StatusInternalServerError, ErrorResponse{
-			Error: err.Error(),
-			Details: "Failed to open database",
+		log.Printf("Failed to open database %s: %v", filePath, err)
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Failed to open database",
 		})
 		return
 	}
 	defer userDB.Close()
 
-	// Block any write operations for shared databases
-	// lowercaseSQL := strings.ToLower(strings.TrimSpace(queryRequest.SQL))
-	// if strings.HasPrefix(lowercaseSQL, "insert") ||
-	// 	strings.HasPrefix(lowercaseSQL, "update") ||
-	// 	strings.HasPrefix(lowercaseSQL, "delete") ||
-	// 	strings.HasPrefix(lowercaseSQL, "drop") ||
-	// 	strings.HasPrefix(lowercaseSQL, "alter") ||
-	// 	strings.HasPrefix(lowercaseSQL, "create") {
-	// 	helper.RespondWithJSON(w, http.StatusForbidden,ErrorResponse{
-	// 		Error: "Write operations are not allowed for shared databases",
-	// 	})
-	// 	return
-	// }
+	// Test database connection
+	if err := userDB.Ping(); err != nil {
+		log.Printf("Database ping failed for %s: %v", filePath, err)
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: fmt.Sprintf("Database connection failed: %v", err),
+		})
+		return
+	}
+
+	// Check if this is a write operation
+	sqlUpper := strings.ToUpper(strings.TrimSpace(queryRequest.SQL))
+	isWriteOp := strings.HasPrefix(sqlUpper, "INSERT") ||
+		strings.HasPrefix(sqlUpper, "UPDATE") ||
+		strings.HasPrefix(sqlUpper, "DELETE") ||
+		strings.HasPrefix(sqlUpper, "CREATE") ||
+		strings.HasPrefix(sqlUpper, "DROP") ||
+		strings.HasPrefix(sqlUpper, "ALTER") ||
+		strings.HasPrefix(sqlUpper, "REPLACE") ||
+		strings.HasPrefix(sqlUpper, "TRUNCATE")
+
+	if isWriteOp {
+		// For write operations, use Exec instead of Query
+		log.Printf("Executing write operation: %s", queryRequest.SQL)
+		
+		// Check directory permissions before attempting write
+		dirPath := filepath.Dir(filePath)
+		if dirInfo, err := os.Stat(dirPath); err != nil {
+			log.Printf("Directory stat error: %v", err)
+		} else {
+			log.Printf("Directory permissions: %s", dirInfo.Mode())
+		}
+		
+		result, err := userDB.Exec(queryRequest.SQL)
+		if err != nil {
+			log.Printf("Write operation failed: %v", err)
+			helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+				Success: false,
+				Message: fmt.Sprintf("Query execution failed: %v", err),
+			})
+			return
+		}
+
+		// Handle write operation results
+		rowsAffected, _ := result.RowsAffected()
+		lastInsertId, _ := result.LastInsertId()
+
+		log.Printf("Write operation successful - Rows affected: %d, Last insert ID: %d", rowsAffected, lastInsertId)
+
+		helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+			Success: true,
+			Data: map[string]interface{}{
+				"rows_affected":  rowsAffected,
+				"last_insert_id": lastInsertId,
+				"message":        "Query executed successfully",
+			},
+		})
+		return
+	}
 
 	// Execute the query
 	rows, err := userDB.Query(queryRequest.SQL)
@@ -1716,14 +1765,12 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 		Columns  []string                 `json:"columns"`
 		Types    []string                 `json:"types"`
 		Rows     []map[string]interface{} `json:"rows"`
-		ReadOnly bool                     `json:"read_only"`
 		RowCount int                      `json:"row_count"`
 		Limited  bool                     `json:"limited"`
 	}{
 		Columns:  columns,
 		Types:    make([]string, len(columnTypes)),
 		Rows:     result,
-		ReadOnly: true,
 		RowCount: rowCount,
 		Limited:  rowCount >= maxRows,
 	}
