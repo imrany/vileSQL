@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -93,6 +94,22 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err := os.MkdirAll(userDir, 0755); err != nil {
 		log.Printf("Failed to create user directory: %v", err)
 	}
+
+	// Send a welcome email
+    emailData := email.EmailData{
+        To:      []string{user.Email},
+        Subject: "Welcome to vileSQL!",
+        Body:    fmt.Sprintf(`
+			<p>Dear %s</p> <br/>
+			<p>Welcome to our service!</p>
+		`, user.Username),
+        IsHTML:  true,
+    }
+    
+    err = email.SendEmail(emailData)
+    if err != nil {
+        log.Fatal(err)
+    }
 
 	helper.RespondWithJSON(w, http.StatusCreated, ApiResponse{
 		Success: true,
@@ -246,19 +263,6 @@ func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
-	// Send a simple email
-    // emailData := email.EmailData{
-    //     To:      []string{confirmData.Email},
-    //     Subject: "Welcome!",
-    //     Body:    "<h1>Welcome to our service!</h1>",
-    //     IsHTML:  true,
-    // }
-    
-    // err = email.SendEmail(emailData)
-    // if err != nil {
-    //     log.Fatal(err)
-    // }
     
     // Send OTP
     otp, err := email.SendOTP(confirmData.Email, "password_reset")
