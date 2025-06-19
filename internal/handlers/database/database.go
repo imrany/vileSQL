@@ -74,6 +74,7 @@ func ColumnsToSQL(columns []Column) string {
 	}
 	return strings.Join(defs, ", ")
 }
+
 type ApiResponse struct {
 	Success bool        `json:"success"`
 	Message string      `json:"message,omitempty"`
@@ -128,6 +129,12 @@ func init() {
             log.Fatalf("failed to create data directory: %v", err)
         }
     }
+
+	// Ensure directory is writable
+    if err := os.Chmod(dataDir, 0755); err != nil {
+        log.Printf("Warning: Could not set directory permissions: %v", err)
+    }
+
 	systemDBPath := filepath.Join(dataDir, "system.db")
 
 	var err error
@@ -148,6 +155,10 @@ func setupSystemDB() {
 			username TEXT UNIQUE NOT NULL,
 			password_hash TEXT NOT NULL,
 			email TEXT UNIQUE NOT NULL,
+			phone_number TEXT NOT NULL,
+			is_verified BOOLEAN DEFAULT FALSE,
+			usage INTEGER DEFAULT 0,
+			amount_paid INTEGER DEFAULT 0,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
@@ -188,6 +199,7 @@ func setupSystemDB() {
 			user_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
 			description TEXT NOT NULL DEFAULT '',
+			transactions INTEGER NOT NULL DEFAULT 0,
 			file_path TEXT NOT NULL,
 			share_token TEXT NOT NULL DEFAULT '',
 			token_expiry TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -734,7 +746,7 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	var queryRequest struct {
 		SQL string `json:"sql"`
 	}
-	log.Printf("Executing query for database ID %d by user ID %d, %v", dbID, userID, r.Body)
+	
 	if err := json.NewDecoder(r.Body).Decode(&queryRequest); err != nil {
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
@@ -751,7 +763,9 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the database file path , also handle share_token option
+	log.Printf("Executing query for database ID %d by user ID %d: %s", dbID, userID, queryRequest.SQL)
+
+	// Get the database file path, also handle share_token option
 	shareToken := r.URL.Query().Get("share_token")
 	var storedShareToken sql.NullString
 	var filePath string
@@ -770,29 +784,46 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Access control logic
-    if shareToken != "" {
-        // Validate share token
-        if !storedShareToken.Valid || storedShareToken.String != shareToken {
-            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-                Success: false,
-                Message: "Invalid share token",
-            })
-            return
-        }
-    } else {
-        // Default authentication fallback
-        if dbUserID != userID {
-            helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
-                Success: false,
-                Message: "You don't have permission to modify this database",
-            })
-            return
-        }
-    }
+	if shareToken != "" {
+		// Validate share token
+		if !storedShareToken.Valid || storedShareToken.String != shareToken {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "Invalid share token",
+			})
+			return
+		}
+	} else {
+		// Default authentication fallback
+		if dbUserID != userID {
+			helper.RespondWithJSON(w, http.StatusForbidden, ApiResponse{
+				Success: false,
+				Message: "You don't have permission to access this database",
+			})
+			return
+		}
+	}
 
-	// Open the user's database
-	userDB, err := sql.Open("sqlite", filePath)
+	// Debug: Log the file path being accessed
+	log.Printf("Attempting to open database at: %s", filePath)
+	
+	// Check if database file exists and get its info
+	if info, err := os.Stat(filePath); err != nil {
+		log.Printf("Database file stat error: %v", err)
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: fmt.Sprintf("Database file not accessible: %v", err),
+		})
+		return
+	} else {
+		log.Printf("Database file info - Size: %d, Mode: %s, ModTime: %s", info.Size(), info.Mode(), info.ModTime())
+	}
+
+	// Open the user's database with connection options
+	connectionString := fmt.Sprintf("%s?_journal_mode=WAL&_sync=NORMAL&_cache_size=1000&_foreign_keys=on", filePath)
+	userDB, err := sql.Open("sqlite", connectionString)
 	if err != nil {
+		log.Printf("Failed to open database %s: %v", filePath, err)
 		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
 			Success: false,
 			Message: "Failed to open database",
@@ -801,9 +832,71 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer userDB.Close()
 
-	// Execute the query
+	// Test database connection
+	if err := userDB.Ping(); err != nil {
+		log.Printf("Database ping failed for %s: %v", filePath, err)
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: fmt.Sprintf("Database connection failed: %v", err),
+		})
+		return
+	}
+
+	// Check if this is a write operation
+	sqlUpper := strings.ToUpper(strings.TrimSpace(queryRequest.SQL))
+	isWriteOp := strings.HasPrefix(sqlUpper, "INSERT") ||
+		strings.HasPrefix(sqlUpper, "UPDATE") ||
+		strings.HasPrefix(sqlUpper, "DELETE") ||
+		strings.HasPrefix(sqlUpper, "CREATE") ||
+		strings.HasPrefix(sqlUpper, "DROP") ||
+		strings.HasPrefix(sqlUpper, "ALTER") ||
+		strings.HasPrefix(sqlUpper, "REPLACE") ||
+		strings.HasPrefix(sqlUpper, "TRUNCATE")
+
+	if isWriteOp {
+		// For write operations, use Exec instead of Query
+		log.Printf("Executing write operation: %s", queryRequest.SQL)
+		
+		// Check directory permissions before attempting write
+		dirPath := filepath.Dir(filePath)
+		if dirInfo, err := os.Stat(dirPath); err != nil {
+			log.Printf("Directory stat error: %v", err)
+		} else {
+			log.Printf("Directory permissions: %s", dirInfo.Mode())
+		}
+		
+		result, err := userDB.Exec(queryRequest.SQL)
+		if err != nil {
+			log.Printf("Write operation failed: %v", err)
+			helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+				Success: false,
+				Message: fmt.Sprintf("Query execution failed: %v", err),
+			})
+			return
+		}
+
+		// Handle write operation results
+		rowsAffected, _ := result.RowsAffected()
+		lastInsertId, _ := result.LastInsertId()
+
+		log.Printf("Write operation successful - Rows affected: %d, Last insert ID: %d", rowsAffected, lastInsertId)
+
+		helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+			Success: true,
+			Data: map[string]interface{}{
+				"rows_affected":  rowsAffected,
+				"last_insert_id": lastInsertId,
+				"message":        "Query executed successfully",
+			},
+		})
+		return
+	}
+
+	// For read operations, continue with existing Query logic
+	log.Printf("Executing read operation: %s", queryRequest.SQL)
 	rows, err := userDB.Query(queryRequest.SQL)
 	if err != nil {
+		log.Printf("Read operation failed: %v", err)
 		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
 			Success: false,
 			Message: fmt.Sprintf("Query execution failed: %v", err),
@@ -825,7 +918,7 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	// Prepare the result set
 	result := make([]map[string]interface{}, 0)
 	columnTypes, _ := rows.ColumnTypes()
-	
+
 	// Prepare values holder
 	values := make([]interface{}, len(columns))
 	valuePtrs := make([]interface{}, len(columns))
@@ -834,15 +927,17 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch rows
+	rowCount := 0
 	for rows.Next() {
 		if err := rows.Scan(valuePtrs...); err != nil {
+			log.Printf("Row scan error: %v", err)
 			continue
 		}
 
 		entry := make(map[string]interface{})
 		for i, col := range columns {
 			val := values[i]
-			
+
 			// Handle SQLite specific types
 			switch v := val.(type) {
 			case []byte:
@@ -855,6 +950,7 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		result = append(result, entry)
+		rowCount++
 	}
 
 	// Check for errors from iterating over rows
@@ -867,19 +963,23 @@ func ExecuteQueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	queryResult := struct {
-		Columns []string                  `json:"columns"`
-		Types   []string                  `json:"types"`
-		Rows    []map[string]interface{}  `json:"rows"`
+		Columns []string                 `json:"columns"`
+		Types   []string                 `json:"types"`
+		Rows    []map[string]interface{} `json:"rows"`
+		Count   int                      `json:"count"`
 	}{
 		Columns: columns,
 		Types:   make([]string, len(columnTypes)),
 		Rows:    result,
+		Count:   rowCount,
 	}
 
 	// Extract column types
 	for i, ct := range columnTypes {
 		queryResult.Types[i] = ct.DatabaseTypeName()
 	}
+
+	log.Printf("Read operation successful - Returned %d rows", rowCount)
 
 	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
 		Success: true,

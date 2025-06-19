@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/imrany/vilesql/config"
 	"github.com/imrany/vilesql/internal/handlers/database"
+	"github.com/imrany/vilesql/internal/handlers/email"
 	"github.com/imrany/vilesql/internal/helper"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -210,4 +211,149 @@ func AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "User not authenticated",
 		})
 	}
+}
+
+// VerifyEmailHandler handles email confirmation requests 
+func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+	var confirmData struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&confirmData); err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid request format",
+		})
+		return
+	}
+	if confirmData.Email == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Email is required",
+		})
+		return	
+	}
+
+	err := database.SystemDB.QueryRow(
+		"SELECT email FROM users WHERE email = ?",
+		confirmData.Email,
+	).Scan(&confirmData.Email)
+
+	if err != nil {
+		log.Printf("Error checking email existence: %v", err)
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Error confirming email",
+		})
+		return
+	}
+
+	// Send a simple email
+    // emailData := email.EmailData{
+    //     To:      []string{confirmData.Email},
+    //     Subject: "Welcome!",
+    //     Body:    "<h1>Welcome to our service!</h1>",
+    //     IsHTML:  true,
+    // }
+    
+    // err = email.SendEmail(emailData)
+    // if err != nil {
+    //     log.Fatal(err)
+    // }
+    
+    // Send OTP
+    otp, err := email.SendOTP(confirmData.Email, "password_reset")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+	type OTPData struct {
+		Email string `json:"email"`
+		OTP   string `json:"otp"`
+	}
+	helper.RespondWithJSON(w, http.StatusOK, OTPData{
+		Email: confirmData.Email,
+		OTP:   otp,
+	})
+}
+
+// PasswodResetHandler handles password reset requests
+func PasswodResetHandler(w http.ResponseWriter, r *http.Request) {
+	var resetData struct {
+		Email    string `json:"email"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&resetData); err != nil {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Invalid request format",
+		})
+		return
+	}
+
+	if resetData.Email == "" || resetData.NewPassword == "" {
+		helper.RespondWithJSON(w, http.StatusBadRequest, ApiResponse{
+			Success: false,
+			Message: "Username and new password are required",
+		})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(resetData.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Error resetting password",
+		})
+		return
+	}
+
+	result, err := database.SystemDB.Exec(
+		"UPDATE users SET password_hash = ? WHERE email = ?",
+		string(hashedPassword),
+		resetData.Email,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows updated") {
+			helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+				Success: false,
+				Message: "User not found",
+			})
+			return
+		}
+		
+		log.Printf("Error updating password: %v", err)
+		
+		helper.RespondWithJSON(w, http.StatusInternalServerError, ApiResponse{
+			Success: false,
+			Message: "Error resetting password",
+		})
+		
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		log.Printf("No user found with email: %s", resetData.Email)
+		
+		helper.RespondWithJSON(w, http.StatusNotFound, ApiResponse{
+			Success: false,
+			Message: "User not found",
+		})
+		
+		return
+	}
+
+	log.Printf("Password reset successful for user with email: %s", resetData.Email)
+
+	
+	data:=make(map[string]interface{})
+	data["email"] = resetData.Email
+
+	
+	helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
+		Success: true,
+		Message: "Password reset successful",
+		Data:    data,
+	})
 }

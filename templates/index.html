@@ -52,7 +52,7 @@
                 <div class="header">
                     <h1>
                         <i data-lucide="database"></i>
-                        VileSQL
+                        <span x-text="'VileSQL'"></span>
                     </h1>
                 </div>
 
@@ -71,9 +71,20 @@
                             @click="authMode = 'register'">
                             Register
                         </button>
+                        <button class="tab-btn" :class="authMode === 'forgot' ? 'active' : ''"
+                            @click="authMode = 'forgot'">
+                            Forgot Password
+                        </button>
                     </div>
 
-                    <form @submit.prevent="authMode === 'login' ? login() : register()" style="padding: 20px 0;">
+                    <form @submit.prevent="
+                        authMode === 'login' ? login() : 
+                        authMode === 'register' ? register() : 
+                        authMode === 'forgot' && showEnterOTPInput === true ? verifyOTP() : 
+                        authMode === 'forgot' && showEnterOTPInput === false && authFormForgot.otp === null ? verify() : 
+                        authMode === 'forgot' && showEnterOTPInput === false && authFormForgot.otp !== null ? password_reset() : 
+                        null
+                    " style="padding: 20px 0;">
                         <template x-if="authMode === 'login'">
                             <div>
                                 <div class="form-group">
@@ -81,9 +92,41 @@
                                     <input type="text" class="form-control" x-model="authFormLogin.username" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>Password</label>
+                                    <div class="flex justify-between w-full items-center">
+                                        <label>Password</label>
+                                        <span class="text-blue-500 cursor-pointer" @click="authMode = 'forgot'">Forgot
+                                            Password</span>
+                                    </div>
                                     <input type="password" class="form-control" x-model="authFormLogin.password"
                                         required>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="authMode === 'forgot'">
+                            <div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" x-model="authFormForgot.email"
+                                        placeholder="Confirm your email">
+                                </div>
+                                <div x-show="showEnterOTPInput && verificationOTP !== null" class="form-group">
+                                    <label>Enter Verification Code</label>
+                                    <input type="text" class="form-control" x-model="authFormForgot.otp"
+                                        placeholder="Enter the OTP sent to your email">
+                                </div>
+                                <div x-show="!showEnterOTPInput && authFormForgot.otp !== null">
+                                    <div class="form-group">
+                                        <label>New Password</label>
+                                        <input type="password" class="form-control"
+                                            x-model="authFormForgot.new_password">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="flex justify-between w-full items-center">
+                                            <span>Confirm Password</span>
+                                        </label>
+                                        <input type="password" class="form-control"
+                                            x-model="authFormForgot.confirm_password">
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -109,8 +152,14 @@
                             <template x-if="loading">
                                 <div class="spinner" style="width: 16px; height: 16px;"></div>
                             </template>
-                            <span
-                                x-text="loading ? 'Processing...' : (authMode === 'login' ? 'Login' : 'Register')"></span>
+                            <span x-text="loading ? 'Processing...' : (
+                                authMode === 'login' ? 'Login' : 
+                                authMode === 'register' ? 'Register' : 
+                                authMode === 'forgot' && showEnterOTPInput === true ? 'Verify OTP' :
+                                authMode === 'forgot' && showEnterOTPInput === false && authFormForgot.otp === null ? 'Send Reset Code' :
+                                authMode === 'forgot' && showEnterOTPInput === false && authFormForgot.otp !== null ? 'Reset Password' :
+                                'Submit'
+                            )"></span>
                         </button>
                     </form>
 
@@ -624,7 +673,7 @@
                                         <option value="REAL DEFAULT 0.0">REAL</option>
                                         <option value="BLOB">BLOB</option>
                                         <option value="NUMERIC">NUMERIC</option>
-                                        <option value="BOOLEAN">BOOLEAN</option>
+                                        <option value="BOOLEAN DEFAULT FALSE">BOOLEAN</option>
                                         <option value="DATE">DATE</option>
                                         <option value="DATETIME">DATETIME</option>
                                     </select>
@@ -1136,12 +1185,13 @@
                     </form>
                 </div>
             </div>
-            
-            <!-- Insert Data Modal -->           
+
+            <!-- Insert Data Modal -->
             <div x-show="showInsertModal && selectedTable && selectedDb" class="modal"
                 @click.self="showInsertModal = false">
                 <div class="modal-content">
-                    <h3 style="margin-bottom: 16px;">Insert Data into <span class="text-blue-500" x-text="selectedTable"></span></h3>
+                    <h3 style="margin-bottom: 16px;">Insert Data into <span class="text-blue-500"
+                            x-text="selectedTable"></span></h3>
                     <form @submit.prevent="insertData()">
                         <template x-for="(column, index) in tableColumns" :key="column.name">
                             <div class="form-group">
@@ -1149,8 +1199,7 @@
                                 <input class="form-control" x-model="insertForm.data[column.name]"
                                     :type="getInputType(column.constraint ? column.constraint.type : '')"
                                     :placeholder="`Enter ${column.name}`"
-                                    :required="column.constraint.not_null && column.constraint.default !== null" 
-                                />
+                                    :required="column.constraint.not_null && column.constraint.default !== null" />
                             </div>
                         </template>
 
@@ -1195,6 +1244,7 @@
                 user: null,
                 authFormRegister: { username: '', password: '', email: '' },
                 authFormLogin: { username: '', password: '' },
+                authFormForgot: { email: '', otp: null, new_password: '', confirm_password: '' },
 
                 // UI state
                 loading: false,
@@ -1203,6 +1253,8 @@
                 tab: null,
                 newColumnName: null, newColumnType: null, newColumnConstraint: null,
                 showTick: null,
+                showEnterOTPInput: false,
+                verificationOTP: null,
 
                 // Database state
                 databases: [],
@@ -1346,6 +1398,76 @@
                         this.setMessage(error.message, 'error');
                     }
                     this.loading = false;
+                },
+
+                async verify() {
+                    if (!this.authFormForgot.email.trim()) return;
+                    this.loading = true;
+                    try {
+                        const result = await this.apiCall('/api/verify', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                email: this.authFormForgot.email,
+                            })
+                        });
+                        if (result && result.otp) {
+                            this.setMessage('OTP sent to your email!', 'success');
+                            this.showEnterOTPInput = true;
+                            this.verificationOTP = result.otp
+                        } else {
+                            this.setMessage('Failed to send OTP. Please try again.', 'error');
+                        }
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                verifyOTP() {
+                    if (!this.authFormForgot.otp.trim() || !this.verificationOTP.trim()) {
+                        this.setMessage('Please enter the OTP sent to your email.', 'error');
+                        return
+                    };
+                    if (this.authFormForgot.otp !== this.verificationOTP) {
+                        this.setMessage('Invalid OTP. Please try again.', 'error');
+                        return
+                    };
+                    this.setMessage('OTP verified successfully!', 'success');
+                    this.showEnterOTPInput = false;
+                },
+
+                async password_reset() {
+                    if (!this.authFormForgot.new_password.trim() || !this.authFormForgot.confirm_password.trim()) {
+                        this.setMessage('Please fill all fields.', 'error');
+                        return
+                    };
+                    if (this.authFormForgot.new_password !== this.authFormForgot.confirm_password) {
+                        this.setMessage('Passwords do not match. Please try again.', 'error');
+                        return
+                    };
+                    this.loading = true;
+                    try {
+                        const result = await this.apiCall('/api/password_reset', {
+                            method: 'PATCH',
+                            body: JSON.stringify({
+                                email: this.authFormForgot.email,
+                                new_password: this.authFormForgot.new_password
+                            })
+                        });
+                        if (result && result.success) {
+                            this.setMessage('Password reset successful! Please login.', 'success');
+                            this.authMode = 'login';
+                            this.authFormForgot = { email: '', otp: '', new_password: '', confirm_password: '' };
+                        } else {
+                            this.setMessage('Failed to reset password. Please try again.', 'error');
+                        }
+                    } catch (error) {
+                        this.setMessage(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
                 },
 
                 async logout() {
@@ -1682,7 +1804,7 @@
                         this.setMessage('Please fill before inserting data.', 'error');
                         return;
                     };
-                   
+
                     this.loading = true;
                     try {
                         let url = `/api/databases/${this.selectedDb.id}/data`;
