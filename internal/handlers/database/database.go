@@ -1677,13 +1677,16 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("Write operation successful - Rows affected: %d, Last insert ID: %d", rowsAffected, lastInsertId)
 
-		helper.RespondWithJSON(w, http.StatusOK, ApiResponse{
-			Success: true,
-			Data: map[string]interface{}{
-				"rows_affected":  rowsAffected,
-				"last_insert_id": lastInsertId,
-				"message":        "Query executed successfully",
-			},
+		type WriteOpResponse struct{
+			RowsAffected int64 `json:"rows_affected"`
+			LastInsertId int64 `json:"last_insert_id"`
+			Message string `json:"message"`
+		}
+
+		helper.RespondWithJSON(w, http.StatusOK, WriteOpResponse{
+			RowsAffected:  rowsAffected,
+			LastInsertId: lastInsertId,
+			Message: "Query executed successfully",
 		})
 		return
 	}
@@ -1780,9 +1783,7 @@ func ExecuteSharedQueryHandler(w http.ResponseWriter, r *http.Request) {
 		queryResult.Types[i] = ct.DatabaseTypeName()
 	}
 
-	helper.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
-		"results":queryResult,
-	})
+	helper.RespondWithJSON(w, http.StatusOK, queryResult)
 }
 
 func GetDatabaseHandler(w http.ResponseWriter, r *http.Request) {
