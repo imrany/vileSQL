@@ -136,7 +136,6 @@ sudo rm -rf /var/lib/vilesql
 ```bash
 brew uninstall vilesql
 # Remove data:
-rm -rf ~/.vilesql
 rm -rf ~/Library/Application\ Support/vilesql
 ```
 
@@ -154,3 +153,7 @@ sudo rm $(which vilesql)
 ```bash
 curl -sSL https://raw.githubusercontent.com/imrany/vilesql/main/scripts/uninstall.sh | bash
 ```
+
+### Support
+Consider and support me opensource work, [https://github.com/sponsors/imrany](https://github.com/sponsors/imrany)
+Thanks :)
