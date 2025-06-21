@@ -153,7 +153,6 @@ curl -sSL https://raw.githubusercontent.com/imrany/vilesql/main/scripts/uninstal
 ```
 
 ### Support
-Consider and support me opensource work, 
+Consider and support me opensource work, [https://github.com/sponsors/imrany](https://github.com/sponsors/imrany)
 
-[https://github.com/sponsors/imrany](https://github.com/sponsors/imrany)
 Thanks :)
