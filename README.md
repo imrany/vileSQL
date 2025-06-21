@@ -117,7 +117,6 @@ VileSQL gives you **the power of an enterprise-grade DBMS** while keeping **SQLi
 sudo apt remove vilesql
 # To remove all data:
 sudo apt purge vilesql
-rm -rf ~/.vilesql
 ```
 or 
 ```bash
@@ -128,7 +127,6 @@ sudo dpkg --remove vilesql
 ```bash
 sudo rpm -e vilesql
 # Remove data manually:
-rm -rf ~/.vilesql
 sudo rm -rf /var/lib/vilesql
 ```
 
@@ -155,5 +153,7 @@ curl -sSL https://raw.githubusercontent.com/imrany/vilesql/main/scripts/uninstal
 ```
 
 ### Support
-Consider and support me opensource work, [https://github.com/sponsors/imrany](https://github.com/sponsors/imrany)
+Consider and support me opensource work, 
+
+[https://github.com/sponsors/imrany](https://github.com/sponsors/imrany)
 Thanks :)
