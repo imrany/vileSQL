@@ -205,8 +205,16 @@ func startServer(serverAddr string) {
 		r.Use(middleware.LoggingMiddleware)
 	}
 	
-	r.HandleFunc("/", vilesqlPanel).Methods("GET")
-	r.HandleFunc("/welcome", welcomePage).Methods("GET")
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
+		pageRender(w, r, "index")
+	}).Methods("GET")
+	r.HandleFunc("/welcome", func(w http.ResponseWriter, r *http.Request) {
+		pageRender(w, r, "welcome")
+	}).Methods("GET")
+	r.HandleFunc("/workspace", func(w http.ResponseWriter, r *http.Request) {
+		pageRender(w, r, "workspace")
+	}).Methods("GET")
+
 	router.SetupRoutes(r)
 
 	staticSub, err := fs.Sub(staticFolder, "static")
@@ -239,30 +247,9 @@ func startServer(serverAddr string) {
 	}
 }
 
-func welcomePage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFS(templateFolder, "templates/welcome.html")
-	if err != nil {
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
-		if verboseMode {
-			log.Printf("Template error: %v", err)
-		}
-		return
-	}
-	data := map[string]interface{}{
-		"Title":   "Welcome to VileSQL",
-		"User":    "Guest",
-		"Version": version,
-	}
-	w.WriteHeader(http.StatusOK)
-	if err := tmpl.Execute(w, data); err != nil {
-		if verboseMode {
-			log.Printf("Template execution error: %v", err)
-		}
-	}
-}
 
-func vilesqlPanel(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFS(templateFolder, "templates/index.html")
+func pageRender(w http.ResponseWriter, r *http.Request, page string) {
+	tmpl, err := template.ParseFS(templateFolder, fmt.Sprintf("templates/%s.html", page))
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 		if verboseMode {
@@ -586,7 +573,7 @@ func runMigrations(dataDir string) error {
 // Example migration functions
 func migrate_1_0_0(dataDir string) error {
 	// Create initial directory structure
-	dirs := []string{"databases", "backups", "logs"}
+	dirs := []string{"backups"}
 	for _, dir := range dirs {
 		if err := os.MkdirAll(filepath.Join(dataDir, dir), 0755); err != nil {
 			return err

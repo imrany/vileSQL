@@ -69,6 +69,11 @@ PORT=5000
 SESSION_KEY=default-session-key
 COOKIE_STORE_KEY=default-session-key
 HOST=0.0.0.0
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=example@gmail.com
+SMTP_PASSWORD=your_password
+SMTP_FROM=example@gmail.com
 EOF
 fi
 

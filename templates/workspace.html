@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All workspaces</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=7">
+    <meta name="description"
+        content="Host and manage your SQLite databases in the cloud with unparalleled speed and simplicity">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="keywords" content="SQLite, SQL, databases, cloud, hosting, edge computing">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="apple-touch-icon" href="/static/favicon.png">
+    <script defer src="/static/tailwindcss.js"></script>
+    <script defer src="/static/alpine.js"></script>
+</head>
+<body>
+    <template x-if="isAuthenticated || sharedDb">
+        <div class="container">
+            <div class="card">
+                <div class="header">
+                    <h1>
+                        <!-- database icon -->
+                        <svg width="26" height="26" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899" />
+                            <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8" />
+                            <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6" />
+                        </svg>
+                        <span x-text="sharedDb ? `Shared: ${sharedDb.name}` : 'VileSQL Database Manager'"></span>
+                    </h1>
+                </div>
+
+                <div x-show="message.text" class="alert"
+                    :class="message.type === 'error' ? 'alert-error' : 'alert-success'" style="margin: 12px;">
+                    <span x-text="message.text"></span>
+                </div>
+
+                <div class="main-layout">
+                    <!-- Sidebar -->
+                    <div class="sidebar">
+                        <div>
+                            <div class="database-list">
+                                <div class="section-header">
+                                    Databases
+                                    <button title="Shows all databases" x-text="selectedDb===null?'':'Back'"
+                                        class="cursor-pointer" @click="selectedDb=null">
+
+                                    </button>
+                                </div>
+                                <div class="section-body">
+                                    <template x-if="sharedDb">
+                                        <div x-show="selectedDb&&sharedDb?selectedDb.name===sharedDb.name:true"
+                                            class="database-item active" @click="selectDatabase(sharedDb)">
+                                            <div style="font-weight: 500;" x-text="sharedDb.name"></div>
+                                            <div style="font-size: 10px; color: #888;">Shared Database</div>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="isAuthenticated">
+                                        <div>
+                                            <div x-show="databases.length === 0 && !sharedToken"
+                                                class="text-[#888] text-[11px] flex items-center justify-center h-[80px]">
+                                                No databases found
+                                            </div>
+
+                                            <template x-for="db in databases" :key="db.id">
+                                                <div x-show="selectedDb?selectedDb.name===db.name:true"
+                                                    class="database-item"
+                                                    :class="selectedDb && selectedDb.id === db.id ? 'active' : ''"
+                                                    @click="selectDatabase(db)">
+                                                    <div
+                                                        style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+                                                        <!-- Pink SQL Database SVG Icon -->
+                                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
+                                                            style="flex-shrink:0;" xmlns="http://www.w3.org/2000/svg">
+                                                            <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899" />
+                                                            <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899"
+                                                                fill-opacity="0.8" />
+                                                            <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899"
+                                                                fill-opacity="0.6" />
+                                                        </svg>
+                                                        <span x-text="db.name"></span>
+                                                    </div>
+                                                    <div style="font-size: 10px; color: #888; margin-top: 2px;">
+                                                        <span
+                                                            x-text="new Date(db.created_at).toLocaleDateString()"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Tables Section -->
+                            <div x-show="selectedDb && tables.length > 0" class="tables-section flex-grow">
+                                <div class="section-header">Tables</div>
+                                <div class="section-body">
+                                    <template x-for="table in tables" :key="table">
+                                        <div class="table-item" :class="selectedTable === table ? 'active' : ''"
+                                            @click="selectTable(table)">
+                                            <!-- Table SVG Icon -->
+                                            <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16"
+                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
+                                                <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
+                                                <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
+                                                <rect x="1" y="11" width="14" height="1" fill="#2563eb" />
+                                            </svg>
+                                            <span x-text="table"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div x-show="isAuthenticated" class="user-info">
+                            <div class="flex flex-col gap-2 w-full">
+                                <button x-show="!sharedToken" class="btn btn-primary" style="width: 100%;"
+                                    @click="showCreateModal = true">
+                                    <!-- plus icon -->
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                        style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff" />
+                                        <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff" />
+                                    </svg>
+                                    New Database
+                                </button>
+                                <div class="flex items-center justify-center gap-2">
+                                    <span x-show="isAuthenticated" style="margin-right: 16px; font-size: 12px;">
+                                        Welcome, <span x-text="sharedToken?'Guest':user"></span>
+                                    </span>
+                                    <button x-show="isAuthenticated" class="btn btn-secondary" @click="logout()">
+                                        <!-- logout icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6"
+                                                stroke="#fff" stroke-width="1.5" stroke-linecap="round" />
+                                            <path d="M10.5 11L14 8m0 0l-3.5-3M14 8H6" stroke="#fff" stroke-width="1.5"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        Logout
+                                    </button>
+                                    <button x-show="sharedDb && !isAuthenticated" class="btn btn-secondary"
+                                        @click="sharedDb = null; sharedToken = ''">
+                                        <!-- close icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                            <line x1="4" y1="4" x2="12" y2="12" stroke="#fff" stroke-width="2" />
+                                            <line x1="12" y1="4" x2="4" y2="12" stroke="#fff" stroke-width="2" />
+                                        </svg>
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Area -->
+                    <div class="content-area" style="position: relative;">
+                        <template x-if="loading">
+                            <div class="loading-overlay">
+                                <div class="spinner"></div>
+                            </div>
+                        </template>
+
+                        <!-- Toolbar -->
+                        <template x-if="selectedDb">
+                            <div class="toolbar">
+                                <div class="flex gap-2 w-full">
+                                    <template x-if="!selectedTable">
+                                        <button class="btn btn-primary" @click="showTableModal = true">
+                                            <!-- Table SVG Icon -->
+                                            <svg class="table-icon" width="12" height="12" viewBox="0 0 16 16"
+                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
+                                                <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
+                                                <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
+                                                <rect x="1" y="11" width="14" height="1" fill="#2563eb" />
+                                            </svg>
+                                            New Table
+                                        </button>
+                                    </template>
+                                    <template x-if="selectedTable">
+                                        <button class="btn btn-success" @click="showInsertModal = true">
+                                            <!-- plus icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="7" y="2" width="2" height="12" rx="1" fill="#fff" />
+                                                <rect x="2" y="7" width="12" height="2" rx="1" fill="#fff" />
+                                            </svg>
+                                            Insert Data
+                                        </button>
+                                    </template>
+
+                                    <template x-if="selectedTable">
+                                        <button type="button" class="btn btn-secondary"
+                                            @click="selectTable(selectedTable)">
+                                            <!-- reload icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M2 8a6 6 0 1 1 2.47 4.85" stroke="#ffff" stroke-width="1.5"
+                                                    fill="none" />
+                                                <path d="M2 12v-3h3" stroke="#ffff" stroke-width="1.5" fill="none" />
+                                            </svg>
+                                            Reload Table
+                                        </button>
+                                    </template>
+
+                                    <template x-if="selectedTable">
+                                        <button type="button" class="btn btn-secondary"
+                                            @click="showQueryPanel? showQueryPanel = false: showQueryPanel = true">
+                                            <!-- show icon -->
+                                            <svg x-show="!showQueryPanel" width="16" height="16" viewBox="0 0 16 16"
+                                                fill="none" style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2"
+                                                    fill="none" />
+                                                <rect x="7" y="4" width="2" height="8" rx="1" fill="#ffff" />
+                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff" />
+                                            </svg>
+                                            <!-- hide icon -->
+                                            <svg x-show="showQueryPanel" width="16" height="16" viewBox="0 0 16 16"
+                                                fill="none" style="vertical-align: middle; margin-right: 4px;"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="8" cy="8" r="7" stroke="#ffff" stroke-width="2"
+                                                    fill="none" />
+                                                <rect x="4" y="7" width="8" height="2" rx="1" fill="#ffff" />
+                                            </svg>
+                                            <span
+                                                x-text="showQueryPanel===false?'Show Query Panel':'Hide Query Panel'"></span>
+                                        </button>
+                                    </template>
+
+                                    <template x-if="isAuthenticated && selectedDb && !selectedTable">
+                                        <button class="btn btn-secondary" @click="tab='info'; showConfigModal = true"
+                                            title="Database Info & Connection">
+                                            <!-- gear icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="8" cy="8" r="2" fill="#fff" />
+                                                <path d="M2 8a6 6 0 0 1 12 0" stroke="#fff" stroke-width="1.2"
+                                                    fill="none" />
+                                                <path
+                                                    d="M8 2v2M8 12v2M2 8h2M12 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5l1.5-1.5M11 5l1.5-1.5"
+                                                    stroke="#fff" stroke-width="1" fill="none" />
+                                            </svg>
+                                            Configurations
+                                        </button>
+                                    </template>
+
+                                    <template x-if="isAuthenticated && selectedTable && !sharedToken">
+                                        <button class="btn btn-danger" style="margin-left: auto;"
+                                            @click="showDeleteTableModal=true">
+                                            <!-- trash icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="3" y="6" width="10" height="7" rx="2" fill="#fff"
+                                                    fill-opacity="0.15" />
+                                                <rect x="3" y="6" width="10" height="7" rx="2" stroke="#fff"
+                                                    stroke-width="1" />
+                                                <rect x="7" y="9" width="2" height="3" rx="1" fill="#fff" />
+                                                <rect x="5" y="3" width="6" height="2" rx="1" fill="#fff" />
+                                                <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff"
+                                                    fill-opacity="0.5" />
+                                                <rect x="2" y="5" width="12" height="1" fill="#fff" />
+                                                <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
+                                                <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
+                                            </svg>
+                                            Delete Table
+                                        </button>
+                                    </template>
+
+                                    <template x-if="isAuthenticated && selectedDb && !selectedTable && !sharedToken">
+                                        <button class="btn btn-danger" style="margin-left: auto;"
+                                            @click="showDeleteModal = true">
+                                            <!-- trash icon -->
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                                style="vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="3" y="6" width="10" height="7" rx="2" fill="#fff"
+                                                    fill-opacity="0.15" />
+                                                <rect x="3" y="6" width="10" height="7" rx="2" stroke="#fff"
+                                                    stroke-width="1" />
+                                                <rect x="7" y="9" width="2" height="3" rx="1" fill="#fff" />
+                                                <rect x="5" y="3" width="6" height="2" rx="1" fill="#fff" />
+                                                <rect x="6" y="2" width="4" height="1" rx="0.5" fill="#fff"
+                                                    fill-opacity="0.5" />
+                                                <rect x="2" y="5" width="12" height="1" fill="#fff" />
+                                                <line x1="6" y1="8" x2="10" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
+                                                <line x1="10" y1="8" x2="6" y2="12" stroke="#d83b01"
+                                                    stroke-width="1.5" />
+                                            </svg>
+                                            Delete DB
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Filter Bar -->
+                        <div x-show="selectedTable && tableData.length > 0" class="filter-bar">
+                            <label>Filter:</label>
+                            <input type="text" class="filter-input" x-model="filterText"
+                                placeholder="Search in table...">
+                            <span style="margin-left: auto; color: #888;"
+                                x-text="`${filteredTableData.length} rows`"></span>
+                        </div>
+
+
+                        <!-- Data Table -->
+                        <div class="data-table-container">
+                            <template x-if="!selectedDb">
+                                <div class="empty-state">
+                                    <!-- database icon -->
+                                    <svg width="48" height="48" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <ellipse cx="10" cy="5" rx="8" ry="3" fill="#ec4899" />
+                                        <ellipse cx="10" cy="10" rx="8" ry="3" fill="#ec4899" fill-opacity="0.8" />
+                                        <ellipse cx="10" cy="15" rx="8" ry="3" fill="#ec4899" fill-opacity="0.6" />
+                                    </svg>
+                                    <h3>Select a database to get started</h3>
+                                    <p>Choose a database from the sidebar to explore its contents</p>
+                                </div>
+                            </template>
+
+                            <template x-if="selectedDb && !selectedTable">
+                                <div class="empty-state">
+                                    <!-- table icon -->
+                                    <svg width="48" height="48" viewBox="0 0 16 16" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="1" y="2" width="14" height="12" rx="2" fill="#60a5fa" />
+                                        <rect x="1" y="5" width="14" height="1" fill="#2563eb" />
+                                        <rect x="1" y="8" width="14" height="1" fill="#2563eb" />
+                                        <rect x="1" y="11" width="14" height="1" fill="#2563eb" />
+                                    </svg>
+                                    <h3>Select a table to view data</h3>
+                                    <p>Choose a table from the sidebar or create a new one</p>
+                                </div>
+                            </template>
+
+                            <template x-if="selectedTable && tableColumns.length > 0">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="cursor-pointer row-number"
+                                                @click="tab ='editType'; showColumnInfo=true"
+                                                title="Click to open column modal">#</th>
+                                            <template x-for="(column, colIndex) in tableColumns" :key="column.name">
+                                                <th style="min-width: 300px;" title="Click to edit column name"
+                                                    @click="editingCell = { row: -1, col: column.name, value: column.name }">
+                                                    <div class="flex justify-between items-center">
+                                                        <template
+                                                            x-if="editingCell && editingCell.row === -1 && editingCell.col === column.name">
+                                                            <input type="text" class="form-control text-[11px]"
+                                                                x-model="editingCell.value" @keydown.enter.stop.prevent="
+                                                                    updateColumnName(editingCell);
+                                                                    editingCell = null;
+                                                                " @keydown.esc="editingCell = null"
+                                                                @blur="editingCell = null"
+                                                                style="padding:2px 6px; min-width: 60px;" autofocus>
+                                                        </template>
+                                                        <template
+                                                            x-if="!editingCell || editingCell.row !== -1 || editingCell.col !== column.name">
+                                                            <span x-text="column.name" class="cursor-pointer"></span>
+                                                        </template>
+                                                        <template x-if="column.constraint">
+                                                            <div
+                                                                class="text-[10px] text-[#60a5fa] mr-2 ml-auto flex gap-[2px] cursor-pointer">
+                                                                <span x-text="column.constraint.type"></span>
+                                                                <span
+                                                                    x-text="column.constraint.unique ? 'UNIQUE' : ''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.primary_key ? 'PRIMARY' : ''"></span>
+                                                                <span
+                                                                    x-text="column.constraint.not_null ? 'NOT NULL' : ''"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Data rows -->
+                                        <template x-for="(row, index) in filteredTableData" :key="index">
+                                            <tr>
+                                                <td class="row-number cursor-pointer"
+                                                    x-text="selectShowDeleteRowIcon===index ? '🗑️' : index + 1"
+                                                    @mouseover="selectShowDeleteRowIcon = index"
+                                                    @mouseenter="selectShowDeleteRowIcon = index"
+                                                    @mouseleave="selectShowDeleteRowIcon = null"
+                                                    @click="showRowDropdown = { row: row, index: index }">
+                                                </td>
+
+                                                <template x-for="(column, colIndex) in tableColumns" :key="column.name">
+                                                    <td style="min-width: 300px;" @dblclick="
+                                                            if (!editingCell || editingCell.row !== index || editingCell.col !== column.name) {
+                                                                editingCell = { row: index, col: column.name, value: Array.isArray(row) ? row[colIndex] : row[column.name] }
+                                                            }
+                                                        ">
+                                                        <template
+                                                            x-if="editingCell && editingCell.row === index && editingCell.col === column.name">
+                                                            <input
+                                                                :type="getInputType(column.constraint ? column.constraint.type : '')"
+                                                                class="form-control text-[11px]"
+                                                                x-model="editingCell.value" @keydown.enter.stop.prevent="
+                                                                    updateCell(index, column.name, editingCell.value, row[colIndex]);
+                                                                    editingCell = null;
+                                                                " @keydown.esc="editingCell = null"
+                                                                @blur="editingCell = null"
+                                                                style="padding:2px 6px; min-width: 60px;" autofocus>
+                                                        </template>
+                                                        <template
+                                                            x-if="!editingCell || editingCell.row !== index || editingCell.col !== column.name">
+                                                            <span
+                                                                x-text="Array.isArray(row) ? (row[colIndex] !== null ? row[colIndex] : 'NULL') : (row[column.name] !== null ? row[column.name] : 'NULL')"
+                                                                :title="Array.isArray(row) ? row[colIndex] : row[column.name]"></span>
+                                                        </template>
+                                                    </td>
+                                                </template>
+                                            </tr>
+                                        </template>
+                                        <!-- Extra row for adding data -->
+                                        <tr>
+                                            <td class="row-number">+</td>
+                                            <template x-for="(column, colIndex) in tableColumns" :key="column.name">
+                                                <td style="min-width: 300px;">
+                                                    <input
+                                                        :type="getInputType(column.constraint ? column.constraint.type : '')"
+                                                        class="form-control text-[11px]" :placeholder="column.name"
+                                                        x-model="insertRow[column.name]"
+                                                        @keydown.enter.stop.prevent="addRow()" style="padding:2px 6px;">
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </div>
+
+                        <!-- Query Panel -->
+                        <div x-show="selectedDb && showQueryPanel" class="query-panel">
+                            <div class="form-group">
+                                <label>SQL Query</label>
+                                <textarea class="query-editor" x-model="queryText" :placeholder="selectedTable && tableColumns.length > 0
+                                        ? `INSERT INTO ${selectedTable} (${tableColumns.map(col => col.name).join(', ')}) VALUES (${tableColumns.map(col => `'${col.name}'`).join(', ')})`
+                                        : 'Enter your SQL query here...'
+                                    "></textarea>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-primary" @click="executeQuery()"
+                                    :disabled="!queryText.trim() || loading">
+                                    <i data-lucide="play"></i>
+                                    Execute
+                                </button>
+                                <button class="btn btn-secondary" @click="queryText = ''">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</body>
+</html>
